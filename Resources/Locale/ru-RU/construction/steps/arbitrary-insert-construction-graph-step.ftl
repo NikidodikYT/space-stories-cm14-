@@ -6,4 +6,4 @@ construction-insert-info-examine-name-instrument-percussion = ударный и�
 construction-insert-info-examine-name-instrument-string = струнный инструмент
 construction-insert-info-examine-name-instrument-woodwind = деревянный духовой инструмент
 construction-insert-info-examine-name-knife = нож
-construction-insert-info-examine-name-utensil = посуда
+construction-insert-info-examine-name-utensil = кухонный прибор
