@@ -1,7 +1,7 @@
 # command
-cm-job-name-senior-enlisted-advisor = Старший советник по работе с военнослужащими
+cm-job-name-senior-enlisted-advisor = Старший сержантский советник
 cm-job-description-senior-enlisted-advisor = Консультируйте и обучайте неопытных членов экипажа и морских пехотинцев. Отдавайте приказы новым рядовым, чтобы они были готовы.
-CMJobSeniorEnlistedAdvisor = Старший советник рядового состава
+CMJobSeniorEnlistedAdvisor = Старший сержантский советник
 cm-job-name-staff-officer = Офицер штаба
 cm-job-description-staff-officer = Наблюдает за морскими пехотинцами, обслуживает ЦБИ. Отвечает за логистику и систему наблюдения. Следующий в очереди на командование после исполнительного офицера.
 CMJobStaffOfficer = Офицер штаба

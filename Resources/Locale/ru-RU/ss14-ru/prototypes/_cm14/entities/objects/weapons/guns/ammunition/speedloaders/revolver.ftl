@@ -1,2 +1,2 @@
-ent-CMSpeedLoaderM44 = спидлоадер (.44)
-    .desc = { ent-BaseItem.desc }
+ent-CMSpeedLoaderM44 = спидлодер M44 (.44)
+    .desc = Револьверный скорозарядный станок.

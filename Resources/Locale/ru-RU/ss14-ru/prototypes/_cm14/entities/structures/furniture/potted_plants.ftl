@@ -1,7 +1,7 @@
 ent-CMPottedPlantRandom = случайное горшечное растение
     .desc = { ent-PottedPlantRandom.desc }
 ent-CMPottedPlantBase = комнатное растение
-    .desc = { ent-BaseStructureDynamic.desc }
+    .desc = { ent-PottedPlantBase.desc }
 ent-CMPottedPlant0 = { ent-CMPottedPlantBase }
     .desc = { ent-CMPottedPlantBase.desc }
 ent-CMPottedPlant1 = { ent-CMPottedPlantBase }

@@ -1,2 +1,2 @@
-ent-CMAutoLathe = автолат
+ent-CMAutolathe = автолат
     .desc = Он производит изделия из металла и стекла.

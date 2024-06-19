@@ -1,4 +1,4 @@
 ent-DoorXenoResin = смоляная дверь
-    .desc = { ent-CMBaseXenoStructure.desc }
+    .desc = Это дверь из смолы.
 ent-DoorXenoResinThick = толстая смоляная дверь
-    .desc = { ent-DoorXenoResin.desc }
+    .desc = Дверь из толстой смолы, которая отличается повышенной прочностью.

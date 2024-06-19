@@ -1,1 +1,2 @@
-cm-access-xeno = Ксено
+cm-access-xeno = Ксеноморфов
+cm-access-xeno-queen = Королева Ксеноморфов

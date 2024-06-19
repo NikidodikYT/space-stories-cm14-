@@ -1,5 +1,5 @@
 ent-CMBaseNormandyWall = стена Нормандии
-    .desc = { ent-CMBaseWall.desc }
+    .desc = { ent-CMBaseWallInvincible.desc }
 ent-CMNormandyWall1 = { ent-CMBaseNormandyWall }
     .suffix = 1
     .desc = { ent-CMBaseNormandyWall.desc }

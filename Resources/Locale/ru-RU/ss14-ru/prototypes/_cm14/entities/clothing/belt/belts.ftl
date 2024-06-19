@@ -1,5 +1,5 @@
-ent-CMBeltBase = { ent-ClothingBeltBase }
-    .desc = { ent-ClothingBeltBase.desc }
+ent-CMBeltBase = пояс
+    .desc = На нем можно хранить различные вещи.
 ent-CMBeltBaseStorage = { ent-CMBeltBase }
     .desc = { ent-CMBeltBase.desc }
 ent-CMBeltInflatable = Мистер Крякерс
