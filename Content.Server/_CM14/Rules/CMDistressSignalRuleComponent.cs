@@ -7,7 +7,6 @@ using Robust.Shared.Prototypes;
 namespace Content.Server._CM14.Rules;
 
 [RegisterComponent, AutoGenerateComponentPause]
-[Access(typeof(CMDistressSignalRuleSystem))]
 public sealed partial class CMDistressSignalRuleComponent : Component
 {
     [DataField]

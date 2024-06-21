@@ -1,4 +1,5 @@
 using System.Linq;
+using Content.Server._CM14.Rules;
 using Content.Server.Announcements;
 using Content.Server.Discord;
 using Content.Server.GameTicking.Events;
@@ -458,12 +459,22 @@ namespace Content.Server.GameTicking
                 if (_webhookIdentifier == null)
                     return;
 
+                // Stories-Discord-Start
+                string result = "Неизвестно";
+                var query = EntityQueryEnumerator<CMDistressSignalRuleComponent>();
+                while (query.MoveNext(out var uid, out var component))
+                {
+                    result = Loc.GetString($"cm-distress-signal-discord-{component.Result.ToString().ToLower()}");
+                }
+                // Stories-Discord-End
+
                 var duration = RoundDuration();
                 var content = Loc.GetString("discord-round-notifications-end",
                     ("id", RoundId),
                     ("hours", Math.Truncate(duration.TotalHours)),
                     ("minutes", duration.Minutes),
-                    ("seconds", duration.Seconds));
+                    ("seconds", duration.Seconds),
+                    ("result", result)); // Stories-Discord
                 var payload = new WebhookPayload { Content = content };
 
                 await _discord.CreateMessage(_webhookIdentifier.Value, payload);
