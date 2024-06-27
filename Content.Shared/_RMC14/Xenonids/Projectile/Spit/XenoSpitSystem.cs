@@ -127,6 +127,7 @@ public sealed class XenoSpitSystem : EntitySystem
         if (spit.Comp.Slow > TimeSpan.Zero)
         {
             EnsureComp<SlowedBySpitComponent>(target).ExpiresAt = _timing.CurTime + spit.Comp.Slow;
+            EnsureComp<SlowedBySpitComponent>(target).Multiplier = spit.Comp.SlowMultiplier;
             _movementSpeed.RefreshMovementSpeedModifiers(target);
         }
 

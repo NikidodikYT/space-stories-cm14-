@@ -10,6 +10,9 @@ public sealed partial class XenoSlowingSpitProjectileComponent : Component
     public TimeSpan Slow = TimeSpan.FromSeconds(3);
 
     [DataField, AutoNetworkedField]
+    public float SlowMultiplier = 0.5f;
+
+    [DataField, AutoNetworkedField]
     public TimeSpan Paralyze = TimeSpan.FromSeconds(2);
 
     [DataField, AutoNetworkedField]

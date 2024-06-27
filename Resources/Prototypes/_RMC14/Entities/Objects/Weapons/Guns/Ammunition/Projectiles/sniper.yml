@@ -48,6 +48,7 @@
     amount: 0
   - type: XenoSlowingSpitProjectile
     slow: 2
+    slowMultiplier: 0.75
     paralyze: 0
 
 - type: entity
