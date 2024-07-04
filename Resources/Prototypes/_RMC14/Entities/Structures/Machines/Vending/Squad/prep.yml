@@ -68,7 +68,7 @@
       #  amount: 10
       #- id: CMAttachmentUnderslungGrenadeLauncher
       #  amount: 25
-    - name: Utilities
+    - name: Утилиты
       entries:
       - id: CMM5Bayonet
         amount: 25
@@ -90,7 +90,7 @@
     sprite: _RMC14/Structures/Machines/VendingMachines/ColMarTech/clothing.rsi
   - type: CMAutomatedVendor
     sections:
-    - name: Standard Equipment
+    - name: Стандартное снаряжение
       entries:
       - id: CMBootsBlack
         amount: 15
@@ -118,7 +118,7 @@
 #        amount: 1
 #      - id: Shoulder Holster
 #        amount: 1
-    - name: Armor
+    - name: Броня
       entries:
 #      - id: M3 Pattern Carrier Marine Armor
 #        amount: 15
@@ -136,7 +136,7 @@
         amount: 10
       - id: CMArmorM3Light
         amount: 10
-    - name: Backpack
+    - name: Рюкзак
       entries:
       - id: CMBackpackMarine
         amount: 15
@@ -164,7 +164,7 @@
 #        amount: 2
 #      - id: Radio Telephone Backpack
 #        amount: 1
-    - name: Belts
+    - name: Поясs
       entries:
       - id: CMBeltMarine
         amount: 15
@@ -187,7 +187,7 @@
         amount: 15
 #      - id: M276 G8-A General Utility Pouch
 #        amount: 15
-    - name: Pouches
+    - name: Подсумки
       entries:
       - id: CMPouchBayonet
         name: Bayonet Sheath (Full)
@@ -225,7 +225,8 @@
         amount: 1
 #      - id: Sling Pouch
 #        amount: 1
-    - name: Mask
+    - name: Маски
+      choices: { CMMask: 1 }
       entries:
       - id: CMMaskGas
         amount: 15
@@ -280,7 +281,7 @@
     sprite: _RMC14/Structures/Machines/VendingMachines/ColMarTech/requisitions_ammo.rsi
   - type: CMAutomatedVendor
     sections:
-    - name: Armor-Piercing Ammunition
+    - name: Броня-Piercing Ammunition
       entries:
       - id: CMMagazineRifleM4SPRAP
         amount: 3

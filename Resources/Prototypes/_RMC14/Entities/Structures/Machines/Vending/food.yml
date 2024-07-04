@@ -10,7 +10,7 @@
     sprite: _RMC14/Structures/Machines/VendingMachines/ColMarTech/food.rsi
   - type: CMAutomatedVendor
     sections:
-    - name: Prepared Meals
+    - name: Готовые блюда
       entries:
       - id: CMMarinePreparedMealChicken
         amount: 15
@@ -26,7 +26,7 @@
         amount: 15
       - id: CMMarineProteinBar
         amount: 50
-    - name: Flasks
+    - name: Фляжки
       entries:
       - id: CMCanteen
         amount: 10

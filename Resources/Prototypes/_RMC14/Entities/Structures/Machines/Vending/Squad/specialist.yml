@@ -16,7 +16,7 @@
     - CMWeaponsSpecialist
     pointsType: Specialist
     sections:
-    - name: Weapons Specialist Sets
+    - name: Наборы специалистов по оружию
       choices: { SquadLeaderKit: 1 }
       entries:
       #- id: DemolitionistSet
@@ -27,7 +27,8 @@
       #  points: 0
       #- id: ScoutSet
       - id: CMSniperEquipmentCase
-    - name: Extra Scout Ammunition
+      - id: RMCSniperAntiMaterielEquipmentCase
+    - name: Дополнительные боеприпасы для скаутов
       entries: [ ]
     #- id: A19HighVelocityImpactMagazine
     #  points: 40
@@ -35,15 +36,17 @@
     #  points: 40
     #- id: A19HighVelocityMagazine
     #  points: 40
-    - name: Extra Sniper Ammunition
+    - name: Дополнительные снайперские патроны
       entries:
-#      - id: CMMagazineSniperM96S # TODO rmc14 CMMagazineSniperM96SFlak
-#        points: 40
-#      - id: CMMagazineSniperM96S # TODO rmc14 CMMagazineSniperM96SIncendiary
-#        points: 40
       - id: CMMagazineSniperM96S
         points: 40
-    - name: Extra Demolitionist Ammunition
+      - id: CMMagazineSniperM96SIncendiary
+        points: 40
+      - id: CMMagazineSniperM96SFlak
+        points: 40
+      - id: CMMagazineSniperXM43E1AntiMateriel
+        points: 40
+    - name: Дополнительные боеприпасы для разрушителей
       entries: [ ]
     #- id: 84mmAntiArmorRocket
     #  points: 40
@@ -51,7 +54,7 @@
     #  points: 40
     #- id: 84mmWhitePhosphorusRocket
     #  points: 40
-    - name: Extra Grenades
+    - name: Дополнительные гранаты
       entries:
       - id: CMGrenadeHighExplosive
         points: 40
@@ -72,7 +75,7 @@
     #  points: 40
     #- id: M74AGMSSmokeGrenadesx6
     #  points: 20
-    - name: Extra Flamethrower Tanks
+    - name: Дополнительные огнеметные баки
       entries: [ ]
     #- id: LargeIncineratorTank
     #  points: 40
@@ -96,17 +99,17 @@
     jobs:
     - CMWeaponsSpecialist
     sections:
-    - name: Standard Equipment
+    - name: Стандартное снаряжение
       takeAll: CMStandard
       entries:
       - id: CMVendorBundleWeaponsSpecialistApparel
       - id: CMMRE
       #- id: CMMap # TODO: Make a map
-    - name: Backpack
+    - name: Рюкзак
       entries:
       - id: CMBackpackMarine
       - id: CMSatchelMarine
-    - name: Belt
+    - name: Пояс
       choices: { CMBelt: 1 }
       entries:
     #- id: CMG8AGeneralUtilityPouch
@@ -116,24 +119,24 @@
     #- id: CMM276M44HolsterRig
     #- id: CMM276M82FHolsterRig
     #- id: CMM276ShotgunShellLoadingRig
-    - name: Pouches
+    - name: Подсумки
       choices: { CMPouch: 2 }
       entries:
       - id: CMPouchFirstAidInjectors
-        name: first-aid pouch (refillable injectors)
+        name: подсумок первой помощи (многоразовые инъекторы)
       - id: CMPouchFirstAidSplintsGauzeOintment
-        name: first-aid pouch (gauze, ointment) # TODO RMC14 splints comma
+        name: подсумок первой помощи (марля, мазь) # TODO RMC14 splints comma
       - id: CMPouchFirstAidPills
-        name: first-aid pouch (pills)
+        name: подсумок первой помощи (таблетки)
       - id: CMPouchFlareFilled
-        name: Flare pouch (Filled)
+        name: подсумок фаеров (заполненный)
       - id: CMPouchMagazine
       - id: CMPouchShotgun
       - id: CMPouchMagazinePistolLarge
       - id: CMPouchGeneralMedium
       - id: CMPouchPistol
       #- id: CMSlingPouch
-    - name: Accessories
+    - name: Аксессуары
       choices: { CMAccessories: 1 }
       entries:
       - id: CMWebbingBrown
@@ -141,11 +144,12 @@
       #- id: CMShoulderHolster
       - id: CMWebbing
     #- id: CMDropPouch
-    - name: Mask
+    - name: Маски
+      choices: { CMMask: 1 }
       entries:
       - id: CMMaskGas
       - id: CMMaskCoif
-    - name: Clothing Items
+    - name: Предметы одежды
       entries:
     #- id: CMScabbardMacheteFull
       - id: CMPouchMacheteFilled
@@ -159,7 +163,7 @@
         points: 15
       - id: CMPouchAutoinjectorFill
         points: 15
-    - name: Utilities
+    - name: Утилиты
       entries:
       - id: CMFireExtinguisherPortable
         points: 5
@@ -167,15 +171,15 @@
         points: 5
     #- id: CMFultonDeviceStack
     #- id: CMMotionDetector
-    - name: Helmet Optics
+    - name: Оптика шлема
       entries: [ ]
     #- id: CMMedicalHelmetOptic
     #- id: CMWeldingVisor
-    - name: Pàmphlets
+    - name: Памфлеты
       entries: [ ]
     #- id: CMPamphletJTAC
     #- id: CMPamphletEngineering
-    - name: Radio Keys
+    - name: Радиоключи
       entries:
       - id: CMEncryptionKeyEngineer
         amount: 5

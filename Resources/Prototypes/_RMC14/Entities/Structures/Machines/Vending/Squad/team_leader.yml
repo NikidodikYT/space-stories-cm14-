@@ -15,7 +15,7 @@
     jobs:
     - CMFireteamLeader
     sections:
-    - name: Explosives
+    - name: Взрывчатка
       entries:
       - id: CMPacketGrenadeHighExplosiveFilled
         points: 18
@@ -67,11 +67,11 @@
     #  points: 15
     #- id: CMM79GrenadeLauncher
     #  points: 30
-    - name: Armors
+    - name: Броня
       entries:
       - id: CMArmorB12
         points: 30
-    - name: Clothing Items
+    - name: Предметы одежды
       entries:
     #- id: CMScabbardMacheteFull
     #  points: 5
@@ -89,7 +89,7 @@
         points: 3
     #- id: CMNightVisionOptic
     #  points: 30
-    - name: Utilities
+    - name: Утилиты
       entries:
     #- id: CMMotionDetector
     #  points: 15
@@ -101,17 +101,17 @@
         points: 5
       - id: CMWhistle
         points: 5
-    - name: Binoculars
+    - name: Бинокли
       entries: [ ]
     #- id: CMBinoculars
     #  points: 5
-    - name: Helmet Optics
+    - name: Оптика шлема
       entries: [ ]
     #- id: CMMedicalHelmetOptic
     #  points: 15
     #- id: CMWeldingVisor
     #  points: 5
-    - name: Radio Keys
+    - name: Радиоключи
       entries:
       - id: CMEncryptionKeyEngineer
         points: 5
@@ -137,7 +137,7 @@
     jobs:
     - CMFireteamLeader
     sections:
-    - name: Standard Equipment
+    - name: Стандартное снаряжение
       takeAll: CMStandard
       entries:
       - id: CMVendorBundleRiflemanApparel
@@ -145,7 +145,7 @@
       - id: CMMRE
       #- id: CMMap # TODO: Make a map
     #- id: CMEssentialFireteamLeaderUtilities
-    - name: Belt
+    - name: Пояс
       choices: { CMBelt: 1 }
       entries:
     #- id: CMG8AGeneralUtilityPouch
@@ -157,18 +157,18 @@
     #- id: CMM276ShotgunShellLoadingRig
       - id: CMBeltUtilityFilled
     #- id: CMM276M40GrenadeRig
-    - name: Pouches
+    - name: Подсумки
       choices: { CMPouch: 2 }
       entries:
       - id: CMPouchFirstAidInjectors
-        name: first-aid pouch (refillable injectors)
+        name: подсумок первой помощи (многоразовые инъекторы)
       - id: CMPouchFirstAidSplintsGauzeOintment
-        name: first-aid pouch (gauze, ointment) # TODO RMC14 splints comma
+        name: подсумок первой помощи (марля, мазь) # TODO RMC14 splints comma
       - id: CMPouchFirstAidPills
-        name: first-aid pouch (pills)
+        name: подсумок первой помощи (таблетки)
       - id: CMPouchFirstResponder
       - id: CMPouchFlareFilled
-        name: Flare pouch (Filled)
+        name: подсумок фаеров (заполненный)
       #- id: CMFuelTankStrapPouch
       - id: CMPouchGeneralLarge
       #- id: CMSlingPouch
@@ -177,7 +177,7 @@
       - id: CMPouchShotgun
       - id: CMPouchPistol
       #- id: CMToolsPouchFull
-    - name: Accessories
+    - name: Аксессуары
       choices: { CMAccessories: 1 }
       entries:
       - id: CMWebbingBrown
@@ -185,7 +185,8 @@
       #- id: CMShoulderHolster
       - id: CMWebbing
     #- id: CMDropPouch
-    - name: Mask
+    - name: Маски
+      choices: { CMMask: 1 }
       entries:
       - id: CMMaskGas
       - id: CMMaskCoif

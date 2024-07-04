@@ -15,15 +15,16 @@
     jobs:
     - CMSmartGunOperator
     sections:
-    - name: Smart Gun Set (Mandatory)
-      entries: [ ]
-    #- id: CMEssentialSmartGunOperatorSet
-    #  points: 0
-    - name: Smart Gun Ammunition
-      entries: [ ]
-    #- id: CMM56SmartGunDrum
-    #  points: 15
-    - name: Gun Attachments
+    - name: Набор умного оружия (обязательно)
+      choices: { SquadLeaderKit: 1 }
+      entries:
+      - id: CMEssentialSmartGunOperatorSet
+        points: 0
+    - name: Боеприпасы для умного оружия
+      entries:
+      - id: CMM56SmartGunDrum
+        points: 15
+    - name: Навесное оборудование для оружия
       entries: [ ]
     #- id: CMLaserSight
     #  points: 0
@@ -31,7 +32,7 @@
     #  points: 0
     #- id: CMReflexSight
     #  points: 0
-    - name: Explosives
+    - name: Взрывчатка
       entries:
       - id: CMPacketGrenadeHighExplosiveFilled
         points: 30
@@ -51,7 +52,7 @@
     #  points: 20
     #- id: CMM20MineBox4
     #  points: 20
-    - name: Clothing Items
+    - name: Предметы одежды
       entries:
     #- id: CMScabbardMacheteFull
     #  points: 6
@@ -59,7 +60,7 @@
     #  points: 5
       - id: CMPouchGeneralLarge
         points: 6
-    - name: Utilities
+    - name: Утилиты
       entries:
       - id: CMFireExtinguisherPortable
         points: 5
@@ -69,7 +70,7 @@
         points: 5
     #- id: CMFultonDeviceStack
     #  points: 5
-    - name: Binoculars
+    - name: Бинокли
       entries: [ ]
     #- id: CMBinoculars
     #  points: 5
@@ -77,19 +78,19 @@
     #  points: 10
     #- id: CMLaserDesignator
     #  points: 15
-    - name: Helmet Optics
+    - name: Оптика шлема
       entries: [ ]
     #- id: CMMedicalHelmetOptic
     #  points: 15
     #- id: CMWeldingVisor
     #  points: 5
-    - name: Pamphlets
+    - name: Памфлеты
       entries: [ ]
     #- id: CMPamphletJTAC
     #  points: 15
     #- id: CMPamphletEngineering
     #  points: 15
-    - name: Radio Keys
+    - name: Радиоключи
       entries:
       - id: CMEncryptionKeyEngineer
         amount: 5
@@ -119,28 +120,29 @@
     jobs:
     - CMSmartGunOperator
     sections:
-    - name: Standard Equipment
+    - name: Стандартное снаряжение
       takeAll: CMStandard
       entries:
       - id: CMVendorBundleRiflemanApparel # TODO any RMC14 smart gun operator specific items?
       - id: CMMRE
       #- id: CMMap # TODO: Make a map
-    - name: Belt
-      entries: [ ]
-    #- id: CMM802SmartGunOperatorSidearmBelt
-    #- id: CMM280SmartGunOperatorDrumBelt
-    - name: Pouches
+    - name: Пояс
+      choices: { CMBelt: 1 }
+      entries:
+      - id: CMBeltSmartGunOperatorFull
+      - id: CMBeltSmartGunOperatorAmmoFull
+    - name: Подсумки
       choices: { CMPouch: 2 }
       entries:
       - id: CMPouchFlareFilled
-        name: Flare pouch (Filled)
+        name: подсумок фаеров (заполненный)
       #- id: CMElectronicsPouch
       - id: CMPouchFirstAidInjectors
-        name: first-aid pouch (refillable injectors)
+        name: подсумок первой помощи (многоразовые инъекторы)
       - id: CMPouchFirstAidSplintsGauzeOintment
-        name: first-aid pouch (gauze, ointment) # TODO RMC14 splints comma
+        name: подсумок первой помощи (марля, мазь) # TODO RMC14 splints comma
       - id: CMPouchFirstAidPills
-        name: first-aid pouch (pills)
+        name: подсумок первой помощи (таблетки)
       - id: CMPouchMagazinePistolLarge
       - id: CMPouchMagazine
       - id: CMPouchShotgun
@@ -148,7 +150,7 @@
       - id: CMPouchPistol
       - id: CMPouchMacheteFilled
     #- id: CMSlingPouch
-    - name: Accessories
+    - name: Аксессуары
       choices: { CMAccessories: 1 }
       entries:
       - id: CMWebbingBrown
@@ -156,7 +158,8 @@
     #- id: CMShoulderHolster
       - id: CMWebbing
     #- id: CMDropPouch
-    - name: Mask
+    - name: Маски
+      choices: { CMMask: 1 }
       entries:
       - id: CMMaskGas
       - id: CMMaskCoif

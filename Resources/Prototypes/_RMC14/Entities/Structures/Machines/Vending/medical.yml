@@ -53,7 +53,7 @@
       - Bottle
   - type: CMAutomatedVendor # TODO RMC14 different ui style
     sections:
-    - name: Field supplies
+    - name: Полевые запасы
       entries:
       - id: CMBurnKit10
         amount: 6
@@ -65,7 +65,7 @@
         amount: 6
 #      - id: CMSplints10 # TODO RMC14
 #        amount: 6
-    - name: Autoinjectors
+    - name: Автоинжекторы
       entries:
       - id: CMBicaridineAutoInjector
         amount: 3
@@ -83,7 +83,7 @@
 #        amount: 3
       - id: CMTricordrazineAutoInjector
         amount: 3
-    - name: Liquid bottles
+    - name: Бутылки с жидкостью
       entries:
       - id: CMBottleBicaridine
         amount: 3
@@ -101,7 +101,7 @@
 #        amount: 3
 #      - id: CMBottleTramadol # TODO RMC14
 #        amount: 3
-    - name: Pill bottles
+    - name: Баночки таблеток
       entries:
       - id: CMPillCanisterBicaridine
         amount: 2
@@ -117,7 +117,7 @@
 #        amount: 2
 #      - id: CMPillCanisterTramadol # TODO RMC14
 #        amount: 2
-    - name: Medical utilities
+    - name: Медицинские утилиты
       entries:
       - id: CMDefibrillator
         amount: 3
@@ -160,7 +160,7 @@
       - Bottle
   - type: CMAutomatedVendor # TODO RMC14 different ui style
     sections:
-    - name: Liquid bottles
+    - name: Бутылки с жидкостью
       entries:
       - id: CMBottleBicaridine
         amount: 6
@@ -178,13 +178,13 @@
     #        amount: 6
     #      - id: CMBottleTramadol # TODO RMC14
     #        amount: 6
-    - name: Miscellaneous
+    - name: Разное
       entries:
       - id: CMBeaker
-        name: Beaker (60 units)
+        name: Мензурка (60 ед.)
         amount: 3
       - id: CMBeakerLarge
-        name: Beaker, Large (120 units)
+        name: Мензурка, большая (120 ед.)
         amount: 3
       - id: CMBoxPillCanister
         amount: 2
@@ -235,11 +235,11 @@
 #      entries: [ ]
     #- id: CMFirstAidInjector
     #- id: CMPainStopAutoinjector
-    - name: Devices
+    - name: Устройства
       entries:
       - id: CMHealthAnalyzer
         amount: 3
-    - name: Field Supplies
+    - name: Полевые запасы
       entries:
       - id: CMFireExtinguisher # TODO RMC14 portable
         amount: 5
@@ -275,12 +275,12 @@
     - [ "CMAccessMedical" ]
   - type: CMAutomatedVendor
     sections:
-    - name: Blood Packs
+    - name: Пакеты с кровью
       entries:
       - id: CMBloodPackFull
         amount: 30
-    - name: Miscellaneous
+    - name: Разное
       entries:
       - id: CMBloodPack
         amount: 5
-        name: empty blood pack
+        name: пустой пакет крови
