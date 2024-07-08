@@ -1,4 +1,10 @@
 - type: entity
+  id: RMCASRSAccount
+  name: ASRS account
+  components:
+  - type: RequisitionsAccount
+
+- type: entity
   parent: [ BaseStructure, CMCargoCatalog ]
   id: CMASRSConsole
   name: ASRS console

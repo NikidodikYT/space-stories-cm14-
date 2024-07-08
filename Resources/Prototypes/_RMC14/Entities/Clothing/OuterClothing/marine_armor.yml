@@ -70,6 +70,7 @@
       - Sidearm
       - Knife
       - Flashlight
+      - MRE
   - type: ContainerContainer
     containers:
       storagebase: !type:Container
@@ -90,12 +91,13 @@
       - CMMagazineSmg
       - CMMagazineSniper
       - CMMagazinePistol
-  - type: Armor
-    modifiers:
-      coefficients:
-        Caustic: 0.6
+      - MRE
   - type: RMCNameItemOnVend
     item: Armor
+  - type: RMCBulkyArmor
+  - type: ExplosionResistance
+    damageCoefficient: 0
+    worn: false
 
 - type: entity
   parent: CMArmorM3Medium
@@ -255,6 +257,8 @@
   - type: Storage
     grid:
     - 0,0,1,1 # 2 slots
+  - type: RMCBulkyArmor
+    isBulky: false
 
 - type: entity
   parent: CMArmorM3VLBallistics
@@ -367,7 +371,7 @@
       - Gun
       - BallisticAmmoProvider
       - Stunbaton
-      - # TODO RMC14 motion detector, walkman
+#      - # TODO RMC14 motion detector, walkman
       tags:
       - Handcuffs
       - Grenade
