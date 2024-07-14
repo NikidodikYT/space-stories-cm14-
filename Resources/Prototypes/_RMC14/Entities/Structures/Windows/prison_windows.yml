@@ -9,7 +9,7 @@
     sprite: _RMC14/Structures/Windows/Frames/prison_frame.rsi
     state: prison_frame0
   - type: IconSmooth
-    key: walls
+    key: window
     base: prison_frame
     mode: CardinalFlags
 
@@ -26,7 +26,7 @@
     sprite: _RMC14/Structures/Windows/prison_window.rsi
     state: prison_window0
   - type: IconSmooth
-    key: walls
+    key: window
     base: prison_window
     mode: CardinalFlags
   # TODO RMC14 40 hp
@@ -42,7 +42,7 @@
     sprite: _RMC14/Structures/Windows/prison_cellwindow.rsi
     state: prison_cellwindow0
   - type: IconSmooth
-    key: walls
+    key: window
     base: prison_cellwindow
     mode: CardinalFlags
   # TODO RMC14 40 hp
@@ -60,7 +60,7 @@
     sprite: _RMC14/Structures/Windows/prison_rwindow.rsi
     state: prison_rwindow0
   - type: IconSmooth
-    key: walls
+    key: window
     base: prison_rwindow
     mode: CardinalFlags
   # TODO RMC14 100 hp
@@ -70,4 +70,7 @@
   id: RMCWindowPrisonHull
   name: hull window
   description: A glass window with a special rod matrix inside a wall frame. This one has an automatic shutter system to prevent any atmospheric breach.
+  components:
+  - type: Corrodible
+    isCorrodible: false
   # TODO RMC14 200 hp, but then it spawns indestructible shutters apparently idk
