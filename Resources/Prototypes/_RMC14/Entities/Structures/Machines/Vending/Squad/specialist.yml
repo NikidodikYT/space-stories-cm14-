@@ -171,6 +171,8 @@
         points: 5
     #- id: CMFultonDeviceStack
     #- id: CMMotionDetector
+      - id: RMCWhistle
+        points: 5
     - name: Оптика шлема
       entries: [ ]
     #- id: CMMedicalHelmetOptic

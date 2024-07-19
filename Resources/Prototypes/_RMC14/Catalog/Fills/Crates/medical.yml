@@ -5,7 +5,7 @@
   components:
   - type: StorageFill
     contents:
-      - id: CMSurgeryTrayFull
+      - id: RMCSurgicalTray
       - id: CMMaskGasMedical
       - id: CMScrubsGreen
       - id: CMBoxSterileMask

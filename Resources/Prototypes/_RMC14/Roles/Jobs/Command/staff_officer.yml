@@ -46,7 +46,7 @@
     shoes: CMShoesLaceup
     head: CMHeadCap
     id: CMIDCardStaffOfficer
-    ears: CMHeadsetLeader
+    ears: RMCHeadsetMarineCommand
 
 - type: entity
   parent: CMSpawnPointJobBase
