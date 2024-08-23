@@ -34,7 +34,6 @@ public sealed partial class VoiceMaskNameChangeWindow : FancyWindow
             OnVerbChange?.Invoke((string?) args.Button.GetItemMetadata(args.Id));
             SpeechVerbSelector.SelectId(args.Id);
         };
-		ReloadVoices(proto); // Stories-TTS
 
         AddVerbs();
     }
