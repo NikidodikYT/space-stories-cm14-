@@ -5,24 +5,6 @@
   components:
   - type: Loadout
     prototypes: [ RMCMobAghostGear ]
-  - type: Skills
-    cqc: 2
-    construction: 2
-    endurance: 2
-    engineer: 2
-    execution: 1
-    intel: 2
-    jtac: 4
-    leadership: 3
-    medical: 3
-    navigations: 1
-    overwatch: 1
-    police: 2
-    powerLoader: 2
-    smartGun: 1
-    surgery: 1
-    vehicles: 1
-  - type: BaseGunWhitelist
 
 - type: startingGear
   parent: MobAghostGear

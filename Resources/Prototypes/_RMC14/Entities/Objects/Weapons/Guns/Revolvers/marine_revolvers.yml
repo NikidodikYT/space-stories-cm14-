@@ -52,10 +52,6 @@
     item: Sidearm
   - type: GunUnskilledPenalty
     angleIncrease: 5
-  - type: GunUserWhitelist
-    whitelist:
-      components:
-      - BaseGunWhitelist
 
 - type: entity
   parent: RMCWeaponRevolverBase

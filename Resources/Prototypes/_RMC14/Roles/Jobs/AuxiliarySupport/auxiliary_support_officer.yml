@@ -46,7 +46,6 @@
         RMCSkillSurgery: 1
         RMCSkillVehicles: 1
     - type: MarineOrders
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearASO

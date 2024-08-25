@@ -59,10 +59,6 @@
   - type: Appearance
   - type: RMCNameItemOnVend
     item: PrimaryGun
-  - type: GunUserWhitelist
-    whitelist:
-      components:
-      - BaseGunWhitelist
 
 - type: entity
   parent: CMBaseWeaponRifle

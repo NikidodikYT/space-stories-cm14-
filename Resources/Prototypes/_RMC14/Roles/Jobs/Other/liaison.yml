@@ -12,6 +12,7 @@
   icon: "CMJobIconLiaison"
   joinNotifyCrew: false
   supervisors: cm-job-supervisors-we-ya
+  whitelisted: true
   accessGroups:
   - MarineMain
   - RMCWeYa
@@ -24,7 +25,6 @@
         RMCSkillVehicles: 1
     - type: CMVendorUser
       points: 50
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearLiaison

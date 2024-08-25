@@ -23,7 +23,6 @@
         RMCSkillMedical: 3
         RMCSkillSurgery: 2
     - type: RMCUserBulkyArmorIncapable
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearDoctor

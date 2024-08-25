@@ -6,12 +6,12 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 40
+        Piercing: 20
         Heat: 10
   - type: CMArmorPiercing
     amount: 20
   - type: IgniteOnCollide
-    fireStacks: 5
+    fireStacks: 1
 
 - type: entity
   parent: BaseBullet
@@ -21,10 +21,10 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 40
+        Piercing: 25
   - type: CMArmorPiercing
     amount: 0
   - type: XenoSlowingSpitProjectile
     slow: 0
     slowMultiplier: 1
-    paralyze: 0.4
+    paralyze: 0.5

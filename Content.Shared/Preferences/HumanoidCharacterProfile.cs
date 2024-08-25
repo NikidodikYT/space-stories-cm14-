@@ -600,7 +600,7 @@ namespace Content.Shared.Preferences
             var prefsUnavailableMode = PreferenceUnavailable switch
             {
                 PreferenceUnavailableMode.StayInLobby => PreferenceUnavailableMode.StayInLobby,
-                PreferenceUnavailableMode.SpawnAsOverflow => PreferenceUnavailableMode.SpawnAsOverflow,
+                PreferenceUnavailableMode.SpawnAsOverflow => PreferenceUnavailableMode.StayInLobby,
                 _ => PreferenceUnavailableMode.StayInLobby // Invalid enum values.
             };
 

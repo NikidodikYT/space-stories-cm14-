@@ -31,7 +31,6 @@
         RMCSkillPolice: 1
         RMCSkillPowerLoader: 2
     - type: MarineOrders
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearQuartermaster

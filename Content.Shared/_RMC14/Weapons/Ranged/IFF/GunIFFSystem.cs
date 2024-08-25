@@ -1,4 +1,5 @@
 ﻿using Content.Shared._RMC14.Attachable.Systems;
+using Content.Shared._Stories.AntiGrief.Cadet;
 using Content.Shared.Hands.Components;
 using Content.Shared.Inventory;
 using Content.Shared.NPC.Components;
@@ -111,6 +112,10 @@ public sealed class GunIFFSystem : EntitySystem
         else if (_container.TryGetContainingContainer((gun, null), out var container))
         {
             owner = container.Owner;
+            // Storise-AnitGrief-Start
+            if (HasComp<CadetComponent>(owner))
+                enabled = true;
+            // Storise-AnitGrief-End
         }
         else
         {

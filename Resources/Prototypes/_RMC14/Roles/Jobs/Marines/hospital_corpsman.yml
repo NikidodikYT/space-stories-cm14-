@@ -31,7 +31,6 @@
     - type: CMVendorUser
       points: 45
     - type: SquadArmorWearer
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearHospitalCorpsman

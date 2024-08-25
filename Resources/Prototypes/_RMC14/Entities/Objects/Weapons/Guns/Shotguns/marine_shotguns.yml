@@ -115,10 +115,6 @@
       rmc-aslot-rail: -0.025, 0.125
       rmc-aslot-stock: -0.375, -0.029
       rmc-aslot-underbarrel: 0.25, -0.31
-  - type: GunUserWhitelist
-    whitelist:
-      components:
-      - BaseGunWhitelist
 
 - type: Tag
   id: RMCWeaponShotgun

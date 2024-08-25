@@ -25,7 +25,6 @@
         RMCSkillFirearms: 1
         RMCSkillFireman: 2
         RMCSkillPolice: 2
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearMilitaryPolice

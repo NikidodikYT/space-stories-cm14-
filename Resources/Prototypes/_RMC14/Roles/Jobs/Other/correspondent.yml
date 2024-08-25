@@ -21,7 +21,6 @@
       skills:
         RMCSkillFirearms: 0
         RMCSkillVehicles: 1
-    - type: BaseGunWhitelist
   hasIcon: false
 
 - type: startingGear

@@ -32,10 +32,6 @@
     item: PrimaryGun
   - type: GunUnskilledPenalty
     angleIncrease: 20
-  - type: GunUserWhitelist
-    whitelist:
-      components:
-      - BaseGunWhitelist
 
 - type: entity
   parent: CMBaseWeaponSMG

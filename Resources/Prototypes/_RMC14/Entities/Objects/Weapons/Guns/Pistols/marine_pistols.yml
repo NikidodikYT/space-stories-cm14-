@@ -80,10 +80,6 @@
           tags:
           - RMCAttachmentBurstFireAssembly
           - RMCAttachmentLaserSight
-  - type: GunUserWhitelist
-    whitelist:
-      components:
-      - BaseGunWhitelist
 
 - type: entity
   parent: CMWeaponPistolBase

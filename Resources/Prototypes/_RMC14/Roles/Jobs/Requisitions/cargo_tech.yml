@@ -22,7 +22,6 @@
         RMCSkillConstruction: 1
         RMCSkillFirearms: 1
         RMCSkillPowerLoader: 2
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearCargoTech

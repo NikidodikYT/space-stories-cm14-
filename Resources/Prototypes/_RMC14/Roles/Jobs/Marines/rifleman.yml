@@ -23,7 +23,6 @@
     - type: CMVendorUser
       points: 45
     - type: SquadArmorWearer
-    - type: BaseGunWhitelist
   hasIcon: false
 
 - type: startingGear

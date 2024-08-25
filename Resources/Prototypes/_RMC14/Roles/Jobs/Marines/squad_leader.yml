@@ -7,7 +7,7 @@
   requirements:
   - !type:DepartmentTimeRequirement
     department: CMSquad
-    time: 36000 # 10 hours
+    time: 72000 # 20 hours
   startingGear: CMGearSquadLeader
   icon: "CMJobIconSquadLeader"
   joinNotifyCrew: false
@@ -39,7 +39,6 @@
     - type: SquadArmorWearer
       leader: true
     - type: SquadLeader
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearSquadLeader

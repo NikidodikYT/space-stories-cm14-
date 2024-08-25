@@ -25,7 +25,7 @@
         RMCSkillResearch: 1
         RMCSkillSurgery: 2
     - type: RMCUserBulkyArmorIncapable
-    - type: BaseGunWhitelist
+  hidden: true # TODO RMC14
 
 - type: startingGear
   id: CMGearResearcher

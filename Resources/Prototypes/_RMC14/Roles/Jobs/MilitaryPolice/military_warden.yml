@@ -31,7 +31,6 @@
         RMCSkillOverwatch: 1
         RMCSkillPolice: 2
     - type: MarineOrders
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearMilitaryWarden

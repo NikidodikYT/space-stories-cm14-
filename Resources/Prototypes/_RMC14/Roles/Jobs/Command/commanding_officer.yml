@@ -4,25 +4,25 @@
   name: cm-job-name-commanding-officer
   description: cm-job-description-commanding-officer
   playTimeTracker: CMJobCommandingOfficer
-  # requirements:
-  # - !type:DepartmentTimeRequirement
-  #   department: CMSquad
-  #   time: 54000 # 15 hours
-  # - !type:TotalJobsTimeRequirement
-  #   group: CMJobsEngineering
-  #   time: 36000 # 10 hours
-  # - !type:DepartmentTimeRequirement
-  #   department: CMMilitaryPolice
-  #   time: 36000 # 10 hours
-  # - !type:TotalJobsTimeRequirement
-  #   group: CMJobsMedical
-  #   time: 36000 # 10 hours
-  # - !type:DepartmentTimeRequirement
-  #   department: CMCommand
-  #   time: 18000 # 5 hours
-  # - !type:RoleTimeRequirement
-  #   role: CMJobExecutiveOfficer
-  #   time: 36000 #10 hrs
+  requirements:
+  - !type:DepartmentTimeRequirement
+    department: CMSquad
+    time: 54000 # 15 hours
+  - !type:TotalJobsTimeRequirement
+    group: CMJobsEngineering
+    time: 36000 # 10 hours
+  - !type:DepartmentTimeRequirement
+    department: CMMilitaryPolice
+    time: 36000 # 10 hours
+  - !type:TotalJobsTimeRequirement
+    group: CMJobsMedical
+    time: 36000 # 10 hours
+  - !type:DepartmentTimeRequirement
+    department: CMCommand
+    time: 36000 # 10 hours
+  - !type:RoleTimeRequirement
+    role: CMJobExecutiveOfficer
+    time: 36000 #10 hrs
   weight: 10
   startingGear: CMGearCommandingOfficer
   icon: "CMJobIconCommandingOfficer"
@@ -58,7 +58,6 @@
     - type: MarineOrders
     - type: CMVendorUser
       points: 120
-    - type: BaseGunWhitelist
 
 - type: startingGear
   id: CMGearCommandingOfficer
@@ -70,7 +69,6 @@
     outerClothing: CMCoatOfficer
     id: CMIDCardCommandingOfficer
     ears: CMHeadsetSeniorCommand
-    pocket1: RMCTabletCO
 
 - type: entity
   parent: CMSpawnPointJobBase

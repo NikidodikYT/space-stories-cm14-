@@ -28,7 +28,6 @@
         RMCSkillConstruction: 1
         RMCSkillEndurance: 2
         RMCSkillFirearms: 1
-    - type: BaseGunWhitelist
   hasIcon: false
   hidden: true # TODO RMC14
 

@@ -3,6 +3,7 @@ using Content.Shared._RMC14.NightVision;
 using Content.Shared._RMC14.Stealth;
 using Content.Shared._RMC14.Weapons.Ranged.IFF;
 using Content.Shared._RMC14.Xenonids.Projectile;
+using Content.Shared._Stories.AntiGrief.Cadet;
 using Content.Shared.Actions;
 using Content.Shared.Explosion.Components.OnTrigger;
 using Content.Shared.Humanoid;
@@ -205,6 +206,16 @@ public sealed class ThermalCloakSystem : EntitySystem
 
     private void OnTimerUse(Entity<ExplodeOnTriggerComponent> ent, ref UseInHandEvent args)
     {
+        // Stories-AntiGrief-Start
+        if (HasComp<CadetComponent>(args.User))
+        {
+            args.Handled = true;
+
+            var popup = Loc.GetString("Вы не можете использовать гранаты в роле кадета");
+            _popup.PopupClient(popup, args.User, args.User, PopupType.SmallCaution);
+        }
+        // Stories-AntiGrief-End
+
         if (args.Handled || !TryComp<EntityTurnInvisibleComponent>(args.User, out var comp))
             return;
 
