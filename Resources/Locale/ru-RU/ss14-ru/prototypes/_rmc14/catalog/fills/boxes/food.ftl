@@ -1,2 +1,2 @@
-ent-CMBoxIngredients = коробка с ингредиентами
+ent-RMCBoxIngredients = коробка с ингредиентами
     .desc = В этой коробке содержатся ингредиенты.

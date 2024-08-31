@@ -12,3 +12,6 @@ ent-CMBaseWall = { ent-BaseStructure }
     .desc = { ent-BaseStructure.desc }
 ent-CMBaseWallXeno = { ent-BaseStructure }
     .desc = { ent-BaseStructure.desc }
+ent-RMCWallInvisibleBulletPassible = блокиратор стены
+    .suffix = Пассивный снаряд
+    .desc = { "" }

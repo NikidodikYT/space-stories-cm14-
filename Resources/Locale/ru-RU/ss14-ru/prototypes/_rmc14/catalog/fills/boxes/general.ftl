@@ -1,2 +1,2 @@
-ent-CMBoxCardboard = картонная коробка
+ent-RMCBoxCardboard = картонная коробка
     .desc = Картонная коробка для хранения вещей.

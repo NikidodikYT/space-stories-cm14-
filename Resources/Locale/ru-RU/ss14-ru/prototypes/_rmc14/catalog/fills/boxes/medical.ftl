@@ -1,10 +1,10 @@
-ent-CMBoxSterileMask = коробка стерильных масок
+ent-RMCBoxSterileMask = коробка стерильных масок
     .desc = В этой коробке находятся стерильные медицинские маски.
-ent-CMBoxLatexGloves = коробка латексных перчаткок
+ent-RMCBoxLatexGloves = коробка латексных перчаткок
     .desc = Содержит стерильные латексные перчатки.
-ent-CMBoxBodyBag = коробка мешков для тела
+ent-RMCBoxBodyBag = коробка мешков для тела
     .desc = Содержит мешки для трупов.
-ent-CMBoxPillCanister = коробка таблетниц
+ent-RMCBoxPillCanister = коробка таблетниц
     .desc = На лицевой стороне коробки изображены бутылочки с таблетками.
-ent-CMBoxSyringe = коробка шприцов
+ent-RMCBoxSyringe = коробка шприцов
     .desc = На коробке напечатано предупреждение о биологической опасности.

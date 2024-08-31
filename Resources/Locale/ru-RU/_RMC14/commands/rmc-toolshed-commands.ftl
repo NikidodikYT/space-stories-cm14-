@@ -1,6 +1,9 @@
-command-description-bioscan-marine = Manually triggers an ARES bioscan to announce to marines where xenos are and how many are left.
-command-description-bioscan-xeno = Manually triggers a Queen Mother bioscan to announce to xenos where marines are and how many are left.
-command-description-bioscan-all = Manually triggers an ARES and Queen Mother bioscans to announce to both xenos and marines where each other are and how many are left.
+command-description-areas-load = Загрузите все сохраненные области на карту в виде сущностей.
+command-description-areas-loadmortar = Загрузите на карту в виде сущностей только сохраненные области с мортирами.
+command-description-areas-save = Сохраните все отображенные области на карте.
+command-description-bioscan-marine = Вручную запускает биосканер ARES, чтобы сообщить пехотинцам, где находятся ксеносы и сколько их осталось.
+command-description-bioscan-xeno = Вручную запускает биосканер королевы-матери, чтобы сообщить ксеносам, где находятся морпехи и сколько их осталось.
+command-description-bioscan-all = Вручную запускает биосканеры ARES и королевы-матери, чтобы сообщить ксеносам и морпехам, где они находятся и сколько их осталось.
 command-description-vendorpoints-get = Получает очки, которые у морского пехотинца остались для покупки предметов у автоматического продавца.
 command-description-vendorpoints-getspecialist = Получает очки, оставшиеся у специалиста по оружию для покупки предметов на стойке снаряжения.
 command-description-vendorpoints-set = Устанавливает количество очков, за которые морпех или группа морпехов могут приобрести предметы у автоматического торговца.

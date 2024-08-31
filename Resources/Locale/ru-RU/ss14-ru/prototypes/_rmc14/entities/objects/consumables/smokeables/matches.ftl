@@ -1,2 +1,2 @@
-ent-CMMatchbox = спичечный коробок
-    .desc = { ent-Matchbox.desc }
+ent-RMCMatchbox = спичечный коробок
+    .desc = спичечный коробок

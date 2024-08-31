@@ -21,7 +21,7 @@ department-CMAuxiliarySupport = Вспомогательная боевая по
 cm-department-AuxiliarySupport-description = Задача вспомогательного персонала - оказывать поддержку морским пехотинцам, используя огневую мощь или другие средства.
 # other
 department-CMOther = Другие
-cm-department-Other-Description = ""
+cm-department-Other-description = ""
 # survivor
 department-CMSurvivor = Выжившиие
 cm-department-Survivor-description = Выживайте по возможности в одиночку или с другими выжившими.

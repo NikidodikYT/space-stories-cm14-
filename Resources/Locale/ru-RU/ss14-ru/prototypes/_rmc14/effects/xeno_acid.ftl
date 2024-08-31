@@ -4,3 +4,7 @@ ent-XenoAcidWeak = слабая кислота
     .desc = { ent-XenoAcidNormal.desc }
 ent-XenoAcidStrong = сильная кислота
     .desc = { ent-XenoAcidNormal.desc }
+ent-XenoAcidSprayWeak = слабые брызги
+    .desc = Он горит! Горит, но не так сильно!
+ent-XenoAcidSprayStrong = сильные брызги
+    .desc = Горит! Горит!

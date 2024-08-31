@@ -16,3 +16,5 @@ ent-CMMagazineRifleM4SPRAP = магазин M4SPR ББ (10x24мм)
     .suffix = ББ
 ent-CMMagazineRifleM4SPRExt = магазин M4SPR расширенный (10x24мм)
     .desc = { ent-CMMagazineRifleM4SPR.desc }
+ent-RMCMagazineRifleM4SPRA19 = магазин M4SPR A19 (высокоскоростной)
+    .desc = Магазин с высокоскоростными патронами A19 для боевой винтовки M4SPR.

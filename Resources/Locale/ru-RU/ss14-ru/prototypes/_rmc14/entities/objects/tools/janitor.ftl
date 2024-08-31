@@ -9,3 +9,5 @@ ent-CMLightReplacer = устройство для замены лампочек
 ent-CMLightReplacerEmpty = { ent-CMLightReplacer }
     .suffix = Пустой
     .desc = { ent-CMLightReplacer.desc }
+ent-RMCSprayBottleSpaceCleaner = { ent-SprayBottleSpaceCleaner }
+    .desc = { ent-SprayBottleSpaceCleaner.desc }

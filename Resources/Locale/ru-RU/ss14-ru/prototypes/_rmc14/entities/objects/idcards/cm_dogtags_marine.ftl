@@ -1,3 +1,5 @@
+ent-CMDogtagCadet = жетон кадета
+    .desc = { ent-CMIDCardStandardDogtag.desc }
 ent-CMDogtagRifleman = жетон стрелка
     .desc = { ent-CMIDCardStandardDogtag.desc }
 ent-CMDogtagCombatTech = жетон боевого техника

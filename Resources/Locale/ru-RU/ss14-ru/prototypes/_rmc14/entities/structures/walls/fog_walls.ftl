@@ -1,6 +1,9 @@
-ent-CMFogWall = густой туман
-    .desc = Это выглядит слишком опасным для прохождения. Лучше подождать, пока он рассеется.
+ent-RMCFogWallPermanent = густой туман
+    .desc = Он выглядит слишком опасным для прохождения.
+    .suffix = Бесконечный
+ent-RMCFogWall25 = { ent-RMCFogWallPermanent }
+    .desc = Он выглядит слишком опасным для прохождения. Лучше подождать, пока не прояснится.
     .suffix = 25 минут
-ent-CMFogWallShort = { ent-CMFogWall }
+ent-RMCFogWall15 = { ent-RMCFogWall25 }
     .suffix = 15 минут
-    .desc = { ent-CMFogWall.desc }
+    .desc = { ent-RMCFogWall25.desc }

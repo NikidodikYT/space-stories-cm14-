@@ -1,5 +1,5 @@
 ent-CMHeadBeret = берет
-    .desc = Does not protect a head from bullet.
+    .desc = Не защищает голову от пули.
 ent-CMHeadBeretRed = берет ВП
     .desc = { ent-CMHeadBeret.desc }
 ent-CMHeadBeretTan = коричневый берет
@@ -9,6 +9,9 @@ ent-CMHeadBeretWO = берет ГВП
 ent-CMHeadBeretCO = берет командира
     .desc = { ent-CMHeadBeret.desc }
 ent-CMHeadBeretCOBlack = берет командира
+    .desc = { ent-CMHeadBeret.desc }
+ent-RMCHeadBeretGreen = Берет КМП США
+    .suffix = Зелёный
     .desc = { ent-CMHeadBeret.desc }
 ent-CMHeadCapMP = кепка ВП
     .desc = Кепка, который носят более непринужденные представители военной полиции USCM.
