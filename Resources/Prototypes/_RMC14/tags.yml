@@ -20,12 +20,6 @@
   id: RMCCartridgePistol45ACP
 
 - type: Tag
-  id: CMCartridgeRifle10x25mm
-
-- type: Tag
-  id: CMMortarShell
-
-- type: Tag
   id: CMBloodPack
 
 - type: Tag
