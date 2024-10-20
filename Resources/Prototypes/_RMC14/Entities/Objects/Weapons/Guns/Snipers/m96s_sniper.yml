@@ -254,8 +254,8 @@
   - type: CMArmorPiercing
     amount: 0
   - type: XenoSlowingSpitProjectile
-    slow: 5
-    slowMultiplier: 0.25
+    slow: 3
+    slowMultiplier: 0.75
     paralyze: 0
 
 - type: entity
