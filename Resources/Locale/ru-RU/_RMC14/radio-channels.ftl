@@ -1,5 +1,5 @@
 chat-radio-marine-highcommand = Высшее командование КСМ США
-chat-radio-marine-common = Общий
+chat-radio-marine-common = Алмайер
 chat-radio-marine-command = Командование
 chat-radio-marine-medical = Медицина
 chat-radio-marine-engineer = Инженерное
@@ -14,5 +14,5 @@ chat-radio-marine-delta = Дельта
 chat-radio-marine-echo = Эхо
 chat-radio-marine-foxtrot = Фокстрот
 chat-radio-colony = Колония
-chat-radio-WY = Weyland-Yutani
+chat-radio-WY = Вестон-Яманда
 chat-radio-hivemind = Улей
