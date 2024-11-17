@@ -735,7 +735,6 @@ public sealed class CMDistressSignalRuleSystem : GameRuleSystem<CMDistressSignal
             {
                 distress.Hijack = true;
                 distress.AbandonedAt ??= time + distress.AbandonedDelay;
-                _hive.SetSeeThroughContainers(distress.Hive, true);
             }
 
             _almayerMaps.Clear();
@@ -775,6 +774,9 @@ public sealed class CMDistressSignalRuleSystem : GameRuleSystem<CMDistressSignal
                 {
                     continue;
                 }
+
+                if (_containers.IsEntityInContainer(marineId))
+                    continue;
 
                 if (_mobState.IsAlive(marineId, mobState) &&
                     (distress.AbandonedAt == null ||
