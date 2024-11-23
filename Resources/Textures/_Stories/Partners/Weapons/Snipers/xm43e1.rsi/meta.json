@@ -8,13 +8,10 @@
   },
   "states": [
     {
-      "name": "base"
+      "name": "icon"
     },
     {
       "name": "bolt-open"
-    },
-    {
-      "name": "mag-0"
     },
     {
       "name": "inhand-left",
@@ -39,6 +36,12 @@
     {
       "name": "equipped-BACKPACK",
       "directions": 4
+    },
+    {
+      "name": "mag-0"
+    },
+    {
+      "name": "base"
     }
   ]
 }

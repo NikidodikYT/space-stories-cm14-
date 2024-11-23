@@ -5,16 +5,19 @@
   description: "An experimental anti-materiel rifle produced by Armat Systems, recently reacquired from the deep storage of an abandoned prototyping facility. This one in particular is currently undergoing field testing. Chambered in 10x99mm Caseless."
   components:
   - type: Sprite
-    sprite: _RMC14/Objects/Weapons/Guns/Snipers/xm43e1.rsi
+    sprite: _Stories/Objects/Weapons/Guns/Snipers/xm43e1.rsi
     layers:
     - state: base
       map: [ "enum.GunVisualLayers.Base" ]
     - state: mag-0
       map: [ "enum.GunVisualLayers.Mag" ]
+    - sprite: _RMC14/Objects/Weapons/Guns/Attachments/barrel.rsi
+      state: pmc_sniperbarrel
+      offset: 0.5, 0.0625
   - type: Item
     size: Large
   - type: Clothing
-    sprite: _RMC14/Objects/Weapons/Guns/Snipers/xm43e1.rsi
+    sprite: _Stories/Objects/Weapons/Guns/Snipers/xm43e1.rsi
   - type: MeleeWeapon
     damage:
       types:
@@ -58,6 +61,11 @@
   - type: Scope
     zoom: 1.25 # TODO RMC14 2x and 4x zoom
     requireWielding: true
+  - type: MagazineVisuals
+    magState: mag
+    steps: 1
+    zeroVisible: true
+  - type: Appearance
   - type: Construction
     graph: XM43E1SniperRifleConstruct
     node: start
@@ -87,7 +95,7 @@
     - state: mag-1
       map: ["enum.GunVisualLayers.Mag"]
     - state: band_e # TODO RMC14 band non e
-      color: "#000000"
+      color: "#FFFFFF"
 
 - type: entity
   parent: CMCartridgeSniper10x28mm

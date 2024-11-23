@@ -107,6 +107,8 @@
   id: CMMagazineSMGM63
   name: "M63 magazine (10x20mm)"
   components:
+  - type: Item
+    size: Normal
   - type: Tag
     tags:
     - CMMagazineSmg

@@ -167,7 +167,7 @@
 - type: radioChannel
   id: CMB
   name: chat-radio-CMB
-  keycode: "l"
+  keycode: "л"
   frequency: 1220
   color: "#1b748c"
   longRange: true

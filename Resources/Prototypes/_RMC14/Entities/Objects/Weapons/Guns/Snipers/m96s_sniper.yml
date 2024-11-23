@@ -84,6 +84,8 @@
   name: "M96S marksman magazine (10x28mm)"
   description: A magazine of sniper rifle ammo. An aimed shot with it will deal significant damage.
   components:
+  - type: Item
+    size: Normal
   - type: Tag
     tags:
     - CMMagazineSniper

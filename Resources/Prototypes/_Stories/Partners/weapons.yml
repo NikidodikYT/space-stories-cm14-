@@ -244,6 +244,9 @@
       map: [ "enum.GunVisualLayers.Base" ]
     - state: mag-0
       map: [ "enum.GunVisualLayers.Mag" ]
+    - sprite: _RMC14/Objects/Weapons/Guns/Attachments/barrel.rsi
+      state: pmc_sniperbarrel
+      offset: 0.5, 0.0625
   - type: Clothing
     sprite: _Stories/Partners/Weapons/Snipers/xm43e1.rsi
   - type: Construction
