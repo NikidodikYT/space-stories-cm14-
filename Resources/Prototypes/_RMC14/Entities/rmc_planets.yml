@@ -5,6 +5,7 @@
   - type: RMCPlanetMapPrototype
     map: /Maps/_RMC14/lv624.yml
     announcement: "Автоматический сигнал бедствия был получен с археологической колонии Лазарь Лэндинг на пограничном мире LV-624. В ближайшее время будет отправлена группа реагирования с корабля «Алмайер«."
+    camouflage: Jungle
 
 - type: entity
   id: RMCPlanetSolaris
@@ -13,6 +14,7 @@
   - type: RMCPlanetMapPrototype
     map: /Maps/_RMC14/solaris.yml
     announcement: "Вестон-Ямада потеряла связь с одним из своих биологических хранилищ, Солярис Ридж, на планете LV-1413. Вестон-Ямада обратилась к кораблю «Алмайер« с просьбой разобраться в проблеме."
+    camouflage: Desert
 
 - type: entity
   id: RMCPlanetShiva
@@ -21,6 +23,7 @@
   - type: RMCPlanetMapPrototype
     map: /Maps/_RMC14/shiva.yml
     announcement: "Автоматический сигнал бедствия был получен с археологического объекта «Снежный шар Шивы» на границе ледяного мира «Ифрит». В ближайшее время будет отправлена группа реагирования с корабля «Алмайер»."
+    camouflage: Snow
 
 - type: entity
   id: RMCPlanetFiorina
@@ -29,6 +32,7 @@
   - type: RMCPlanetMapPrototype
     map: /Maps/_RMC14/prison.yml
     announcement: "Получен автоматический сигнал бедствия из тюрьмы строгого режима Научный Филиал Фиорины  . В ближайшее время будет отправлена группа реагирования с корабля «Алмайер»."
+    camouflage: Classic
 
 - type: entity
   id: RMCPlanetTrijent
@@ -37,6 +41,7 @@
   - type: RMCPlanetMapPrototype
     map: /Maps/_RMC14/trijent.yml
     announcement: "Мы потеряли связь с внесолнечной колонией Вестон-Ямада, «Дамба Триджент», на планете «Райджин». На помощь отправлен корабль «Алмайер»."
+    camouflage: Desert
 
 - type: entity
   id: RMCPlanetVaradero
@@ -54,6 +59,8 @@
 
       Больше никакой информации на данный момент нет."
 
+    camouflage: Jungle
+
 - type: entity
   id: RMCPlanetKutjevo
   name: НПЗ Кутьево
@@ -61,6 +68,7 @@
   - type: RMCPlanetMapPrototype
     map: /Maps/_RMC14/kutjevo.yml
     announcement: "Автоматический сигнал бедствия был получен с колонии Вестон-Ямада, нефтеперерабатывающего завода Кутьево, известного своими ботаническими исследованиями, экспортом, переработкой и рафинированием сырья. Для расследования был отправлен корабль США «Алмайер»."
+    camouflage: Desert
 
 - type: entity
   id: RMCPlanetChances
@@ -69,3 +77,4 @@
   - type: RMCPlanetMapPrototype
     map: /Maps/_RMC14/chances.yml
     announcement: "Пан-Пан. С вами говорит командир корабля «Ханьют», КМП США ФОРЕКОН. В настоящее время мы находимся на планете LV-522 в непосредственной близости от Претензия Шанса. Мы не можем связаться с «Ханьютом», а наши корабли не могут взлететь в данный момент. Мы просим помощи у всех близлежащих кораблей; это сообщение будет повторяться каждые 24 часа."
+    camouflage: Classic

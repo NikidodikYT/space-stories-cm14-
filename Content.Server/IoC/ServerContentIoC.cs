@@ -1,5 +1,6 @@
 using Content.Server._RMC14.Discord;
 using Content.Server._RMC14.LinkAccount;
+using Content.Server._RMC14.Mentor;
 using Content.Server._RMC14.PlayTimeTracking;
 using Content.Server._Stories.DiscordAuth;
 using Content.Server._Stories.JoinQueue;
@@ -89,6 +90,7 @@ namespace Content.Server.IoC
             IoCManager.Register<LinkAccountManager>();
             IoCManager.Register<RMCPlayTimeManager>();
             IoCManager.Register<RMCDiscordManager>();
+            IoCManager.Register<MentorManager>();
         }
     }
 }

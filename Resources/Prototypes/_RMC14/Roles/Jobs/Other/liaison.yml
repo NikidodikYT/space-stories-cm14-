@@ -39,7 +39,6 @@
   id: CMGearLiaison
   equipment:
     jumpsuit: CMJumpsuitLiaisonBlack
-    back: CMSatchel
     shoes: RMCShoesLaceup
     id: CMIDCardLiaison
     ears: RMCHeadsetLiaison
