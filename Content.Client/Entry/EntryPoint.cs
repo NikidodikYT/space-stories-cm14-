@@ -128,7 +128,6 @@ namespace Content.Client.Entry
             _prototypeManager.RegisterIgnore("nukeopsRole");
             _prototypeManager.RegisterIgnore("ghostRoleRaffleDecider");
             _prototypeManager.RegisterIgnore("stationGoal"); // Stories-StationGoal
-            _prototypeManager.RegisterIgnore("loadout"); // Stories-Loadout
 
             _componentFactory.GenerateNetIds();
             _adminManager.Initialize();

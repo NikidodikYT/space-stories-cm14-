@@ -1,7 +1,7 @@
 {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "Created by Cephalopod222, The Phoenix skin was made by RustedTim(discord:Helloo4771) for SpaceStories Colonial Marines(Server SS14)",
+  "copyright": "Created by Cephalopod222, equipped-SUITSTORAGE taken and modified from cmss13 at https://github.com/cmss13-devs/cmss13/commit/07455a5f3986b610e7ccdc3096cad1d914fca2f9, Pheonix skin made by RustedTim(discord:Helloo4771) for SpaceStories CM(Server SS14)",
   "size": {
     "x": 32,
     "y": 32
@@ -17,23 +17,7 @@
       "name": "bolt-open"
     },
     {
-      "name": "inhand-left",
-      "directions": 4
-    },
-    {
       "name": "mag-0"
-    },
-    {
-      "name": "inhand-right",
-      "directions": 4
-    },
-    {
-      "name": "wielded-inhand-left",
-      "directions": 4
-    },
-    {
-      "name": "wielded-inhand-right",
-      "directions": 4
     },
     {
       "name": "equipped-BACKPACK",
@@ -45,6 +29,22 @@
     },
     {
       "name": "equipped-SUITSTORAGE",
+      "directions": 4
+    },
+    {
+      "name": "inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "wielded-inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "inhand-right",
+      "directions": 4
+    },
+    {
+      "name": "wielded-inhand-right",
       "directions": 4
     }
   ]
