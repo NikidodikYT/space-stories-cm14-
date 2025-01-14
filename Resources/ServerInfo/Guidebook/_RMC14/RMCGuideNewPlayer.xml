@@ -4,7 +4,11 @@
 
   Вы можете использовать клавишу осмотра (Shift + левая кнопка мыши по умолчанию), чтобы осмотреть любые сущности в руководстве.
 
-  Обязательно настройте сочетания клавиш так, как вам нравится, и ознакомьтесь со специфичными для Space Stories Colonial Marines сочетаниями клавиш! Игрокам CM13 это будет очень полезно.
+  ## Marine
+  - [textlink="Your first day as a rifleman!" link="CMGuideRoleRifleman"]
+  - [textlink="Communications towers and senor towers" link="RMCGuideCommunicationsTowers"]
+  - [textlink="Combat Technician" link="RMCGuideRoleCombatTechnician"]
+  - [textlink="Maintenance Technician" link="RMCGuideRoleMaintenanceTechnician"]
 
   ## Морпех
   - [textlink="Ваш первый день в роли стрелка!" link="CMGuideRoleRifleman"]
