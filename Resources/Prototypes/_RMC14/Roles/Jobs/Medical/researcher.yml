@@ -65,10 +65,7 @@
   - type: SpawnPoint
     job_id: CMResearcher
   - type: Sprite
-    layers:
-    - sprite: Markers/jobs.rsi
-      state: green
-    - state: researcher
+    state: res_spawn
 
 - type: playTimeTracker
   id: CMJobResearcher
