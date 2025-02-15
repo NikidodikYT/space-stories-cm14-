@@ -12569,4 +12569,13 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 5.5216527,-0.41633797
       parent: 1
+- proto: WarpPoint
+  entities:
+  - uid: 1848
+    components:
+    - type: Transform
+      pos: 28.5,-15.5
+      parent: 1
+    - type: WarpPoint
+      location: '! Админ Факсы'
 ...
