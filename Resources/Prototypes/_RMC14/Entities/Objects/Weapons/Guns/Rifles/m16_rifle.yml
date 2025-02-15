@@ -159,11 +159,11 @@
     - Cartridge
     - RMCCartridgeRifleM16
   - type: CartridgeAmmo
-    proto: BulletRifle556x45mm # Stories-Fixes
+    proto: BulletRifle556x45mm
 
 - type: entity
   parent: BulletRifle10x24mm
-  id: BulletRifle556x45mm # Stories-Fixes
+  id: BulletRifle556x45mm
   components:
   - type: Projectile
     damage:
