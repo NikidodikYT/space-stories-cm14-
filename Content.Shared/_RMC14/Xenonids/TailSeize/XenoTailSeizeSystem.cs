@@ -89,7 +89,8 @@ public sealed class XenoTailSeizeSystem : EntitySystem
         if (!_actionBlocker.CanAttack(xeno))
             return;
 
-        _projectile.TryShoot(xeno, args.Coords.Value, 0, xeno.Comp.Projectile, null, 1, Angle.Zero, xeno.Comp.Speed, target: args.Entity);
+        if (args.Coords != null && args.Coords.Value != null)
+            _projectile.TryShoot(xeno, args.Coords.Value, 0, xeno.Comp.Projectile, null, 1, Angle.Zero, xeno.Comp.Speed, target: args.Entity);
 
         if (TryComp(xeno, out MeleeWeaponComponent? melee))
         {

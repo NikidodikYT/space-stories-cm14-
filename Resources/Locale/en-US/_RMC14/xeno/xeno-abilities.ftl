@@ -290,17 +290,6 @@ rmc-xeno-soak-end-fail = We stop tanking incoming damage.
 rmc-xeno-soak-end-self = We feel enraged after taking in oncoming damage! Our tail slam's cooldown is reset and we heal!
 rmc-xeno-soak-end-others =  {CAPITALIZE(THE($xeno))} gets enraged after being damaged enough!
 
-# Abduct
-rmc-xeno-abduct-cancel = We relax our tail.
-rmc-xeno-abduct-no-room = We don't have any room to do our abduction!
-rmc-xeno-abduct-none = Our tail fails to catch anything!
-rmc-xeno-abduct-one = Our tail catches and slows one target!
-rmc-xeno-abduct-two = Our tail catches and roots two targets!
-rmc-xeno-abduct-more = Our tail catches and stuns {$targets} targets!
-
-# Tail Lash
-rmc-xeno-tail-lash-no-room = We don't have any room to do our tail lash!
-
 # Tail Fountain
 rmc-xeno-tail-fountain-self = We use our tail to pour acid over {$target}.
 rmc-xeno-tail-fountain-others = {CAPITALIZE(THE($user))} pours acid all over {$target} using its tail.
