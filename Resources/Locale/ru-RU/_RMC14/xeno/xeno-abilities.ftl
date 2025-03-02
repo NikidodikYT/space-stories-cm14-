@@ -20,6 +20,10 @@ cm-xeno-requires-more-plasma = { THE($construction) } требуется { $plas
 cm-xeno-construction-plasma-left = Здесь назначено сооружение { $construction }. Оно требует [color=cyan]{ $plasma }[/color] больше плазмы.
 cm-xeno-cant-reach-there = Вы не можете туда добраться!
 cm-xeno-cant-build-in-self = Вы не можете строить сооружения так близко!
+rmc-xeno-construction-unique-exists = Уже есть построенный { $choice }!
+rmc-xeno-construction-hive-limit-met = Мы достигли предела { $choice }, который может поддерживать улей!
+rmc-xeno-construction-requires-hive-weeds = { $choice } должен быть построен на сорняках улья!
+rmc-xeno-construction-requires-space = Нам нужно больше открытого пространства, чтобы строить здесь
 cm-xeno-unique-exists = Здесь уже построено { $choice }!
 rmc-xeno-cant-build-new-yet = Мы пока не можем создать новый { $choice }!
 # Evolve

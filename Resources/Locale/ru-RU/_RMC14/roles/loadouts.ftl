@@ -2,6 +2,7 @@ rmc-loadout-group-backpack = Рюкзак
 rmc-loadout-group-eyewear = Очки
 rmc-loadout-group-masks = Маски и шарфы
 rmc-loadout-group-headwear = Головные уборы
+rmc-loadout-group-helmet-garbs = Шлем Гарбса
 rmc-loadout-group-paperwork = Бумажная работа
 rmc-loadout-group-plushies = Плюши
 rmc-loadout-group-weapons = Оружие

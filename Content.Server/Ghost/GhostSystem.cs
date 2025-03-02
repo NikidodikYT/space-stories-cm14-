@@ -8,6 +8,7 @@ using Content.Server.Ghost.Components;
 using Content.Server.Mind;
 using Content.Server.Roles.Jobs;
 using Content.Server.Warps;
+using Content.Shared._RMC14.Ghost;
 using Content.Shared.Actions;
 using Content.Shared.CCVar;
 using Content.Shared.Damage;
@@ -277,6 +278,13 @@ namespace Content.Server.Ghost
                 || !TryComp(attached, out ActorComponent? actor))
             {
                 Log.Warning($"User {args.SenderSession.Name} sent an invalid {nameof(GhostReturnToBodyRequest)}");
+                return;
+            }
+
+            if (_mind.TryGetMind(attached, out var mindId, out _) &&
+                CompOrNull<RMCGhostReturnComponent>(attached)?.Target is { } returnTo)
+            {
+                _mind.TransferTo(mindId, returnTo);
                 return;
             }
 
@@ -592,12 +600,5 @@ namespace Content.Server.Ghost
 
             return true;
         }
-    }
-
-    public sealed class GhostAttemptHandleEvent(MindComponent mind, bool canReturnGlobal) : HandledEntityEventArgs
-    {
-        public MindComponent Mind { get; } = mind;
-        public bool CanReturnGlobal { get; } = canReturnGlobal;
-        public bool Result { get; set; }
     }
 }

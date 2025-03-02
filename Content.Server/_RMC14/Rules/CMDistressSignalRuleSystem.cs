@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server._RMC14.Commendations;
 using Content.Server._RMC14.Dropship;
+using Content.Server._RMC14.MapInsert;
 using Content.Server._RMC14.Marines;
 using Content.Server._RMC14.Stations;
 using Content.Server._RMC14.Xenonids.Construction.Tunnel;
@@ -134,6 +135,7 @@ public sealed class CMDistressSignalRuleSystem : GameRuleSystem<CMDistressSignal
     [Dependency] private readonly RMCCameraShakeSystem _rmcCameraShake = default!;
     [Dependency] private readonly ThermalCloakSystem _thermalCloak = default!;
     [Dependency] private readonly SharedGhillieSuitSystem _ghillieSuit = default!;
+    [Dependency] private readonly MapInsertSystem _mapInsert = default!;
 
     private readonly HashSet<string> _operationNames = new();
     private readonly HashSet<string> _operationPrefixes = new();
@@ -786,6 +788,13 @@ public sealed class CMDistressSignalRuleSystem : GameRuleSystem<CMDistressSignal
     private void OnMapInit(Entity<XenoEvolutionGranterComponent> ent, ref MapInitEvent args)
     {
         CheckRoundShouldEnd();
+        var hive = _hive.GetHive(ent.Owner);
+        if (hive is null)
+        {
+            return;
+        }
+
+        _hive.SetHiveQueen(ent.Owner, hive.Value);
     }
 
     private void ReloadPrototypes()
@@ -1044,6 +1053,13 @@ public sealed class CMDistressSignalRuleSystem : GameRuleSystem<CMDistressSignal
             Log.Error("Multiple planet-side grids found");
 
         rule.Comp.XenoMap = grids[0];
+
+        //Process map inserts
+        var mapInsertQuery = EntityQueryEnumerator<MapInsertComponent>();
+        while (mapInsertQuery.MoveNext(out var uid, out var mapInsert))
+        {
+            _mapInsert.ProcessMapInsert((uid, mapInsert));
+        }
 
         _mapManager.SetMapPaused(mapId, false);
 

@@ -66,3 +66,11 @@
     key: walls
     keyTwo: window # Stories-Fixes
     base: solaris_rock
+
+- type: entity
+  parent: CMWallSolarisRock
+  id: RMCWallSolarisRockTimed
+  suffix: Timed
+  components:
+  - type: TimedDespawn
+    lifetime: 2400
