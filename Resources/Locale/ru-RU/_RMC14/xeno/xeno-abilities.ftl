@@ -235,6 +235,7 @@ rmc-xeno-sacrifice-heal-target-too-far-away-failure = Нам нужно быть
 rmc-xeno-sacrifice-heal-target-dead-failure = { $target_xeno } мертв!
 rmc-xeno-sacrifice-heal-target-full-health-failure = { $target_xeno } уже имеет полное здоровье!
 rmc-xeno-sacrifice-heal-target-announcement = { $healer_xeno } жертвует собой, чтобы исцелить { $target_xeno }!
+rmc-xeno-sacrifice-heal-announce = ;НАША СЕСТРА НЕ УМРЕТ!!!
 rmc-xeno-sacrifice-heal-target-enviorment = { $healer_xeno } взрывается потоком регенеративной смоляной мази, покрывая { $target_xeno }!
 # Dodge
 rmc-xeno-dodge-self = Теперь мы можем пробираться сквозь врагов!
@@ -286,19 +287,19 @@ rmc-xeno-empower-start-others = { CAPITALIZE(THE($user)) } начинает ра
 rmc-xeno-ravager-empower = Мы чувствуем прилив сил от окружающих врагов!
 rmc-xeno-ravager-empower-fizzle = Вокруг нас не было врагов!
 # Headbite
-rmc-xeno-headbite-others = { $xeno } grabs { $target }'s head aggressively.
-rmc-xeno-headbite-self = We grab { $target }'s head aggressively.
-rmc-xeno-headbite-warning-larva = We should not harm this host! It has a sister inside.
-rmc-xeno-headbite-warning = We can only headbite an unconscious, adjacent target!
-rmc-xeno-headbite-hit-self = We pierce { $target }'s head with our inner jaw!
-rmc-xeno-headbite-hit-others = { $xeno } pierces { $target }'s head with its inner jaw!
-# Produce Eggs
-rmc-xeno-produce-eggs-no-plasma = We don't have enough plasma to support forming eggs.
-rmc-xeno-produce-eggs-new-egg = We generate an egg. Now holding: { $cur_eggs } / { $max_eggs }.
-rmc-xeno-produce-eggs-start = We start forming eggs.
-# Eggsac Passive
-rmc-xeno-sustain-egg-decaying = We can only sustain { $max } eggs off hive weeds! Our oldest egg is decaying rapidly.
-rmc-xeno-sustain-death = { CAPITALIZE(THE($xeno)) } throes as its eggsac bursts into a mess of acid!
+rmc-xeno-headbite-others = { $xeno } агрессивно хватает { $target } за голову.
+rmc-xeno-headbite-self = Мы агрессивно хватаем { $target } за голову.
+rmc-xeno-headbite-warning-larva = Мы не должны причинять вред этому хозяину! У него внутри есть сестра.
+rmc-xeno-headbite-warning = Мы можем укусить в голову только бессознательную, соседнюю цель!
+rmc-xeno-headbite-hit-self = Мы прокалываем голову { $target } нашей внутренней челюстью!
+rmc-xeno-headbite-hit-others = { $xeno } прокалывает голову { $target } своей внутренней челюстью!
+# Производите яйца
+rmc-xeno-produce-eggs-no-plasma = У нас недостаточно плазмы для поддержания формирования яйцеклеток.
+rmc-xeno-produce-eggs-new-egg = Мы генерируем яйцо. Теперь держите: { $cur_eggs } / { $max_eggs }.
+rmc-xeno-produce-eggs-start = Начинаем формировать яйца.
+# Eggsac Пассивный
+rmc-xeno-sustain-egg-decaying = Мы можем поддерживать только { $max } яиц из сорняков улья! Наша самая старая яйцеклетка быстро разлагается.
+rmc-xeno-sustain-death = { CAPITALIZE(THE($xeno)) } агонит, когда его мешок для яиц превращается в месиво из кислоты!
 rmc-xeno-ravager-super-empower-fade = Наше свечение исчезает, сила покидает нашу форму!
 rmc-xeno-defensive-shield-activate-self = Мы прижимаемся к земле и укрепляем свою защиту!
 cm-xeno-plasma-transferred-to-self = { $target } передал вам { $plasma } плазмы. Теперь у вас есть { $total }
