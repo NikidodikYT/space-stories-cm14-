@@ -126,6 +126,9 @@
         layer:
         - WallLayer
   - type: Appearance
+  - type: RMCReactorPoweredLight
+  - type: PreventAttackLightOff
+  - type: RequireProjectileTarget
 
 - type: entity
   parent: BaseStructure

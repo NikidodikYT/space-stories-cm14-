@@ -225,9 +225,11 @@
       - id: RMCLaserDesignator
         points: 15
     - name: Оптика Для Шлема
-      entries: [ ]
-    #- id: CMMedicalHelmetOptic
-    #- id: CMWeldingVisor
+      entries:
+      - id: RMCVisorMedical
+        points: 15
+      - id: RMCVisorWelding
+        points: 5
     - name: Памфлеты
       entries:
       - id: CMPamphletJTAC

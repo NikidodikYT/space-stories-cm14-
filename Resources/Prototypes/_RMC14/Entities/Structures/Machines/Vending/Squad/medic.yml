@@ -168,8 +168,9 @@
       - id: RMCLaserDesignator
         points: 15
     - name: Оптика Для Шлема
-      entries: [ ]
-    #    CMWeldingVisor: 5P
+      entries:
+      - id: RMCVisorWelding
+        points: 5
     - name: Памфлеты
       entries:
       - id: CMPamphletEngineer

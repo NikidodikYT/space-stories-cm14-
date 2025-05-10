@@ -17,4 +17,4 @@ rmc-dogtags-single-join = Соедините две метки вместе.
 rmc-dogtags-unknown = неизвестно
 rmc-dogtags-info-joined-name = жетон
 rmc-dogtags-info-joined-desc = Жетоны павших морских пехотинцев.
-rmc-unstrippable = Ты не можешь снять { THE($item) } с { $owner }!
+rmc-unstrippable = Ты не можешь снять { $item } с { $owner }!
