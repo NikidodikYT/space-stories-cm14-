@@ -193,6 +193,8 @@
     interfaces:
       enum.XenoEvolutionUIKey.Key:
         type: XenoEvolutionBui
+      enum.XenoSkinsUIKey.Key: # Stories-Xeno-Skins
+        type: XenoSkinsBui
       enum.XenoDevolveUIKey.Key:
         type: XenoDevolveBui
       enum.XenoWatchUIKey.Key:
@@ -363,6 +365,7 @@
   - type: RMCObstacleSlamCauserImmune
   - type: RMCMobCollisionMass
   - type: XenoRankNames
+  - type: XenoSkins # Stories-Xeno-Skins
 
 - type: entity
   abstract: true
