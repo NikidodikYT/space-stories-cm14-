@@ -74,6 +74,23 @@
     camouflage: Urban
     minPlayers: 130
     announcement: "Получен автоматический сигнал бедствия из тюрьмы максимальной безопасности 'Орбитальная тюрьма Фиорина'. Группа реагирования с борта ВКСШ Алмайер будет отправлена в ближайшее время для расследования." # Stories-Translate
+    survivorJobInserts:
+      CMSurvivor:
+      - CMSurvivor: -1
+      - CMSurvivorISR: -1
+      - CMSurvivorGangLeader: -1
+      CMSurvivorCorporate:
+      - CMSurvivorFiorinaCorporateLiaison: 2
+      CMSurvivorDoctor:
+      - CMSurvivorFiorinaDoctor: 3
+      CMSurvivorEngineer:
+      - CMSurvivorFiorinaEngineer: 2
+      CMSurvivorSecurity:
+      - CMSurvivorPrisoner: 2
+      - CMSurvivorFiorinaPrisonGuard: 2
+      - CMSurvivorFiorinaRiotOfficer: 2
+      CMSurvivorScientist:
+      - CMSurvivorFiorinaResearcher: 2
 
 - type: entity
   id: RMCPlanetTrijent

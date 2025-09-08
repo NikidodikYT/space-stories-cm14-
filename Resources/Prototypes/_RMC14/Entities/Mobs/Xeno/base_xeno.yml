@@ -69,14 +69,11 @@
       collection: XenoDeath
       params:
         volume: -4
-  - type: HealthExaminable
-    examineShowEmpty: false
-    examinableTypes:
-    - Blunt
-    - Slash
-    - Piercing
-    - Heat
-    - Shock
+  - type: RMCHealthExaminable
+  - type: AcidBloodSplash
+    damage:
+      types:
+        Heat: 25
   - type: CMDefibrillatorBlocked
     popup: defibrillator-xeno
     showOnExamine: false
@@ -401,6 +398,8 @@
       - DeletedByWeedKiller
       - Xeno
     range: 1.5
+  - type: RMCMesonsNonviewable
+    xenoVisible: true
 
 - type: entity
   abstract: true

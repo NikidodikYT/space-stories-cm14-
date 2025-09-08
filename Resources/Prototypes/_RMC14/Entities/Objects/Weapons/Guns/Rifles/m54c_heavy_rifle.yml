@@ -82,12 +82,6 @@
           - RMCAttachmentMagneticHarness
           - RMCAttachmentS5RedDotSight
           - RMCAttachmentS6ReflexSight
-      rmc-aslot-stock:
-        locked: true
-        startingAttachable: RMCAttachmentM54CE2Stock
-        whitelist:
-          tags:
-          - RMCAttachmentM54CE2Stock
       rmc-aslot-underbarrel:
         whitelist:
           tags:

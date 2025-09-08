@@ -30,3 +30,7 @@ ent-SquadSOF = ССО
     .desc = { ent-SquadBase.desc }
 ent-SquadCLF = КОФ
     .desc = { ent-SquadBase.desc }
+ent-SquadUnassigned = Не назначен
+    .desc = { ent-SquadBase.desc }
+ent-SquadSunRiders = Солнечные наездники
+    .desc = { ent-SquadBase.desc }

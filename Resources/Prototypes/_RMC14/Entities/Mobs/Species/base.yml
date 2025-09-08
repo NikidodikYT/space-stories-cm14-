@@ -1,4 +1,4 @@
-- type: entity
+﻿- type: entity
   save: false
   parent: BaseMobSpecies
   id: CMBaseMobSpeciesOrganic
@@ -399,3 +399,5 @@
       components:
       - Xeno
   - type: RMCHealthIcons
+  - type: RMCMesonsNonviewable
+    xenoVisible: true
