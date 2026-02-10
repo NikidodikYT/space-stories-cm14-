@@ -58,6 +58,16 @@
       ]
     },
     {
+      "name": "eggmorph",
+      "delays": [
+        [
+          2,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
       "name": "evopod",
       "delays": [
         [
@@ -100,49 +110,44 @@
       ]
     },
     {
-      "name": "eggmorph",
-      "delays": [
-        [
-          4,
-          4
-        ]
-      ]
-    },
-    {
-      "name": "pylon"
-    },
-    {
-      "name": "recovery",
-      "delays": [
-        [
-          0.8,
-          0.8,
-          0.8
-        ]
-      ]
-    },
-    {
-      "name": "core",
+      "name": "eggmorph_0",
       "delays": [
         [
           2,
           0.1,
-          0.2,
           0.1
         ]
       ]
     },
     {
-      "name": "eggmorph_0"
+      "name": "eggmorph_1",
+      "delays": [
+        [
+          2,
+          0.1,
+          0.1
+        ]
+      ]
     },
     {
-      "name": "eggmorph_1"
+      "name": "eggmorph_2",
+      "delays": [
+        [
+          2,
+          0.1,
+          0.1
+        ]
+      ]
     },
     {
-      "name": "eggmorph_2"
-    },
-    {
-      "name": "eggmorph_3"
+      "name": "eggmorph_3",
+      "delays": [
+        [
+          2,
+          0.1,
+          0.1
+        ]
+      ]
     }
   ]
 }

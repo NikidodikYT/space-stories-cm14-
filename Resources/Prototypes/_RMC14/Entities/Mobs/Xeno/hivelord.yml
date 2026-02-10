@@ -218,7 +218,7 @@
     guides:
     - RMCGuideRoleDesigner
   - type: Sprite
-    sprite: _RMC14/Mobs/Xenonids/Hivelord/designer_hivelord.rsi
+    sprite: _Stories/Mobs/Xenos/Hivelord/designer_hivelord.rsi
   - type: Xeno
     role: CMXenoHivelord
     actionIds:

@@ -734,8 +734,6 @@
         amount: 20
       - id: CMArmorHelmetM10Medic
         amount: 20
-      - id: RMCArmorVestSquad
-        amount: 15
       - id: RMCArmorM3MediumCarrier
         amount: 15
       - id: RMCArmorM3MediumPadded

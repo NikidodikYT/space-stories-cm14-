@@ -23,8 +23,6 @@
     - name: Броня
       choices: { CMArmour: 1 }
       entries:
-      - id: RMCArmorVestSquad
-        name: armor vest
       - id: RMCArmorM3LightVariants
         name: лёгкая броня
       - id: RMCArmorM3MediumVariants
