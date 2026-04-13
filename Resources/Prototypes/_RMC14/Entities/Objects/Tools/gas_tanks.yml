@@ -162,14 +162,14 @@
     solution: beaker
   - type: FitsInDispenser
     solution: beaker
-  # - type: RefillableSolution # Stories-Fix
-  #   solution: beaker
+  - type: RefillableSolution
+    solution: beaker
   - type: DrainableSolution
     solution: beaker
   - type: ExaminableSolution
     solution: beaker
-  - type: DrawableSolution
-    solution: beaker
+  # - type: DrawableSolution # Stories-Fix
+  #   solution: beaker
   - type: InjectableSolution
     solution: beaker
   - type: RMCSolutionTransferWhitelist

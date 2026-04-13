@@ -278,11 +278,51 @@
 
 # Minitank /obj/item/reagent_container/glass/minitank
 - type: entity
-  parent: RMCBeakerBaseMetallic
+  parent: BaseItem # Stories-Fix
   id: CMMiniTank
   name: MS-11 Smart Refill Tank
   description: A robust little tank capable of refilling autoinjectors that previously required a nanomed system to refill. Using the wonders of microchips, it automatically sorts the correct chemicals into most single reagent autoinjectors. It is unable to partially fill them however. A valve exists on the top to transfer reagents to another container or to flush it entirely.
   components:
+  # Stories-Fix-Start
+  - type: MixableSolution
+    solution: beaker
+  - type: FitsInDispenser
+    solution: beaker
+  - type: DrainableSolution
+    solution: beaker
+  - type: ExaminableSolution
+    solution: beaker
+  - type: SolutionItemStatus
+    solution: beaker
+  - type: UserInterface
+    interfaces:
+      enum.TransferAmountUiKey.Key:
+        type: TransferAmountBoundUserInterface
+  - type: Appearance
+  - type: Damageable
+    damageContainer: Inorganic
+    damageModifierSet: Glass
+  - type: DnaSubstanceTrace
+  - type: InteractedBlacklist
+    blacklist:
+      components:
+      - Xeno
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 5
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - !type:SpillBehavior
+        solution: beaker
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  # Stories-Fix-Start
   - type: Sprite
     sprite: _RMC14/Objects/Tanks/minitank.rsi
     layers:
