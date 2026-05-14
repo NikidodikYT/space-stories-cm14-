@@ -1,4 +1,3 @@
-using System.Numerics;
 using Content.Shared._RMC14.Hands;
 using Content.Shared._RMC14.Attachable.Components;
 using Content.Shared._RMC14.Attachable.Events;
@@ -60,7 +59,6 @@ using Content.Shared.Whitelist;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
@@ -73,13 +71,10 @@ namespace Content.Shared._Stories.CombatMech;
 public sealed partial class CombatMechSystem : EntitySystem
 {
     private const float ProtectionCleanupInterval = 0.25f;
-    private const float BarricadeBumperProbeRadius = 0.5f;
     private const float PositionMoveEpsilon = 0.0001f;
     private const float DirectionEpsilon = 0.001f;
     private const float FiringTargetEpsilon = 0.01f;
-    private const float BarricadeForwardDotMinimum = 0.35f;
     private static readonly ProtoId<DamageTypePrototype> BluntDamageType = "Blunt";
-    private const float WeaponDetachDropDistance = 1.1f;
 
     private float _protectionCleanupAccumulator;
     // Scratch buffers used only inside Update's sequential server pass.
@@ -304,10 +299,25 @@ public sealed partial class CombatMechSystem : EntitySystem
         if (ent.Comp.BodyOverlayPrototype is not { } proto)
             return;
 
-        if (ent.Comp.BodyOverlayEntity is { } existing && !Deleted(existing))
+        // Always ensure the slot exists so client replication has a stable destination for the overlay
+        // entity and PVS late-joiners see it via container state instead of a stray transform.
+        // ShowContents = true is mandatory: BaseContainer defaults hide the contained sprite from
+        // rendering (the overlay literally disappears otherwise). OccludesLight = false because the
+        // overlay is decorative and must not cast shadows onto the mech body underneath it.
+        var slot = _container.EnsureContainer<ContainerSlot>(ent.Owner, ent.Comp.BodyOverlayContainerId);
+        slot.ShowContents = true;
+        slot.OccludesLight = false;
+
+        if (ent.Comp.BodyOverlayEntity is { } existing && !Deleted(existing) && slot.ContainedEntity == existing)
             return;
 
-        var overlay = Spawn(proto, new EntityCoordinates(ent.Owner, Vector2.Zero));
+        var overlay = Spawn(proto, Transform(ent.Owner).Coordinates);
+        if (!_container.Insert(overlay, slot))
+        {
+            QueueDel(overlay);
+            return;
+        }
+
         ent.Comp.BodyOverlayEntity = overlay;
         DirtyField(ent.Owner, ent.Comp, nameof(CombatMechComponent.BodyOverlayEntity));
         UpdateVisualStack(ent);

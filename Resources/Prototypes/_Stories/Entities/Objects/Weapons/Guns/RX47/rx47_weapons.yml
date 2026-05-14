@@ -71,25 +71,11 @@
     capacity: 5000
 
 - type: entity
-  parent: [ CMBaseWeaponGun, BaseItem, RMCBaseAttachableHolder ]
+  parent: STWeaponRX47Base
   id: STWeaponRX47Siegebreaker
   name: RX47 siegebreaker cannon
   description: A 50mm mechsuit cannon with a narrow firing arc and explosive impact.
   components:
-  - type: Item
-    size: Huge
-  - type: Clothing
-    slots: NONE
-  - type: AmmoCounter
-  - type: GunIFF
-    enabled: true
-  - type: GunPointBlank
-  - type: Appearance
-  - type: GunSkilledRecoil
-    setRecoil: 0
-    mustBeWielded: false
-    skills:
-      RMCSkillFirearms: 0
   - type: CombatMechWeapon
     armState: cannon
     firingArc: 90

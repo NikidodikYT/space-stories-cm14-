@@ -78,6 +78,11 @@ public sealed partial class CombatMechSystem
 
     private void OnInsideVehicleBeforeDamage(Entity<InsideCombatVehicleComponent> ent, ref BeforeDamageChangedEvent args)
     {
+        // Damage forwarding is server-authoritative. A predicted client run could otherwise cascade
+        // through TryChangeDamage -> DamageChangedEvent -> alert popups/sounds before being rolled back.
+        if (_net.IsClient)
+            return;
+
         if (args.Cancelled)
             return;
 

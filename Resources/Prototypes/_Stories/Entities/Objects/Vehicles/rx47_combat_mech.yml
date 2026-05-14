@@ -187,9 +187,15 @@
         enum.CombatMechVisualLayers.TowLauncher:
           True: { state: weapon_tow }
           False: { state: empty }
+  - type: CMArmor
+    melee: 20
+    bullet: 20
+    xenoArmor: 20
+    explosionArmor: 20
   - type: Damageable
     damageContainer: STRX47CombatMech
-    # RX47 balance is HP-pool based; incoming supported damage is not reduced by an armor modifier set.
+    # RX47 reduction is handled by CMArmor (flat per-type subtraction). damageModifierSet stays null so
+    # the modifier multiplier pass is not stacked on top of armor.
     damageModifierSet: null
   - type: RMCRepairable
     heal: 100

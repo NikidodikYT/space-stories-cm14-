@@ -16,11 +16,23 @@ namespace Content.Shared._Stories.CombatMech;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class CombatMechComponent : Component
 {
-    public const string EmptyWeaponState = "empty";
-    public const string UnderbarrelSlot = "rmc-aslot-underbarrel";
-    public const string GunMagazineContainerId = "gun_magazine";
-    public const string GunChamberContainerId = "gun_chamber";
-    public const string WeaponTankContainerId = "rx47_flamer_tank";
+    [DataField]
+    public string EmptyWeaponState = "empty";
+
+    [DataField]
+    public string UnderbarrelSlot = "rmc-aslot-underbarrel";
+
+    [DataField]
+    public string GunMagazineContainerId = "gun_magazine";
+
+    [DataField]
+    public string GunChamberContainerId = "gun_chamber";
+
+    [DataField]
+    public string WeaponTankContainerId = "rx47_flamer_tank";
+
+    [DataField]
+    public string BodyOverlayContainerId = "rx47_body_overlay";
 
     [DataField(required: true)]
     public EntProtoId PrimaryWeapon;
@@ -28,11 +40,12 @@ public sealed partial class CombatMechComponent : Component
     [DataField(required: true)]
     public EntProtoId SecondaryWeapon;
 
+    // "empty" matches the EmptyWeaponState default; the runtime field is set explicitly when a weapon is mounted.
     [DataField, AutoNetworkedField]
-    public string PrimaryWeaponState = EmptyWeaponState;
+    public string PrimaryWeaponState = "empty";
 
     [DataField, AutoNetworkedField]
-    public string SecondaryWeaponState = EmptyWeaponState;
+    public string SecondaryWeaponState = "empty";
 
     [DataField, AutoNetworkedField]
     public bool HelmetClosed;
@@ -104,6 +117,15 @@ public sealed partial class CombatMechComponent : Component
     public float BarricadeBumperRange = 0.5f;
 
     [DataField]
+    public float BarricadeBumperProbeRadius = 0.5f;
+
+    [DataField]
+    public float BarricadeForwardDotMinimum = 0.35f;
+
+    [DataField]
+    public float WeaponDetachDropDistance = 1.1f;
+
+    [DataField]
     public TimeSpan BarricadeBumperCooldown = TimeSpan.FromSeconds(0.25);
 
     [DataField]
@@ -157,6 +179,9 @@ public sealed partial class CombatMechComponent : Component
 
     [DataField]
     public SoundSpecifier? EnterSound = new SoundPathSpecifier("/Audio/Mecha/sound_mecha_powerloader_step.ogg");
+
+    [DataField]
+    public SoundSpecifier? ExitSound = new SoundPathSpecifier("/Audio/Mecha/sound_mecha_powerloader_step.ogg");
 
     [DataField]
     public SoundSpecifier? DamageAlertSound = new SoundPathSpecifier("/Audio/Machines/warning_buzzer.ogg");
@@ -242,13 +267,15 @@ public sealed partial class CombatMechBumpDamageableComponent : Component;
 [RegisterComponent]
 public sealed partial class CombatMechWeaponFlamerTankComponent : Component
 {
+    // Defaults mirror CombatMechComponent.WeaponTankContainerId / GunMagazineContainerId.
+    // Duplicated literally because field initializers cannot reference instance members of another component.
     [DataField]
-    public string WeaponTankContainerId = CombatMechComponent.WeaponTankContainerId;
+    public string WeaponTankContainerId = "rx47_flamer_tank";
 
     // Most RX47 flamers keep the local RMCFlamerTank directly on the attachable; this is only
     // a fallback for attachables that store their local tank in a container.
     [DataField]
-    public string LocalTankContainerId = CombatMechComponent.GunMagazineContainerId;
+    public string LocalTankContainerId = "gun_magazine";
 }
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]

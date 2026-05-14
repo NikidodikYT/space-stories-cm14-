@@ -113,7 +113,7 @@ public sealed partial class CombatMechSystem
 
         RemCompDeferred<InsideCombatVehicleComponent>(pilot);
 
-        _audio.PlayPredicted(ent.Comp.EnterSound, ent, pilot);
+        _audio.PlayPredicted(ent.Comp.ExitSound, ent, pilot);
     }
 
     private bool TransferWeaponToPilot(Entity<CombatMechComponent> ent, EntityUid pilot, bool primary)

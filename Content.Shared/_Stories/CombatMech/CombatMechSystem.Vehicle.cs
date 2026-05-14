@@ -541,7 +541,7 @@ public sealed partial class CombatMechSystem
             var check = new MapCoordinates(coords.Position + direction * mech.BarricadeBumperRange, coords.MapId);
 
             _bumpDamageTargets.Clear();
-            _lookup.GetEntitiesInRange(check.MapId, check.Position, BarricadeBumperProbeRadius, _bumpDamageTargets, LookupFlags.Uncontained);
+            _lookup.GetEntitiesInRange(check.MapId, check.Position, mech.BarricadeBumperProbeRadius, _bumpDamageTargets, LookupFlags.Uncontained);
             foreach (var target in _bumpDamageTargets)
             {
                 if (!CanBumperDamageTarget(target))
@@ -550,7 +550,7 @@ public sealed partial class CombatMechSystem
                 var targetPos = _transform.GetMapCoordinates(target).Position;
                 var delta = targetPos - coords.Position;
                 if (delta.LengthSquared() > PositionMoveEpsilon &&
-                    Vector2.Dot(delta.Normalized(), direction) < BarricadeForwardDotMinimum)
+                    Vector2.Dot(delta.Normalized(), direction) < mech.BarricadeForwardDotMinimum)
                 {
                     continue;
                 }

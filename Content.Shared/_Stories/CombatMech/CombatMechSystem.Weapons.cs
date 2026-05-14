@@ -7,6 +7,7 @@ using Content.Shared._RMC14.Weapons.Ranged;
 using Content.Shared._RMC14.Weapons.Ranged.IFF;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Containers;
+using Content.Shared.FixedPoint;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DoAfter;
 using Content.Shared.Hands;
@@ -298,8 +299,9 @@ public sealed partial class CombatMechSystem
         var mechXform = Transform(mech.Owner);
         var mechMap = _transform.GetMapCoordinates(mech.Owner, mechXform);
         var userMap = _transform.GetMapCoordinates(user);
+        var dropDistance = mech.Comp.WeaponDetachDropDistance;
         if (mechMap.MapId != userMap.MapId)
-            return mechXform.Coordinates.Offset(new Vector2(0f, -WeaponDetachDropDistance));
+            return mechXform.Coordinates.Offset(new Vector2(0f, -dropDistance));
 
         var direction = userMap.Position - mechMap.Position;
         if (direction.LengthSquared() < DirectionEpsilon)
@@ -309,7 +311,7 @@ public sealed partial class CombatMechSystem
 
         var parentRotation = _transform.GetWorldRotation(mechXform.ParentUid);
         var localDirection = (-parentRotation).RotateVec(direction);
-        return mechXform.Coordinates.Offset(localDirection * WeaponDetachDropDistance);
+        return mechXform.Coordinates.Offset(localDirection * dropDistance);
     }
 
     private void OnWeaponGetAlternativeVerbs(Entity<CombatMechWeaponComponent> ent, ref GetVerbsEvent<AlternativeVerb> args)
@@ -326,8 +328,9 @@ public sealed partial class CombatMechSystem
             return;
         }
 
+        var underbarrelSlot = mech.UnderbarrelSlot;
         if (!HasComp<AttachableHolderComponent>(ent.Owner) ||
-            !_container.TryGetContainer(ent.Owner, CombatMechComponent.UnderbarrelSlot, out var container) ||
+            !_container.TryGetContainer(ent.Owner, underbarrelSlot, out var container) ||
             container.ContainedEntities.Count == 0)
         {
             return;
@@ -344,7 +347,7 @@ public sealed partial class CombatMechSystem
             IconEntity = GetNetEntity(attachable),
             Act = () =>
             {
-                var ev = new AttachableToggleStartedEvent(ent.Owner, user, CombatMechComponent.UnderbarrelSlot);
+                var ev = new AttachableToggleStartedEvent(ent.Owner, user, underbarrelSlot);
                 RaiseLocalEvent(attachable, ref ev);
             },
             Priority = 90,
@@ -388,12 +391,17 @@ public sealed partial class CombatMechSystem
 
     private void OnWeaponContainerRemoveAttempt(Entity<CombatMechWeaponComponent> ent, ref ContainerIsRemovingAttemptEvent args)
     {
-        if (args.Container.ID != CombatMechComponent.GunMagazineContainerId &&
-            args.Container.ID != CombatMechComponent.GunChamberContainerId)
+        if (ent.Comp.LinkedMech is not { } mechUid || Deleted(mechUid) ||
+            !TryComp(mechUid, out CombatMechComponent? mech))
+        {
             return;
+        }
 
-        if (ent.Comp.LinkedMech == null || Deleted(ent.Comp.LinkedMech.Value))
+        if (args.Container.ID != mech.GunMagazineContainerId &&
+            args.Container.ID != mech.GunChamberContainerId)
+        {
             return;
+        }
 
         args.Cancel();
     }
@@ -713,14 +721,45 @@ public sealed partial class CombatMechSystem
 
     private void CopySolution(Entity<SolutionComponent> source, Entity<SolutionComponent> target)
     {
-        ClearSolution(target);
-        if (source.Comp.Solution.Volume > 0)
-            _solution.ForceAddSolution(target, source.Comp.Solution.Clone());
+        // Hot path: called per shot and per ammo-count probe. The old implementation
+        // allocated a fresh Solution + reagent list via Clone() every call; here we mutate
+        // the existing target in place and skip work entirely when contents already match.
+        var sourceSol = source.Comp.Solution;
+        var targetSol = target.Comp.Solution;
+
+        if (SolutionsEquivalent(sourceSol, targetSol))
+            return;
+
+        _solution.RemoveAllSolution(target);
+        if (sourceSol.Volume <= FixedPoint2.Zero)
+            return;
+
+        foreach (var reagent in sourceSol.Contents)
+            _solution.TryAddReagent(target, reagent, out _);
     }
 
     private void ClearSolution(Entity<SolutionComponent> solution)
     {
         _solution.RemoveAllSolution(solution);
+    }
+
+    private static bool SolutionsEquivalent(Solution a, Solution b)
+    {
+        if (a.Volume != b.Volume)
+            return false;
+
+        if (a.Contents.Count != b.Contents.Count)
+            return false;
+
+        for (var i = 0; i < a.Contents.Count; i++)
+        {
+            var aq = a.Contents[i];
+            var bq = b.Contents[i];
+            if (aq.Reagent != bq.Reagent || aq.Quantity != bq.Quantity)
+                return false;
+        }
+
+        return true;
     }
 
     private bool TryResolveMountedAttachable(
@@ -765,7 +804,7 @@ public sealed partial class CombatMechSystem
 
     private void SetWeapon(Entity<CombatMechComponent> mech, bool primary, EntityUid? weapon)
     {
-        var state = CombatMechComponent.EmptyWeaponState;
+        var state = mech.Comp.EmptyWeaponState;
         if (weapon != null && TryComp(weapon.Value, out CombatMechWeaponComponent? weaponComp))
             state = BuildWeaponState(weaponComp.ArmState, primary);
 
