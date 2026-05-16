@@ -173,7 +173,7 @@ public sealed partial class CombatMechSystem
         if (GetPilot(ent) == null)
             return;
 
-        if (HasComp<ItemComponent>(args.OtherEntity))
+        if (_itemQuery.HasComp(args.OtherEntity))
             args.Cancelled = true;
     }
 
@@ -191,10 +191,18 @@ public sealed partial class CombatMechSystem
         // Only count pilot-driven motion as a "step". Marines bumping the mech can nudge its
         // KinematicController position by physics resolution; without this gate those nudges
         // would replay the step-stun on idle bystanders.
-        if (!TryComp(ent, out InputMoverComponent? mover) || !TryGetMovementDirection(mover, out _))
+        if (!_moverQuery.TryComp(ent, out var mover) || !TryGetMovementDirection(mover, out _))
             return;
 
         ent.Comp.LastStepMoveAt = _timing.CurTime;
+
+        // MoveEvent can fire multiple times per tick; physics-contact lookup + per-target AABBs
+        // inside TryProcessMarineStepStuns are too costly to run every time. The 0.25s Update
+        // pass covers any gap via LastStepMoveAt + StepActiveDuration.
+        if (_timing.CurTime < ent.Comp.NextStepStunCheckAt)
+            return;
+
+        ent.Comp.NextStepStunCheckAt = _timing.CurTime + StepStunMoveCheckInterval;
         TryProcessMarineStepStuns(ent, Transform(ent.Owner), _timing.CurTime);
     }
 
@@ -529,14 +537,9 @@ public sealed partial class CombatMechSystem
             if (GetPilot((uid, mech)) == null || _timing.CurTime < mech.NextBarricadeBumpAt)
                 continue;
 
-            var direction = mover.WishDir;
-            if (direction.LengthSquared() <= DirectionEpsilon)
-                direction = _mover.DirVecForButtons(mover.HeldMoveButtons);
-
-            if (direction.LengthSquared() <= DirectionEpsilon)
+            if (!TryGetMovementDirection(mover, out var direction))
                 continue;
 
-            direction = direction.Normalized();
             var coords = _transform.GetMapCoordinates(uid, xform);
             var check = new MapCoordinates(coords.Position + direction * mech.BarricadeBumperRange, coords.MapId);
 
@@ -647,6 +650,9 @@ public sealed partial class CombatMechSystem
             return false;
 
         mech.Comp.NextStepStunAt[target] = time + mech.Comp.StepStunCooldown;
+        // Allocated per-hit deliberately: DamageModifyAfterResistEvent runs even with ignoreResistances=true,
+        // and some subscribers (e.g. XenoShieldSystem) mutate args.Damage.DamageDict in place. A shared/cached
+        // DamageSpecifier would accumulate those mutations across calls.
         _damageable.TryChangeDamage(
             target,
             CreateBluntDamage(mech.Comp.StepDamage),
@@ -677,8 +683,7 @@ public sealed partial class CombatMechSystem
             if (!HasLiveVehicle(pilot))
                 continue;
 
-            PruneEntityTimeDictionary(inside.OpenFaceplateDamageAt, time);
-
+            // Skip sealed/dead/critical pilots before any work - they cannot take open-faceplate DOT.
             if (IsPilotSealed(pilot) ||
                 _mobState.IsDead(pilotUid) ||
                 _mobState.IsCritical(pilotUid))
@@ -686,18 +691,23 @@ public sealed partial class CombatMechSystem
                 continue;
             }
 
+            PruneEntityTimeDictionary(inside.OpenFaceplateDamageAt, time);
+
             var vehicleXform = Transform(inside.Vehicle);
             var (worldPosition, worldRotation) = _transform.GetWorldPositionRotation(vehicleXform);
             var bounds = _lookup.GetAABBNoContainer(inside.Vehicle, worldPosition, worldRotation);
+
+            // Hoisted out of the contacts foreach: FixturesComponent on the vehicle is the same for every contact.
+            TryComp(inside.Vehicle, out FixturesComponent? vehicleFixtures);
 
             _damageContacts.Clear();
             _lookup.GetEntitiesIntersecting(vehicleXform.MapID, bounds, _damageContacts, LookupFlags.Uncontained | LookupFlags.Sensors);
             foreach (var contact in _damageContacts)
             {
                 // DamageOverTime sources choose their own collision mask; acid smoke is MidImpassable via MobMask.
-                if (!HasCollisionLayer(inside.Vehicle, contact.Comp.Collision) ||
-                    !contact.Comp.AffectsCrit && _mobState.IsCritical(pilotUid) ||
-                    !contact.Comp.AffectsDead && _mobState.IsDead(pilotUid) ||
+                if (!FixturesOverlapLayer(vehicleFixtures, contact.Comp.Collision) ||
+                    (!contact.Comp.AffectsCrit && _mobState.IsCritical(pilotUid)) ||
+                    (!contact.Comp.AffectsDead && _mobState.IsDead(pilotUid)) ||
                     !_whitelist.IsWhitelistPassOrNull(contact.Comp.Whitelist, pilotUid))
                 {
                     continue;
@@ -717,9 +727,9 @@ public sealed partial class CombatMechSystem
         }
     }
 
-    private bool HasCollisionLayer(EntityUid uid, CollisionGroup layer)
+    private static bool FixturesOverlapLayer(FixturesComponent? fixtures, CollisionGroup layer)
     {
-        if (!TryComp(uid, out FixturesComponent? fixtures))
+        if (fixtures == null)
             return false;
 
         var layerMask = (int)layer;
@@ -758,6 +768,8 @@ public sealed partial class CombatMechSystem
             return false;
 
         // ignoreResistances: mech mass shoves aside barricades regardless of material/reinforcement.
+        // Allocated per-hit deliberately: DamageModifyAfterResistEvent runs even with ignoreResistances=true,
+        // and some subscribers mutate args.Damage.DamageDict in place.
         _damageable.TryChangeDamage(
             target,
             CreateBluntDamage(mech.Comp.BarricadeCollisionDamage),
@@ -788,5 +800,14 @@ public sealed partial class CombatMechSystem
             return null;
 
         return Math.Clamp(100f - totalDamage / mech.MaxHealth * 100f, 0f, 100f);
+    }
+
+    public void SetMaxHealth(Entity<CombatMechComponent> ent, float maxHealth)
+    {
+        if (ent.Comp.MaxHealth == maxHealth)
+            return;
+
+        ent.Comp.MaxHealth = maxHealth;
+        DirtyField(ent.Owner, ent.Comp, nameof(CombatMechComponent.MaxHealth));
     }
 }

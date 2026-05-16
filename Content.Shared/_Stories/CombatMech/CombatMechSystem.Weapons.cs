@@ -253,10 +253,10 @@ public sealed partial class CombatMechSystem
         return true;
     }
 
-    private bool DetachWeapon(Entity<CombatMechComponent> mech, EntityUid user, bool primary, bool pickup = true)
+    private void DetachWeapon(Entity<CombatMechComponent> mech, EntityUid user, bool primary)
     {
         if (GetWeapon(mech, primary) is not { } weapon)
-            return false;
+            return;
 
         var coordinates = GetSafeWeaponDropCoordinates(mech, user);
         var heldByMech = _hands.IsHolding(mech.Owner, weapon);
@@ -269,7 +269,7 @@ public sealed partial class CombatMechSystem
             !_hands.TryDrop(mech.Owner, weapon, coordinates, checkActionBlocker: false, doDropInteraction: false))
         {
             EnsureWeaponUnremoveable(weapon);
-            return false;
+            return;
         }
 
         if (TryComp(weapon, out CombatMechWeaponComponent? weaponComp))
@@ -280,18 +280,12 @@ public sealed partial class CombatMechSystem
 
         SetWeapon(mech, primary, null);
 
-        if (pickup)
-            _hands.TryPickup(user, weapon, checkActionBlocker: false, animate: false);
+        _hands.TryPickup(user, weapon, checkActionBlocker: false, animate: false);
 
         UpdateAppearance(mech);
 
-        if (pickup)
-        {
-            var slot = GetSlotName(primary);
-            _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-detached", ("weapon", weapon), ("slot", slot)), mech, user);
-        }
-
-        return true;
+        var slot = GetSlotName(primary);
+        _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-detached", ("weapon", weapon), ("slot", slot)), mech, user);
     }
 
     private EntityCoordinates GetSafeWeaponDropCoordinates(Entity<CombatMechComponent> mech, EntityUid user)
@@ -617,12 +611,12 @@ public sealed partial class CombatMechSystem
         CopySolution(localSolution, weaponSolution);
     }
 
-    private void SyncWeaponTankToMountedFlamer(Entity<CombatMechWeaponFlamerTankComponent> ent, EntityUid? weapon = null)
+    private void SyncWeaponTankToMountedFlamer(Entity<CombatMechWeaponFlamerTankComponent> ent)
     {
         if (!TryGetMountedFlamerLocalTank(ent, out var localSolution))
             return;
 
-        if (!TryGetMountedWeaponFlamerTank(ent, out var weaponSolution, weapon))
+        if (!TryGetMountedWeaponFlamerTank(ent, out var weaponSolution))
         {
             ClearSolution(localSolution);
             return;
@@ -633,16 +627,9 @@ public sealed partial class CombatMechSystem
 
     private bool TryGetMountedWeaponFlamerTank(
         Entity<CombatMechWeaponFlamerTankComponent> ent,
-        out Entity<SolutionComponent> solution,
-        EntityUid? weapon = null)
+        out Entity<SolutionComponent> solution)
     {
         solution = default;
-
-        if (weapon is { } directWeapon &&
-            HasComp<CombatMechWeaponComponent>(directWeapon))
-        {
-            return TryGetWeaponFlamerTank(directWeapon, ent.Comp.WeaponTankContainerId, out solution);
-        }
 
         if (!TryGetContainingCombatMechWeapon(ent.Owner, out var holder))
             return false;

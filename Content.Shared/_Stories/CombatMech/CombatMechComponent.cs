@@ -14,6 +14,7 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._Stories.CombatMech;
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
+[Access(typeof(CombatMechSystem))]
 public sealed partial class CombatMechComponent : Component
 {
     [DataField]
@@ -186,19 +187,20 @@ public sealed partial class CombatMechComponent : Component
     [DataField]
     public SoundSpecifier? DamageAlertSound = new SoundPathSpecifier("/Audio/Machines/warning_buzzer.ogg");
 
-    [DataField, AutoNetworkedField]
+    // Runtime references, not safe across save/restart - intentionally not [DataField].
+    [AutoNetworkedField]
     public EntityUid? PrimaryWeaponEntity;
 
-    [DataField, AutoNetworkedField]
+    [AutoNetworkedField]
     public EntityUid? SecondaryWeaponEntity;
 
-    [DataField, AutoNetworkedField]
+    [AutoNetworkedField]
     public EntityUid? PilotEntity;
 
     [DataField(required: true)]
-    public EntProtoId? BodyOverlayPrototype;
+    public EntProtoId BodyOverlayPrototype;
 
-    [DataField, AutoNetworkedField]
+    [AutoNetworkedField]
     public EntityUid? BodyOverlayEntity;
 
     [DataField]
@@ -230,6 +232,10 @@ public sealed partial class CombatMechComponent : Component
 
     [ViewVariables]
     public bool SecondaryWeaponInstallInProgress;
+
+    // Throttle for OnMechMove-driven step-stun checks. ProcessMarineStepStuns covers the gap from Update.
+    [ViewVariables]
+    public TimeSpan NextStepStunCheckAt;
 }
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]

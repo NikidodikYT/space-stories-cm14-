@@ -74,6 +74,8 @@ public sealed partial class CombatMechSystem : EntitySystem
     private const float PositionMoveEpsilon = 0.0001f;
     private const float DirectionEpsilon = 0.001f;
     private const float FiringTargetEpsilon = 0.01f;
+    // Upper-bound the cadence of MoveEvent-driven step-stun probes; the periodic Update pass fills the gap.
+    private static readonly TimeSpan StepStunMoveCheckInterval = TimeSpan.FromMilliseconds(100);
     private static readonly ProtoId<DamageTypePrototype> BluntDamageType = "Blunt";
 
     private float _protectionCleanupAccumulator;
@@ -123,8 +125,15 @@ public sealed partial class CombatMechSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly EntityWhitelistSystem _whitelist = default!;
 
+    // Hot-path EntityQuery caches. Used inside MoveEvent / PreventCollideEvent handlers that may fire many times per tick.
+    private EntityQuery<InputMoverComponent> _moverQuery;
+    private EntityQuery<ItemComponent> _itemQuery;
+
     public override void Initialize()
     {
+        _moverQuery = GetEntityQuery<InputMoverComponent>();
+        _itemQuery = GetEntityQuery<ItemComponent>();
+
         SubscribeLocalEvent<CombatMechComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<CombatMechComponent, StrapAttemptEvent>(OnStrapAttempt);
         SubscribeLocalEvent<CombatMechComponent, UnstrapAttemptEvent>(OnUnstrapAttempt);
@@ -283,7 +292,7 @@ public sealed partial class CombatMechSystem : EntitySystem
             return;
         }
 
-        EnsureBodyOverlay(ent);
+        // EnsureBodyOverlay is called transitively by UpdateAppearance on the server.
         UpdateAppearance(ent);
 
         if (ent.Comp.DefaultWeaponEnsureQueued)
@@ -296,7 +305,8 @@ public sealed partial class CombatMechSystem : EntitySystem
 
     private void EnsureBodyOverlay(Entity<CombatMechComponent> ent)
     {
-        if (ent.Comp.BodyOverlayPrototype is not { } proto)
+        var proto = ent.Comp.BodyOverlayPrototype;
+        if (string.IsNullOrEmpty(proto.Id))
             return;
 
         // Always ensure the slot exists so client replication has a stable destination for the overlay

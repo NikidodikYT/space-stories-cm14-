@@ -7,6 +7,7 @@ namespace Content.Server._Stories.CombatMech;
 public sealed class CombatMechDestructibleSystem : EntitySystem
 {
     [Dependency] private readonly DestructibleSystem _destructible = default!;
+    [Dependency] private readonly CombatMechSystem _combatMech = default!;
 
     public override void Initialize()
     {
@@ -22,7 +23,6 @@ public sealed class CombatMechDestructibleSystem : EntitySystem
             return;
         }
 
-        ent.Comp.MaxHealth = destroyedAt.Value.Float();
-        DirtyField(ent.Owner, ent.Comp, nameof(CombatMechComponent.MaxHealth));
+        _combatMech.SetMaxHealth(ent, destroyedAt.Value.Float());
     }
 }
