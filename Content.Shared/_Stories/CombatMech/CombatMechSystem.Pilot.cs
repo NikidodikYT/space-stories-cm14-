@@ -9,6 +9,7 @@ using Content.Shared.Item;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Events;
 using Content.Shared.Popups;
+using Content.Shared._RMC14.Suicide;
 using Content.Shared.Verbs;
 using Robust.Shared.Maths;
 
@@ -260,14 +261,18 @@ public sealed partial class CombatMechSystem
         args.Cancelled = true;
     }
 
-    private void OnInsideVehicleGetVerbs(Entity<InsideCombatVehicleComponent> ent, ref GetVerbsEvent<Verb> args)
+    // Cancels the suicide doafter at its source instead of trying to scrape the verb out of the menu
+    // by matching a localized string. Survives Loc-key renames and verb-text suffix changes upstream.
+    // Subscribed `before` RMCSuicideSystem so setting Handled=true short-circuits its OnSuicideDoAfter.
+    private void OnInsideVehicleSuicideAttempt(Entity<InsideCombatVehicleComponent> ent, ref RMCSuicideDoAfterEvent args)
     {
-        if (args.User != ent.Owner || !HasLiveVehicle(ent))
+        if (args.Cancelled || args.Handled)
             return;
 
-        // RMCSuicideSystem adds its verb without a stable id, so the localized title is the only handle we have.
-        var suicide = Loc.GetString("rmc-suicide");
-        args.Verbs.RemoveWhere(v => v.Text == suicide);
+        if (!HasLiveVehicle(ent))
+            return;
+
+        args.Handled = true;
     }
 
     private void ApplyPilotVisuals(Entity<InsideCombatVehicleComponent> pilot)

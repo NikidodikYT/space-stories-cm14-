@@ -11,6 +11,8 @@ namespace Content.Client._Stories.CombatMech;
 // round is bounded (event/admin spawn), so the per-frame cost is negligible.
 public sealed class CombatMechDamageFlashSystem : EntitySystem
 {
+    [Dependency] private readonly SpriteSystem _sprite = default!;
+
     private EntityQuery<SpriteComponent> _spriteQuery;
 
     public override void Initialize()
@@ -32,7 +34,9 @@ public sealed class CombatMechDamageFlashSystem : EntitySystem
             if (_spriteQuery.TryComp(overlay, out var overlaySprite) &&
                 overlaySprite.Color != mechSprite.Color)
             {
-                overlaySprite.Color = mechSprite.Color;
+                // Go through SpriteSystem so the sprite-tree / render cache invalidates correctly;
+                // direct field assignment can leave stale render entries on child sprites.
+                _sprite.SetColor((overlay, overlaySprite), mechSprite.Color);
             }
         }
     }

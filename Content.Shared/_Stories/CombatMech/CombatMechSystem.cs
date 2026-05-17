@@ -1,16 +1,10 @@
-using Content.Shared._RMC14.Hands;
-using Content.Shared._RMC14.Attachable.Components;
-using Content.Shared._RMC14.Attachable.Events;
 using Content.Shared._RMC14.Atmos;
 using Content.Shared._RMC14.CameraShake;
 using Content.Shared._RMC14.Damage;
-using Content.Shared._RMC14.Entrenching;
 using Content.Shared._RMC14.Explosion;
 using Content.Shared._RMC14.Marines.Skills;
 using Content.Shared._RMC14.Pulling;
-using Content.Shared._RMC14.Slow;
 using Content.Shared._RMC14.Sprite;
-using Content.Shared._RMC14.Stealth;
 using Content.Shared._RMC14.Stun;
 using Content.Shared._RMC14.Suicide;
 using Content.Shared._RMC14.Weapons.Ranged;
@@ -18,9 +12,6 @@ using Content.Shared._RMC14.Weapons.Ranged.Flamer;
 using Content.Shared._RMC14.Weapons.Ranged.IFF;
 using Content.Shared._RMC14.Xenonids.Acid;
 using Content.Shared._RMC14.Xenonids.Neurotoxin;
-using Content.Shared._RMC14.Xenonids.Paralyzing;
-using Content.Shared._RMC14.Xenonids.Parasite;
-using Content.Shared._RMC14.Xenonids.Weeds;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Buckle;
 using Content.Shared.Buckle.Components;
@@ -92,6 +83,8 @@ public sealed partial class CombatMechSystem : EntitySystem
     // re-running in the same tick (each tick gives GiveHands another chance to finish populating the mech).
     private readonly Queue<EntityUid> _pendingDefaultWeapons = new();
     private readonly Queue<EntityUid> _nextTickDefaultWeapons = new();
+    // Snapshot buffer for safe iteration over _pilotsInCombatMechs while cleanup may reenter and mutate it.
+    private readonly List<EntityUid> _pilotsIterBuffer = new();
 
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
@@ -193,9 +186,9 @@ public sealed partial class CombatMechSystem : EntitySystem
         SubscribeLocalEvent<InsideCombatVehicleComponent, ComponentShutdown>(OnInsideVehicleShutdown);
         SubscribeLocalEvent<InsideCombatVehicleComponent, MoveEvent>(OnInsideVehicleMove);
         SubscribeLocalEvent<InsideCombatVehicleComponent, GetEyeOffsetAttemptEvent>(OnInsideVehicleGetEyeOffsetAttempt);
-        SubscribeLocalEvent<InsideCombatVehicleComponent, GetVerbsEvent<Verb>>(
-            OnInsideVehicleGetVerbs,
-            after: [typeof(RMCSuicideSystem)]);
+        SubscribeLocalEvent<InsideCombatVehicleComponent, RMCSuicideDoAfterEvent>(
+            OnInsideVehicleSuicideAttempt,
+            before: [typeof(RMCSuicideSystem)]);
     }
 
     public override void Update(float frameTime)
@@ -259,8 +252,14 @@ public sealed partial class CombatMechSystem : EntitySystem
         ProcessMarineStepStuns();
         ProcessOpenFaceplateDamageOverTime();
 
+        // ClearProtectedStatuses internally calls the legacy synchronous _statusEffects.TryRemoveStatusEffect,
+        // whose subscribers may reenter and mutate _pilotsInCombatMechs (e.g. ejecting the pilot mid-cleanup).
+        // Snapshot into a re-used buffer so the foreach never iterates the live HashSet.
+        _pilotsIterBuffer.Clear();
+        _pilotsIterBuffer.AddRange(_pilotsInCombatMechs);
+
         _stalePilots.Clear();
-        foreach (var uid in _pilotsInCombatMechs)
+        foreach (var uid in _pilotsIterBuffer)
         {
             if (!TryComp(uid, out InsideCombatVehicleComponent? inside) ||
                 !HasLiveVehicle((uid, inside)))
@@ -314,12 +313,27 @@ public sealed partial class CombatMechSystem : EntitySystem
         // ShowContents = true is mandatory: BaseContainer defaults hide the contained sprite from
         // rendering (the overlay literally disappears otherwise). OccludesLight = false because the
         // overlay is decorative and must not cast shadows onto the mech body underneath it.
-        var slot = _container.EnsureContainer<ContainerSlot>(ent.Owner, ent.Comp.BodyOverlayContainerId);
-        slot.ShowContents = true;
-        slot.OccludesLight = false;
+        var slot = _container.EnsureContainer<ContainerSlot>(ent.Owner, ent.Comp.BodyOverlayContainerId, out var alreadyExisted);
 
-        if (ent.Comp.BodyOverlayEntity is { } existing && !Deleted(existing) && slot.ContainedEntity == existing)
-            return;
+        // Direct mutation of ContainerSlot fields does not mark the manager dirty, so PVS state would
+        // ship the engine defaults (ShowContents=false) to clients and the overlay would render as
+        // invisible. Always re-apply the desired settings and explicitly dirty the manager on changes.
+        if (!alreadyExisted || slot.ShowContents != true || slot.OccludesLight != false)
+        {
+            slot.ShowContents = true;
+            slot.OccludesLight = false;
+            Dirty(ent.Owner, Comp<ContainerManagerComponent>(ent.Owner));
+        }
+
+        if (ent.Comp.BodyOverlayEntity is { } existing && !Deleted(existing))
+        {
+            if (slot.ContainedEntity == existing)
+                return;
+
+            // Old overlay drifted out of the slot (VV, another system, container reset). Delete it
+            // before spawning the replacement so we do not leak orphan entities each respawn.
+            QueueDel(existing);
+        }
 
         var overlay = Spawn(proto, Transform(ent.Owner).Coordinates);
         if (!_container.Insert(overlay, slot))
