@@ -17,9 +17,6 @@ public sealed partial class XenoDespoilerAcidBarrageProjectileComponent : Compon
     public bool EnhanceAcid = true;
 
     [DataField]
-    public TimeSpan SplashAcidDuration = TimeSpan.FromSeconds(12);
-
-    [DataField]
     public EntProtoId LingeringAcidProto = "RMCEffectDespoilerLingeringAcid";
 
     [DataField, AutoNetworkedField]

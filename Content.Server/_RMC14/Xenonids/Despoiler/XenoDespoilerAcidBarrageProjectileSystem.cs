@@ -40,7 +40,7 @@ public sealed class XenoDespoilerAcidBarrageProjectileSystem : EntitySystem
         {
             if (_mobStateQuery.HasComp(args.Target) && XenoDespoilerVictims.IsValidVictim(EntityManager, args.Target, src))
             {
-                _acid.ApplyAcid(args.Target, src, comp.SplashAcidDuration, enhance: comp.EnhanceAcid);
+                _acid.ApplyAcid(args.Target, src, enhance: comp.EnhanceAcid);
             }
         }
 
@@ -54,7 +54,7 @@ public sealed class XenoDespoilerAcidBarrageProjectileSystem : EntitySystem
                 continue;
             if (shooter is not { } caster || !XenoDespoilerVictims.IsValidVictim(EntityManager, ent, caster))
                 continue;
-            _acid.ApplyAcid(ent, caster, comp.SplashAcidDuration);
+            _acid.ApplyAcid(ent, caster);
         }
     }
 

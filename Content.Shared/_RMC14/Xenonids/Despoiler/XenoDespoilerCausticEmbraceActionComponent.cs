@@ -32,9 +32,6 @@ public sealed partial class XenoDespoilerCausticEmbraceActionComponent : Compone
     public TimeSpan EmpoweredWeakenDuration = TimeSpan.FromSeconds(1);
 
     [DataField]
-    public TimeSpan SplashAcidDuration = TimeSpan.FromSeconds(12);
-
-    [DataField]
     public float SplashScanDiameter = 3f;
 
     [DataField]
@@ -42,9 +39,6 @@ public sealed partial class XenoDespoilerCausticEmbraceActionComponent : Compone
 
     [DataField]
     public EntProtoId LingeringAcidProto = "RMCEffectDespoilerLingeringAcid";
-
-    [DataField]
-    public ComponentRegistry? EmpoweredAcid;
 
     [DataField]
     public SoundSpecifier? PounceSound;

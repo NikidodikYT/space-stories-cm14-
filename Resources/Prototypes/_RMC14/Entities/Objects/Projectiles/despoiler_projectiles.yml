@@ -21,7 +21,6 @@
     splashRadius: 1
     lingeringAcidChance: 0.25
     enhanceAcid: true
-    splashAcidDuration: 12
     lingeringAcidProto: RMCEffectDespoilerLingeringAcid
   - type: PointLight
     enabled: true
@@ -89,7 +88,6 @@
     stunsOnEmpowered: false
     stunDuration: 1
     grantImmunityDuration: 3
-    acidApplyDuration: 10
   - type: TimedDespawn
     lifetime: 2
   - type: Physics
@@ -116,7 +114,6 @@
     stunsOnEmpowered: true
     stunDuration: 1
     grantImmunityDuration: 3
-    acidApplyDuration: 10
 
 - type: entity
   id: RMCEffectDespoilerCausticTelegraph

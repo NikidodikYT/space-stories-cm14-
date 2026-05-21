@@ -39,7 +39,8 @@ public sealed class XenoDespoilerAcidSpraySystem : EntitySystem
         dmg.DamageDict["Heat"] = FixedPoint2.New(comp.Damage);
         _damageable.TryChangeDamage(target, dmg, ignoreResistances: false, origin: comp.Caster);
 
-        _acid.ApplyAcid(target, comp.Caster, comp.AcidApplyDuration, enhance: true);
+        if (comp.Caster is { } caster)
+            _acid.ApplyAcid(target, caster, enhance: true);
 
         if (comp.StunsOnEmpowered)
         {

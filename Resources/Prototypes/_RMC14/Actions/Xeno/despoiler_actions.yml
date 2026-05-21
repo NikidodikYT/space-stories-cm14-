@@ -68,17 +68,8 @@
         Heat: 30
     lingeringAcidChance: 0.3
     empoweredWeakenDuration: 1
-    splashAcidDuration: 12
     telegraphProto: RMCEffectDespoilerCausticTelegraph
     lingeringAcidProto: RMCEffectDespoilerLingeringAcid
-    empoweredAcid:
-    - type: UserAcided
-      combo: true
-      armorPiercing: 40
-      damage:
-        types:
-          Heat: 2
-      duration: 30
     pounceSound:
       path: /Audio/_RMC14/Xeno/alien_roar1.ogg
   - type: XenoActionPlasma

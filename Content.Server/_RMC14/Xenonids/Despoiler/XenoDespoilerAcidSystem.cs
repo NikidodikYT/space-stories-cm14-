@@ -7,17 +7,16 @@ using Content.Shared._RMC14.Xenonids.Projectile.Spit.Charge;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Weapons.Melee.Events;
-using Robust.Shared.Timing;
 
 namespace Content.Server._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly XenoDespoilerHypertensionSystem _hyper = default!;
     [Dependency] private readonly XenoSpitSystem _xenoSpit = default!;
 
     private EntityQuery<XenoComponent> _xenoQuery;
+    private EntityQuery<XenoDespoilerComponent> _despoilerQuery;
     private EntityQuery<XenoDespoilerHypertensionComponent> _hyperQuery;
     private EntityQuery<MarineComponent> _marineQuery;
     private EntityQuery<UserAcidedComponent> _userAcidedQuery;
@@ -26,6 +25,7 @@ public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
     public override void Initialize()
     {
         _xenoQuery = GetEntityQuery<XenoComponent>();
+        _despoilerQuery = GetEntityQuery<XenoDespoilerComponent>();
         _hyperQuery = GetEntityQuery<XenoDespoilerHypertensionComponent>();
         _marineQuery = GetEntityQuery<MarineComponent>();
         _userAcidedQuery = GetEntityQuery<UserAcidedComponent>();
@@ -80,10 +80,7 @@ public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
                 continue;
 
             if (hyper != null && hyper.Stacks >= comp.EnhanceStacksThreshold)
-                ApplyAcid(hit, uid, comp.AcidApplyDuration,
-                    enhance: false,
-                    armorPiercing: comp.AcidArmorPiercing,
-                    tickDamage: comp.AcidTickDamage);
+                ApplyAcid(hit, uid);
 
             if (hyper != null && _marineQuery.HasComp(hit))
                 _hyper.AddSlashPoints(uid, hyper);
@@ -91,40 +88,30 @@ public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
     }
 
     /// <summary>
-    /// Apply Despoiler's lingering acid to <paramref name="target"/>, raising
-    /// or capping the <see cref="XenoDespoilerAcidTierComponent"/> tier.
+    /// Apply Despoiler's lingering acid to <paramref name="target"/> from
+    /// <paramref name="caster"/>. Uses the caster's <see cref="XenoDespoilerComponent.AcidComponents"/>
+    /// registry to spawn <see cref="UserAcidedComponent"/> on first hit; ticks/visuals
+    /// after that are owned by <see cref="XenoSpitSystem"/>. Increments the Despoiler
+    /// acid tier on the target; <paramref name="enhance"/> jumps tier to max and flips
+    /// the UserAcided combo flag.
     /// </summary>
-    public void ApplyAcid(EntityUid target, EntityUid? source, TimeSpan duration,
-        bool enhance = false,
-        int? armorPiercing = null,
-        DamageSpecifier? tickDamage = null)
+    public void ApplyAcid(EntityUid target, EntityUid caster, bool enhance = false)
     {
-        var newExpiry = _timing.CurTime + duration;
+        if (!_despoilerQuery.TryComp(caster, out var despoilerComp))
+            return;
 
-        if (!_userAcidedQuery.TryComp(target, out var acid))
-        {
-            acid = EnsureComp<UserAcidedComponent>(target);
-            acid.Duration = duration;
-            acid.NextDamageAt = _timing.CurTime + acid.DamageEvery;
-        }
-
-        if (newExpiry > acid.ExpiresAt)
-            acid.ExpiresAt = newExpiry;
-
-        if (armorPiercing is { } ap)
-            acid.ArmorPiercing = ap;
-
-        if (tickDamage is not null)
-            acid.Damage = tickDamage;
-
-        Dirty(target, acid);
+        if (!_userAcidedQuery.HasComp(target) && despoilerComp.AcidComponents.Count > 0)
+            EntityManager.AddComponents(target, despoilerComp.AcidComponents, removeExisting: false);
 
         var tier = EnsureComp<XenoDespoilerAcidTierComponent>(target);
         if (enhance)
         {
             tier.Tier = tier.MaxTier;
-            _xenoSpit.SetAcidCombo((target, acid),
-                duration: duration, damage: null, paralyze: default, resists: default);
+            if (_userAcidedQuery.TryComp(target, out var acid))
+            {
+                _xenoSpit.SetAcidCombo((target, acid),
+                    duration: default, damage: null, paralyze: default, resists: default);
+            }
         }
         else if (tier.Tier < tier.MaxTier)
         {

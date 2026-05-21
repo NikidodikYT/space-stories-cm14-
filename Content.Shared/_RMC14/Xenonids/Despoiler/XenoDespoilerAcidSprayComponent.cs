@@ -17,9 +17,6 @@ public sealed partial class XenoDespoilerAcidSprayComponent : Component
     [DataField, AutoNetworkedField]
     public TimeSpan GrantImmunityDuration = TimeSpan.FromSeconds(3);
 
-    [DataField]
-    public TimeSpan AcidApplyDuration = TimeSpan.FromSeconds(10);
-
     [DataField, AutoNetworkedField]
     public EntityUid? Caster;
 }

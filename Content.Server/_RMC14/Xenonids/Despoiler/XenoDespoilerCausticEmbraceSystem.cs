@@ -140,7 +140,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
                     if (Math.Abs(entPos.Y - tileMap.Position.Y) > 0.5f) continue;
 
                     _damageable.TryChangeDamage(ent, action.SplashDamage, ignoreResistances: false, origin: caster);
-                    _acid.ApplyAcid(ent, caster, action.SplashAcidDuration);
+                    _acid.ApplyAcid(ent, caster);
                 }
 
                 if (_random.Prob(action.LingeringAcidChance))
@@ -187,7 +187,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             _audio.PlayPvs(sound, uid);
 
         _damageable.TryChangeDamage(victim.Value, action.EmpoweredDamage, ignoreResistances: false, origin: uid);
-        _acid.ApplyAcid(victim.Value, uid, action.SplashAcidDuration, enhance: true);
+        _acid.ApplyAcid(victim.Value, uid, enhance: true);
 
         _stun.TryParalyze(victim.Value, action.EmpoweredWeakenDuration, true);
 

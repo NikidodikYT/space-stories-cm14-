@@ -57,7 +57,7 @@ public sealed class XenoTailJabSystem : EntitySystem
 
         //TODO RMC14 targets chest
         var damage = new DamageSpecifier(xeno.Comp.Damage);
-        var ev = new RMCGetTailStabBonusDamageEvent(new DamageSpecifier(), target);
+        var ev = new RMCGetTailStabBonusDamageEvent(new DamageSpecifier());
         RaiseLocalEvent(xeno, ref ev);
         damage += ev.Damage;
 

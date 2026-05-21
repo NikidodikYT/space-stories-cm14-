@@ -101,6 +101,14 @@
         Heat: 7
   - type: XenoDespoiler
     finishingStabBonusByTier: [10, 20, 30, 40]
+    acidComponents:
+    - type: UserAcided
+      armorPiercing: 40
+      duration: 12
+      damageEvery: 1
+      damage:
+        types:
+          Heat: 1
   - type: XenoDespoilerHypertension
     maxStacks: 4
     pointsPerStack: 200
@@ -110,11 +118,6 @@
     bonusBurnPerStack: 10
   - type: XenoDespoilerSlashOnHit
     enhanceStacksThreshold: 3
-    acidApplyDuration: 12
-    acidArmorPiercing: 40
-    acidTickDamage:
-      types:
-        Heat: 1
   - type: Tackle
     chance: 0.2
     stunMin: 2
