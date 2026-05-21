@@ -1,0 +1,188 @@
+# Despoiler projectiles and ground-effect entities.
+
+- type: entity
+  id: RMCProjectileDespoilerAcidShot
+  name: acid shot
+  parent: BaseBullet
+  noSpawn: true
+  components:
+  # Full layers override — BaseBullet's Sprite has `layers: [{ state: bullet }]`;
+  # SS14 merges parent/child Sprite by replacing `layers` only when child also
+  # declares `layers`, otherwise the inherited `bullet` state is looked up in
+  # OUR rsi and fails. Redeclaring `layers` here fully replaces it.
+  # NOTE: per-projectile random scale (0.9..1.33) is applied at spawn time by
+  # XenoDespoilerAcidBarrageProjectileVisualSystem reading the Scale field from
+  # XenoDespoilerAcidBarrageProjectile.
+  - type: Sprite
+    sprite: _RMC14/Effects/despoiler_acid_puddle.rsi
+    drawdepth: Effects
+    layers:
+    - state: xeno_acid_lingering
+      shader: unshaded
+  - type: Projectile
+    damage:
+      types:
+        Heat: 20
+        Piercing: 0
+    deleteOnCollide: true
+    ignoreShield: false
+  - type: XenoDespoilerAcidBarrageProjectile
+    splashRadius: 1
+    lingeringAcidChance: 0.25
+    enhanceAcid: true
+  - type: PointLight
+    enabled: true
+    radius: 1.2
+    color: "#83ff66"
+  - type: TimedDespawn
+    lifetime: 3
+
+- type: entity
+  id: RMCEffectDespoilerLingeringAcid
+  name: lingering acid
+  description: A bubbling pool of corrosive acid.
+  noSpawn: true
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _RMC14/Effects/despoiler_acid_puddle.rsi
+    state: puddle
+    drawdepth: BelowMobs
+  - type: PointLight
+    enabled: true
+    radius: 1
+    color: "#83ff66"
+  - type: XenoDespoilerLingeringAcid
+    minLifetimeSeconds: 15
+    maxLifetimeSeconds: 20
+    crossBurnDamage: 20
+    slowdownSeconds: 1.5
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        hard: false
+        layer:
+        - SlipLayer
+        mask:
+        - MobMask
+
+- type: entity
+  id: RMCEffectDespoilerAcidSpray
+  name: acid spray
+  description: A hissing burst of acid.
+  noSpawn: true
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _RMC14/Effects/despoiler_acid_puddle.rsi
+    state: puddle
+    drawdepth: BelowMobs
+  - type: PointLight
+    enabled: true
+    radius: 0.9
+    color: "#83ff66"
+  - type: XenoDespoilerAcidSpray
+    damage: 30
+    stunsOnEmpowered: false
+    stunSeconds: 1
+    grantImmunitySeconds: 3
+  - type: TimedDespawn
+    lifetime: 2
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        hard: false
+        layer:
+        - SlipLayer
+        mask:
+        - MobMask
+
+- type: entity
+  id: RMCEffectDespoilerAcidSprayEmpowered
+  parent: RMCEffectDespoilerAcidSpray
+  noSpawn: true
+  components:
+  - type: XenoDespoilerAcidSpray
+    damage: 30
+    stunsOnEmpowered: true
+    stunSeconds: 1
+    grantImmunitySeconds: 3
+
+# U-shape Caustic Embrace telegraph. Mirrors CM13's
+# new /obj/effect/xenomorph/xeno_telegraph/green(turf). Brief flash on the
+# tiles that will receive the pounce shockwave.
+- type: entity
+  id: RMCEffectDespoilerCausticTelegraph
+  name: caustic telegraph
+  noSpawn: true
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _RMC14/Effects/xeno_telegraph.rsi
+    state: xeno_telegraph_base
+    color: "#799657"
+    drawdepth: BelowMobs
+    noRot: true
+  - type: TimedDespawn
+    lifetime: 0.25
+
+# Oozing Wounds spray telegraph (visual-only; the real spray spawns after
+# the distance-based delay tick).
+- type: entity
+  id: RMCEffectDespoilerOozingTelegraph
+  name: acid telegraph
+  noSpawn: true
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _RMC14/Effects/xeno_telegraph.rsi
+    state: xeno_telegraph_base
+    color: "#c4a23d"
+    drawdepth: BelowMobs
+    noRot: true
+  - type: TimedDespawn
+    lifetime: 0.4
+
+# Catalyze cast visual: bubbles of pressurized acid around the Despoiler.
+# Parented to the caster on spawn; TimedDespawn cleans it up after the loop plays.
+- type: entity
+  id: RMCEffectDespoilerCatalyze
+  name: hypertension burst
+  noSpawn: true
+  components:
+  - type: Transform
+  - type: Sprite
+    sprite: _RMC14/Effects/despoiler_catalyze.rsi
+    state: bubbles
+    drawdepth: BelowMobs
+    noRot: true
+  - type: PointLight
+    enabled: true
+    radius: 1.6
+    softness: 1
+    energy: 1.2
+    color: "#83ff66"
+  - type: TimedDespawn
+    lifetime: 10
