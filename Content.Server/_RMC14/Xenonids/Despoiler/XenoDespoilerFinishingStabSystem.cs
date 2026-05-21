@@ -1,67 +1,48 @@
-using Content.Shared._RMC14.Xenonids.Stab;
 using Content.Shared._RMC14.Xenonids.Despoiler;
+using Content.Shared._RMC14.Xenonids.Stab;
+using Content.Shared._RMC14.Xenonids.Projectile.Spit.Charge;
 using Content.Shared.Damage;
-using Content.Shared.Weapons.Melee.Events;
-using Robust.Shared.Timing;
+using Content.Shared.FixedPoint;
 
 namespace Content.Server._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Implements the Despoiler's Tail Stab passive damage modifier.
-/// When the Despoiler lands a standard tail stab, we check for active acid tiers
-/// on the target and apply bonus heat damage ignoring resistances.
-/// </summary>
 public sealed class XenoDespoilerFinishingStabSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private readonly XenoDespoilerAcidSystem _acid = default!;
+
+    private EntityQuery<UserAcidedComponent> _acidQuery;
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<XenoDespoilerComponent, RMCGetTailStabBonusDamageEvent>(OnGetTailStabBonusDamage);
-        SubscribeLocalEvent<XenoDespoilerComponent, MeleeHitEvent>(OnMeleeHit);
+        _acidQuery = GetEntityQuery<UserAcidedComponent>();
+
+        SubscribeLocalEvent<XenoDespoilerComponent, RMCGetTailStabBonusDamageEvent>(OnGetTailStabBonus);
     }
 
-    private void OnGetTailStabBonusDamage(EntityUid uid, XenoDespoilerComponent comp, ref RMCGetTailStabBonusDamageEvent args)
+    private void OnGetTailStabBonus(EntityUid uid, XenoDespoilerComponent comp, ref RMCGetTailStabBonusDamageEvent args)
     {
-        comp.LastTailStabTime = _timing.CurTime;
-    }
-
-    private void OnMeleeHit(EntityUid uid, XenoDespoilerComponent comp, MeleeHitEvent args)
-    {
-        if (comp.LastTailStabTime != _timing.CurTime)
+        if (args.Target is not { } target)
             return;
 
-        comp.LastTailStabTime = null;
+        if (!_acidQuery.HasComp(target))
+            return;
 
-        foreach (var target in args.HitEntities)
-        {
-            if (TerminatingOrDeleted(target))
-                continue;
+        var tier = _acid.ConsumeAcidTier(target);
+        if (tier <= 0)
+            return;
 
-            if (TryComp<XenoDespoilerAcidEffectComponent>(target, out var acid))
-            {
-                var level = acid.Level;
-                if (level > 0)
-                {
-                    var bonusDamage = 15 * Math.Clamp(level, 0, 3);
-                    var damage = new DamageSpecifier();
-                    damage.DamageDict["Heat"] = bonusDamage;
+        var table = comp.FinishingStabBonusByTier;
+        if (table.Count == 0)
+            return;
 
-                    _damageable.TryChangeDamage(target, damage, ignoreResistances: true, origin: uid);
+        var idx = Math.Clamp(tier - 1, 0, table.Count - 1);
+        var bonus = table[idx];
+        if (bonus <= 0)
+            return;
 
-                    // Decrement target's acid stack by 1 on hit
-                    acid.Level--;
-                    if (acid.Level <= 0)
-                    {
-                        RemComp<XenoDespoilerAcidEffectComponent>(target);
-                    }
-                    else
-                    {
-                        Dirty(target, acid);
-                    }
-                }
-            }
-        }
+        var damage = new DamageSpecifier();
+        damage.DamageDict["Heat"] = FixedPoint2.New(bonus);
+        _damageable.TryChangeDamage(target, damage, ignoreResistances: true, origin: uid);
     }
 }

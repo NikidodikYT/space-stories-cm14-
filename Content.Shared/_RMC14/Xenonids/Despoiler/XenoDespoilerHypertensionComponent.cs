@@ -1,13 +1,9 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Despoiler's Hypertension resource (state only). Logic lives in
-/// <c>XenoDespoilerHypertensionSystem</c> (shared, read-only accumulation) and
-/// <c>XenoDespoilerAcidSystem</c> (slash bonus damage).
-/// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
 public sealed partial class XenoDespoilerHypertensionComponent : Component
 {
     [DataField, AutoNetworkedField]
@@ -19,21 +15,21 @@ public sealed partial class XenoDespoilerHypertensionComponent : Component
     [DataField, AutoNetworkedField]
     public float Points;
 
-    [DataField, AutoNetworkedField]
+    [DataField]
     public float PointsPerStack = 200f;
 
-    [DataField, AutoNetworkedField]
+    [DataField]
     public float PointsPerSlash = 100f;
 
-    [DataField, AutoNetworkedField]
-    public float DecayDelaySeconds = 10f;
+    [DataField]
+    public TimeSpan DecayDelay = TimeSpan.FromSeconds(10);
 
-    [DataField, AutoNetworkedField]
+    [DataField]
     public float DecayPerSecond = 200f;
 
-    [DataField, AutoNetworkedField]
-    public float BonusBurnPerStack = 5f;
+    [DataField]
+    public float BonusBurnPerStack = 10f;
 
-    [DataField, AutoNetworkedField]
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
     public TimeSpan LastActivityAt;
 }

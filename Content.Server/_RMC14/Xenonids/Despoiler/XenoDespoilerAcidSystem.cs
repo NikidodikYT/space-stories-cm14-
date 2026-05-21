@@ -2,6 +2,8 @@ using Content.Shared._RMC14.Marines;
 using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Stab;
 using Content.Shared._RMC14.Xenonids.Despoiler;
+using Content.Shared._RMC14.Xenonids.Projectile.Spit;
+using Content.Shared._RMC14.Xenonids.Projectile.Spit.Charge;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Weapons.Melee.Events;
@@ -9,20 +11,26 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Server-side: every Despoiler slash applies / extends the Acid effect on
-/// the target, optionally enhances it (at hypertension stacks >= threshold),
-/// and adds bonus burn damage (+5 per stack) via GetMeleeDamageEvent.
-/// The Acid effect itself no longer deals damage over time — it only tracks
-/// level for armor debuffs and expires after its duration.
-/// </summary>
-public sealed class XenoDespoilerAcidSystem : EntitySystem
+public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly XenoDespoilerHypertensionSystem _hyper = default!;
+    [Dependency] private readonly XenoSpitSystem _xenoSpit = default!;
+
+    private EntityQuery<XenoComponent> _xenoQuery;
+    private EntityQuery<XenoDespoilerHypertensionComponent> _hyperQuery;
+    private EntityQuery<MarineComponent> _marineQuery;
+    private EntityQuery<UserAcidedComponent> _userAcidedQuery;
+    private EntityQuery<XenoDespoilerAcidTierComponent> _tierQuery;
 
     public override void Initialize()
     {
+        _xenoQuery = GetEntityQuery<XenoComponent>();
+        _hyperQuery = GetEntityQuery<XenoDespoilerHypertensionComponent>();
+        _marineQuery = GetEntityQuery<MarineComponent>();
+        _userAcidedQuery = GetEntityQuery<UserAcidedComponent>();
+        _tierQuery = GetEntityQuery<XenoDespoilerAcidTierComponent>();
+
         SubscribeLocalEvent<XenoDespoilerSlashOnHitComponent, MeleeHitEvent>(OnMeleeHit);
         SubscribeLocalEvent<XenoDespoilerSlashOnHitComponent, GetMeleeDamageEvent>(OnGetMeleeDamage);
         SubscribeLocalEvent<XenoDespoilerSlashOnHitComponent, RMCGetTailStabBonusDamageEvent>(OnGetTailStabBonusDamage);
@@ -30,8 +38,7 @@ public sealed class XenoDespoilerAcidSystem : EntitySystem
 
     private void OnGetMeleeDamage(EntityUid uid, XenoDespoilerSlashOnHitComponent comp, ref GetMeleeDamageEvent args)
     {
-        // Despoiler bonus burn = stacks * BonusBurnPerStack.
-        if (!TryComp<XenoDespoilerHypertensionComponent>(uid, out var hyper) || hyper.Stacks <= 0)
+        if (!_hyperQuery.TryComp(uid, out var hyper) || hyper.Stacks <= 0)
             return;
 
         var bonus = hyper.Stacks * hyper.BonusBurnPerStack;
@@ -40,14 +47,12 @@ public sealed class XenoDespoilerAcidSystem : EntitySystem
 
         var burn = new DamageSpecifier();
         burn.DamageDict["Heat"] = FixedPoint2.New(bonus);
-        args.Damage = args.Damage + burn;
+        args.Damage += burn;
     }
 
-    // Tail stab raises its own bonus-damage event instead of GetMeleeDamageEvent,
-    // so the hypertension burn bonus would otherwise be skipped at every stack.
     private void OnGetTailStabBonusDamage(EntityUid uid, XenoDespoilerSlashOnHitComponent comp, ref RMCGetTailStabBonusDamageEvent args)
     {
-        if (!TryComp<XenoDespoilerHypertensionComponent>(uid, out var hyper) || hyper.Stacks <= 0)
+        if (!_hyperQuery.TryComp(uid, out var hyper) || hyper.Stacks <= 0)
             return;
 
         var bonus = hyper.Stacks * hyper.BonusBurnPerStack;
@@ -64,89 +69,87 @@ public sealed class XenoDespoilerAcidSystem : EntitySystem
         if (!args.IsHit || args.HitEntities.Count == 0)
             return;
 
-        // Despoiler must be a real xeno. Otherwise we don't run.
-        if (!HasComp<XenoComponent>(uid))
+        if (!_xenoQuery.HasComp(uid))
             return;
 
-        TryComp<XenoDespoilerHypertensionComponent>(uid, out var hyper);
+        _hyperQuery.TryComp(uid, out var hyper);
 
         foreach (var hit in args.HitEntities)
         {
-            if (hit == uid)
+            if (hit == uid || _xenoQuery.HasComp(hit))
                 continue;
-
-            // Skip allies (other xenos).
-            if (HasComp<XenoComponent>(hit))
-                continue;
-
-            ApplyAcid(hit, uid, comp.AcidApplyDuration);
 
             if (hyper != null && hyper.Stacks >= comp.EnhanceStacksThreshold)
-                EnhanceAcid(hit);
+                ApplyAcid(hit, uid, comp.AcidApplyDuration,
+                    enhance: false,
+                    armorPiercing: comp.AcidArmorPiercing,
+                    tickDamage: comp.AcidTickDamage);
 
-            // Hypertension only builds on marine hits — slashes against
-            // synthetics, xeno-friendly NPCs, structures, etc. don't count.
-            if (hyper != null && HasComp<MarineComponent>(hit))
+            if (hyper != null && _marineQuery.HasComp(hit))
                 _hyper.AddSlashPoints(uid, hyper);
         }
     }
 
-    public XenoDespoilerAcidEffectComponent ApplyAcid(EntityUid target, EntityUid? source, float durationSeconds)
+    /// <summary>
+    /// Apply Despoiler's lingering acid to <paramref name="target"/>, raising
+    /// or capping the <see cref="XenoDespoilerAcidTierComponent"/> tier.
+    /// </summary>
+    public void ApplyAcid(EntityUid target, EntityUid? source, TimeSpan duration,
+        bool enhance = false,
+        int? armorPiercing = null,
+        DamageSpecifier? tickDamage = null)
     {
-        var effect = EnsureComp<XenoDespoilerAcidEffectComponent>(target);
-        if (effect.Level < 1)
-            effect.Level = 1;
+        var newExpiry = _timing.CurTime + duration;
 
-        var now = _timing.CurTime;
-        var newExpiry = now + TimeSpan.FromSeconds(durationSeconds);
-        if (newExpiry > effect.ExpiresAt)
-            effect.ExpiresAt = newExpiry;
-
-        if (effect.NextTickAt == TimeSpan.Zero)
-            effect.NextTickAt = now + TimeSpan.FromSeconds(effect.TickIntervalSeconds);
-
-        Dirty(target, effect);
-        return effect;
-    }
-
-    public void EnhanceAcid(EntityUid target)
-    {
-        if (!TryComp<XenoDespoilerAcidEffectComponent>(target, out var effect))
+        if (!_userAcidedQuery.TryComp(target, out var acid))
         {
-            var defaults = new XenoDespoilerAcidEffectComponent();
-            effect = ApplyAcid(target, null, defaults.DurationSeconds);
+            acid = EnsureComp<UserAcidedComponent>(target);
+            acid.Duration = duration;
+            acid.NextDamageAt = _timing.CurTime + acid.DamageEvery;
         }
 
-        if (effect.Level < effect.MaxLevel)
-        {
-            effect.Level++;
-            Dirty(target, effect);
-        }
+        if (newExpiry > acid.ExpiresAt)
+            acid.ExpiresAt = newExpiry;
 
-        effect.ExpiresAt = _timing.CurTime + TimeSpan.FromSeconds(effect.DurationSeconds);
-        Dirty(target, effect);
+        if (armorPiercing is { } ap)
+            acid.ArmorPiercing = ap;
+
+        if (tickDamage is not null)
+            acid.Damage = tickDamage;
+
+        Dirty(target, acid);
+
+        var tier = EnsureComp<XenoDespoilerAcidTierComponent>(target);
+        if (enhance)
+        {
+            tier.Tier = tier.MaxTier;
+            _xenoSpit.SetAcidCombo((target, acid),
+                duration: duration, damage: null, paralyze: default, resists: default);
+        }
+        else if (tier.Tier < tier.MaxTier)
+        {
+            tier.Tier++;
+        }
+        Dirty(target, tier);
     }
 
-    public void SuperEnhanceAcid(EntityUid target)
+    /// <summary>
+    /// Decrement the Despoiler acid tier on <paramref name="target"/> by one.
+    /// Returns the tier value <em>before</em> the decrement, or 0 if no tier
+    /// component was present.
+    /// </summary>
+    public int ConsumeAcidTier(EntityUid target)
     {
-        var effect = EnsureComp<XenoDespoilerAcidEffectComponent>(target);
-        effect.Level = effect.MaxLevel;
-        effect.ExpiresAt = _timing.CurTime + TimeSpan.FromSeconds(effect.DurationSeconds);
-        if (effect.NextTickAt == TimeSpan.Zero)
-            effect.NextTickAt = _timing.CurTime + TimeSpan.FromSeconds(effect.TickIntervalSeconds);
-        Dirty(target, effect);
-    }
+        if (!_tierQuery.TryComp(target, out var tier) || tier.Tier <= 0)
+            return 0;
 
-    public override void Update(float frameTime)
-    {
-        var now = _timing.CurTime;
-        var query = EntityQueryEnumerator<XenoDespoilerAcidEffectComponent>();
-        while (query.MoveNext(out var uid, out var effect))
-        {
-            // Acid effect is now a level/duration tracker only — no DoT.
-            // All damage is dealt up front by the hit that applied it.
-            if (now >= effect.ExpiresAt)
-                RemComp<XenoDespoilerAcidEffectComponent>(uid);
-        }
+        var previous = tier.Tier;
+        tier.Tier--;
+        if (tier.Tier <= 0)
+            RemComp<XenoDespoilerAcidTierComponent>(target);
+        else
+            Dirty(target, tier);
+
+        return previous;
     }
 }

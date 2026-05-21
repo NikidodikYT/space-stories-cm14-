@@ -14,17 +14,6 @@ using System.Numerics;
 
 namespace Content.Client._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Mouse dispatcher for the Acid Barrage charge UX.
-///
-///   LMB while the local entity holds <see cref="XenoDespoilerChargingBarrageComponent"/>:
-///     fire the volley at the click coordinates
-///     (<see cref="XenoDespoilerBarrageFireRequest"/>) and consume the input so
-///     it doesn't fall through to normal interaction / attack.
-///   RMB while charging: cancel the charge
-///     (<see cref="XenoDespoilerBarrageCancelRequest"/>) and consume the input.
-///   When not charging both clicks are passed through unchanged.
-/// </summary>
 public sealed class XenoDespoilerBarrageFireKeybindSystem : EntitySystem
 {
     [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -127,8 +116,6 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
         var rotation = args.Viewport.Eye?.Rotation ?? Angle.Zero;
         var xformQuery = _entManager.GetEntityQuery<TransformComponent>();
 
-        const float scale = 1f;
-        var scaleMatrix = Matrix3Helpers.CreateScale(new Vector2(scale, scale));
         var rotationMatrix = Matrix3Helpers.CreateRotation(-rotation);
 
         var curTime = _timing.CurTime;
@@ -145,21 +132,16 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
             if (!bounds.Contains(worldPosition))
                 continue;
 
-            if (uid != localEnt)
-                handle.UseShader(null);
-            else
-                handle.UseShader(_unshadedShader);
+            handle.UseShader(uid == localEnt ? _unshadedShader : null);
 
             var worldMatrix = Matrix3Helpers.CreateTranslation(worldPosition);
-            var scaledWorld = Matrix3x2.Multiply(scaleMatrix, worldMatrix);
-            var matty = Matrix3x2.Multiply(rotationMatrix, scaledWorld);
+            var matty = Matrix3x2.Multiply(rotationMatrix, worldMatrix);
             handle.SetTransform(matty);
 
             var alpha = sprite.Color.A;
 
             var yOffset = _sprite.GetLocalBounds((uid, sprite)).Height / 2f + 0.05f;
-            var position = new Vector2(-_barTexture.Width / 2f / EyeManager.PixelsPerMeter,
-                yOffset / scale);
+            var position = new Vector2(-_barTexture.Width / 2f / EyeManager.PixelsPerMeter, yOffset);
 
             handle.DrawTexture(_barTexture, position, Color.White.WithAlpha(alpha));
 
@@ -169,7 +151,7 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
                 ? Math.Clamp(elapsed.TotalSeconds / duration.TotalSeconds, 0.0, 1.0)
                 : 0.0;
 
-            var color = Color.FromHex("#7FFF00").WithAlpha(alpha); // lime green
+            var color = Color.FromHex("#7FFF00").WithAlpha(alpha);
 
             var xProgress = (EndX - StartX) * (float)elapsedRatio + StartX;
             var box = new Box2(new Vector2(StartX, 3f) / EyeManager.PixelsPerMeter, new Vector2(xProgress, 4f) / EyeManager.PixelsPerMeter);

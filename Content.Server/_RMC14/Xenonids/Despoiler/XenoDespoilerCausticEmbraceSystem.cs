@@ -1,49 +1,23 @@
 using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Map;
+using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Hive;
-using Content.Shared._RMC14.Xenonids.Plasma;
 using Content.Shared._RMC14.Xenonids.Despoiler;
-using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
-using Content.Shared.Actions.Components;
-using Content.Shared.Coordinates.Helpers;
 using Content.Shared.Damage;
 using Content.Shared.Interaction;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
 using Content.Shared.Stunnable;
 using Robust.Server.Audio;
 using Robust.Shared.Map;
-using Robust.Shared.Player;
 using Robust.Shared.Random;
-using Robust.Shared.Timing;
 
 namespace Content.Server._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Caustic Embrace.
-///
-/// Normal mode:
-///   1. Validate that the snapped landing tile isn't blocked by a wall and is
-///      reachable (LOS) — if not, abort BEFORE consuming the empower flag.
-///   2. Pounce strictly 1 tile in the cardinal/intercardinal direction nearest
-///      the click vector. Click distance only sets the angle.
-///   3. Drop the U-shape AoE anchored to the LANDING tile, opening behind the
-///      despoiler: telegraph + damage on every non-xeno mob on the U cells +
-///      <see cref="XenoDespoilerCausticEmbraceActionComponent.LingeringAcidChance"/>
-///      puddle roll per cell.
-///
-/// Empowered mode:
-///   1. Validate that there's a marine target within EmpoweredRange and that
-///      we have LOS to it.
-///   2. Only THEN consume the empower flag (no more "wasted empower on
-///      a misclick").
-///   3. Lunge onto the target tile, apply max-level Lingering Acid
-///      (DoT + armor debuff) and a brief weaken.
-/// </summary>
 public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 {
-    [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
     [Dependency] private readonly AudioSystem _audio = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
@@ -58,8 +32,16 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
     [Dependency] private readonly XenoDespoilerAcidSystem _acid = default!;
 
+    private EntityQuery<MobStateComponent> _mobStateQuery;
+    private EntityQuery<XenoComponent> _xenoQuery;
+    private EntityQuery<XenoDespoilerLingeringAcidComponent> _lingeringQuery;
+
     public override void Initialize()
     {
+        _mobStateQuery = GetEntityQuery<MobStateComponent>();
+        _xenoQuery = GetEntityQuery<XenoComponent>();
+        _lingeringQuery = GetEntityQuery<XenoDespoilerLingeringAcidComponent>();
+
         SubscribeLocalEvent<XenoDespoilerComponent, XenoDespoilerCausticEmbraceActionEvent>(OnUse);
     }
 
@@ -77,25 +59,17 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         if (dist < 0.01f)
             return;
 
-        var direction = approach / dist;
-        var step = SnapDirectionToTile(direction);
+        var step = SnapDirectionToTile(approach / dist);
         if (step == Vector2.Zero)
             return;
 
-        // Empower is checked-but-not-consumed here. We commit-or-refund based
-        // on per-mode validation below so misclicks don't burn the buff.
-        var hasEmpower = _catalyze.IsEmpowered(uid, comp);
-
-        if (hasEmpower)
+        if (_catalyze.IsEmpowered(uid, comp))
         {
-            if (TryEmpoweredLunge(uid, action, args, ownerXform.Coordinates, dist))
+            if (TryEmpoweredLunge(uid, action, args, dist))
             {
-                // Commit plasma + cooldown only after the lunge actually
-                // landed. Misclick during empowered mode leaves the buff and
-                // plasma untouched.
                 if (!_rmcActions.TryUseAction(args))
                     return;
-                _catalyze.TakeEmpowerment(uid, comp); // commit only on success
+                _catalyze.TakeEmpowerment(uid, comp);
                 args.Handled = true;
             }
             return;
@@ -103,9 +77,8 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 
         var landing = ownerXform.Coordinates.Offset(step);
 
-        // Wall / impassable check: never teleport through walls.
         if (_rmcMap.IsTileBlocked(landing) ||
-            !_interaction.InRangeUnobstructed(uid, landing, range: 2f))
+            !_interaction.InRangeUnobstructed(uid, landing, range: action.NormalRange + 1f))
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
             return;
@@ -124,31 +97,23 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         args.Handled = true;
     }
 
-    /// <summary>
-    /// Round a normalized direction vector to the nearest of the 8 grid steps.
-    /// Returns <see cref="Vector2.Zero"/> if both components round to 0
-    /// (caller must check).
-    /// </summary>
     private static Vector2 SnapDirectionToTile(Vector2 dir)
     {
-        var x = (float) Math.Sign(MathF.Round(dir.X));
-        var y = (float) Math.Sign(MathF.Round(dir.Y));
-        return new Vector2(x, y);
+        return new Vector2(Math.Sign(MathF.Round(dir.X)), Math.Sign(MathF.Round(dir.Y)));
     }
 
-    /// <summary>
-    /// Spawn the green telegraph + apply burn/acid to mobs + roll puddle on
-    /// the seven neighbours of <paramref name="center"/> that AREN'T directly
-    /// opposite of <paramref name="forward"/>. <paramref name="forward"/> must
-    /// already be snapped to a cardinal/intercardinal step.
-    /// </summary>
     private void SpawnUShape(EntityUid caster,
         XenoDespoilerCausticEmbraceActionComponent action,
         EntityCoordinates center,
         Vector2 forward)
     {
-        var backX = -(int) forward.X;
-        var backY = -(int) forward.Y;
+        var backX = -(int)forward.X;
+        var backY = -(int)forward.Y;
+
+        // Single lookup at the U-shape center, filter by tile inline — avoids 8 physics calls.
+        var centerMap = _xform.ToMapCoordinates(center);
+        var hits = _lookup.GetEntitiesIntersecting(centerMap.MapId,
+            Box2.CenteredAround(centerMap.Position, new Vector2(action.SplashScanDiameter, action.SplashScanDiameter)));
 
         for (var dx = -1; dx <= 1; dx++)
         {
@@ -159,20 +124,32 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
                 if (dx == backX && dy == backY)
                     continue;
 
-                var tile = center.Offset(new Vector2(dx, dy)).SnapToGrid(EntityManager);
+                var tile = center.Offset(new Vector2(dx, dy));
+                var tileMap = _xform.ToMapCoordinates(tile);
 
                 var telegraph = Spawn(action.TelegraphProto, tile);
                 _hive.SetSameHive(caster, telegraph);
 
-                DamageMobsAt(caster, tile, action);
+                foreach (var ent in hits)
+                {
+                    if (!XenoDespoilerVictims.IsValidVictim(EntityManager, ent, caster))
+                        continue;
+
+                    var entPos = _xform.ToMapCoordinates(Transform(ent).Coordinates).Position;
+                    if (Math.Abs(entPos.X - tileMap.Position.X) > 0.5f) continue;
+                    if (Math.Abs(entPos.Y - tileMap.Position.Y) > 0.5f) continue;
+
+                    _damageable.TryChangeDamage(ent, action.SplashDamage, ignoreResistances: false, origin: caster);
+                    _acid.ApplyAcid(ent, caster, action.SplashAcidDuration);
+                }
 
                 if (_random.Prob(action.LingeringAcidChance))
                 {
                     var puddle = Spawn(action.LingeringAcidProto, tile);
                     _hive.SetSameHive(caster, puddle);
-                    if (TryComp<XenoDespoilerLingeringAcidComponent>(puddle, out var puddleComp))
+                    if (_lingeringQuery.TryComp(puddle, out var puddleComp))
                     {
-                        puddleComp.Owner = caster;
+                        puddleComp.Caster = caster;
                         Dirty(puddle, puddleComp);
                     }
                 }
@@ -180,29 +157,9 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         }
     }
 
-    private void DamageMobsAt(EntityUid caster, EntityCoordinates tile, XenoDespoilerCausticEmbraceActionComponent action)
-    {
-        var tileMap = _xform.ToMapCoordinates(tile);
-        foreach (var ent in _lookup.GetEntitiesIntersecting(tileMap.MapId,
-                     Box2.CenteredAround(tileMap.Position, new Vector2(0.9f, 0.9f))))
-        {
-            if (!XenoDespoilerVictims.IsValidVictim(EntityManager, ent, caster))
-                continue;
-
-            _damageable.TryChangeDamage(ent, action.SplashDamage, ignoreResistances: false, origin: caster);
-            _acid.ApplyAcid(ent, caster, action.SplashAcidDurationSeconds);
-        }
-    }
-
-    /// <summary>
-    /// Returns true when the empowered lunge committed (caller commits the
-    /// empower flag). Returns false on any validation failure so the caller
-    /// can leave the buff intact.
-    /// </summary>
     private bool TryEmpoweredLunge(EntityUid uid,
         XenoDespoilerCausticEmbraceActionComponent action,
         XenoDespoilerCausticEmbraceActionEvent args,
-        EntityCoordinates origin,
         float dist)
     {
         if (dist > action.EmpoweredRange)
@@ -230,27 +187,18 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             _audio.PlayPvs(sound, uid);
 
         _damageable.TryChangeDamage(victim.Value, action.EmpoweredDamage, ignoreResistances: false, origin: uid);
-        _acid.SuperEnhanceAcid(victim.Value);
+        _acid.ApplyAcid(victim.Value, uid, action.SplashAcidDuration, enhance: true);
 
-        // Apply yellow (combo) acid on top of the lunge, matching how
-        // RMCXenoRunnerAcider's XenoAcidSlash brands its target. Registry is
-        // configured in yaml so designers can tweak duration/damage without
-        // touching code.
-        if (action.EmpoweredAcid is { } acid)
-            EntityManager.AddComponents(victim.Value, acid);
-
-        _stun.TryParalyze(victim.Value, TimeSpan.FromSeconds(action.EmpoweredWeakenSeconds), true);
+        _stun.TryParalyze(victim.Value, action.EmpoweredWeakenDuration, true);
 
         return true;
     }
 
     private EntityUid? FindEmpoweredVictim(EntityUid caster, XenoDespoilerCausticEmbraceActionEvent args)
     {
-        // Prefer the entity the player explicitly clicked.
         if (args.Entity is { } target && XenoDespoilerVictims.IsValidVictim(EntityManager, target, caster))
             return target;
 
-        // Fall back to the first valid mob on the target tile.
         var landingMap = _xform.ToMapCoordinates(args.Target);
         foreach (var ent in _lookup.GetEntitiesIntersecting(landingMap.MapId,
                      Box2.CenteredAround(landingMap.Position, new Vector2(1f, 1f))))
@@ -261,5 +209,4 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 
         return null;
     }
-
 }

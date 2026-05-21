@@ -12,11 +12,6 @@ public sealed partial class XenoDespoilerOozingWoundsActionEvent : InstantAction
 
 public sealed partial class XenoDespoilerCatalyzeActionEvent : InstantActionEvent;
 
-/// <summary>
-/// Sent from the client when the Despoiler operator presses LMB while Acid
-/// Barrage is charging. Carries the cursor target so the server can spawn the
-/// volley toward where the player clicked.
-/// </summary>
 [Serializable, NetSerializable]
 public sealed class XenoDespoilerBarrageFireRequest : EntityEventArgs
 {
@@ -24,8 +19,5 @@ public sealed class XenoDespoilerBarrageFireRequest : EntityEventArgs
     public XenoDespoilerBarrageFireRequest(NetCoordinates target) => Target = target;
 }
 
-/// <summary>
-/// Sent from the client when the Despoiler operator cancels the Acid Barrage charge.
-/// </summary>
 [Serializable, NetSerializable]
 public sealed class XenoDespoilerBarrageCancelRequest : EntityEventArgs;

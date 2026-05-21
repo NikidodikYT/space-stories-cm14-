@@ -3,12 +3,6 @@ using Robust.Client.GameObjects;
 
 namespace Content.Client._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Applies the per-projectile random scale (set on the server in
-/// <c>XenoDespoilerAcidBarrageSystem.FireVolley</c>) to the projectile's
-/// <see cref="SpriteComponent"/> on the client, both at spawn time and any
-/// time the networked component state changes.
-/// </summary>
 public sealed class XenoDespoilerAcidBarrageProjectileVisualSystem : EntitySystem
 {
     [Dependency] private readonly SpriteSystem _sprite = default!;

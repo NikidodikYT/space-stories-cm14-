@@ -2,15 +2,6 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Pure resource tracker — no spawns, no status effects, no DamageSpecifier mutation.
-/// Stacks are accumulated only via <see cref="AddSlashPoints"/>, which the
-/// server-side slash handler calls when the Despoiler lands a hit on a marine.
-///
-/// Display is handled by the client-side XenoHudOverlay (drawn over the
-/// Despoiler entity next to the health/plasma bars) — not by the
-/// AlertsSystem.
-/// </summary>
 public sealed class XenoDespoilerHypertensionSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
@@ -59,12 +50,10 @@ public sealed class XenoDespoilerHypertensionSystem : EntitySystem
             if (comp.Stacks <= 0 && comp.Points <= 0)
                 continue;
 
-            var idleFor = (now - comp.LastActivityAt).TotalSeconds;
-            if (idleFor < comp.DecayDelaySeconds)
+            if (now - comp.LastActivityAt < comp.DecayDelay)
                 continue;
 
-            var lost = comp.DecayPerSecond * frameTime;
-            comp.Points -= lost;
+            comp.Points -= comp.DecayPerSecond * frameTime;
             while (comp.Points < 0 && comp.Stacks > 0)
             {
                 comp.Stacks--;

@@ -4,14 +4,8 @@ using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
-public sealed partial class XenoDespoilerComponent : Component
+public sealed partial class XenoDespoilerAcidImmunityComponent : Component
 {
-    [DataField, AutoNetworkedField]
-    public bool NextAbilityEmpowered;
-
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
-    public TimeSpan EmpowerExpiresAt;
-
-    [DataField]
-    public List<float> FinishingStabBonusByTier = new() { 10f, 20f, 30f, 40f };
+    public TimeSpan ExpiresAt;
 }

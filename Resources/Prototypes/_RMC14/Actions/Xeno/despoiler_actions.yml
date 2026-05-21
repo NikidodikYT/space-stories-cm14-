@@ -1,11 +1,3 @@
-# Despoiler caste actions. Parent: ActionXenoBase (canonical RMC14 base).
-# Pattern mirrors RMC14's ActionXenoAcidStrong (xeno_offense_actions.yml) so
-# the target-mode highlight and click-through behaviour match the rest of the
-# xeno toolkit.
-# NOTE: The Despoiler's Tail Stab now uses standard ActionXenoTailStab from
-# the core RMC14 action set. Bonus acid damage is applied passively by
-# StoriesDespoilerFinishingStabServerSystem.
-
 - type: entity
   parent: ActionXenoBase
   id: RMCActionXenoDespoilerAcidBarrage
@@ -25,7 +17,6 @@
   - type: WorldTargetAction
     event: !type:XenoDespoilerAcidBarrageActionEvent
   - type: XenoDespoilerAcidBarrageAction
-    plasmaCost: 100
     maxChargeSeconds: 3
     minProjectiles: 1
     maxProjectiles: 8
@@ -40,7 +31,7 @@
     maxRangeTiles: 6
     minProjectileScale: 0.9
     maxProjectileScale: 1.33
-    cancelCooldownSeconds: 2
+    cancelCooldown: 2
     chargeSound:
       path: /Audio/_RMC14/Xeno/acid_sizzle1.ogg
     fireSound:
@@ -67,7 +58,6 @@
   - type: WorldTargetAction
     event: !type:XenoDespoilerCausticEmbraceActionEvent
   - type: XenoDespoilerCausticEmbraceAction
-    plasmaCost: 100
     normalRange: 1
     empoweredRange: 5
     splashDamage:
@@ -77,12 +67,10 @@
       types:
         Heat: 30
     lingeringAcidChance: 0.3
-    empoweredWeakenSeconds: 1.0
-    splashAcidDurationSeconds: 12
+    empoweredWeakenDuration: 1
+    splashAcidDuration: 12
     telegraphProto: RMCEffectDespoilerCausticTelegraph
     lingeringAcidProto: RMCEffectDespoilerLingeringAcid
-    # Combo=true makes UserAcidedComponent fire the Enhanced (yellow) visual on
-    # MapInit, the same path Acider Runner's combo hit takes.
     empoweredAcid:
     - type: UserAcided
       combo: true
@@ -112,16 +100,14 @@
   - type: InstantAction
     event: !type:XenoDespoilerOozingWoundsActionEvent
   - type: XenoDespoilerOozingWoundsAction
-    plasmaCost: 100
     baseRadius: 1
     severityHpThreshold1: 0.7
     severityHpThreshold2: 0.3
-    sprayLifetime: 2
     sprayDamage: 30
     lingeringAcidChance: 0.2
-    empoweredStunSeconds: 1.0
-    empoweredImmunitySeconds: 3.0
-    distanceDelayPerTileSeconds: 0.2
+    empoweredStunDuration: 1
+    empoweredImmunityDuration: 3
+    distanceDelayPerTile: 0.2
     telegraphProto: RMCEffectDespoilerOozingTelegraph
     acidSprayProto: RMCEffectDespoilerAcidSpray
     acidSprayEmpoweredProto: RMCEffectDespoilerAcidSprayEmpowered
@@ -147,7 +133,6 @@
   - type: InstantAction
     event: !type:XenoDespoilerCatalyzeActionEvent
   - type: XenoDespoilerCatalyzeAction
-    plasmaCost: 0
     hypertensionCost: 1
-    buffDurationSeconds: 10
+    buffDuration: 10
     visualProto: RMCEffectDespoilerCatalyze

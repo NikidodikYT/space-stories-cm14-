@@ -96,7 +96,7 @@ public abstract class SharedXenoTailStabSystem : EntitySystem
         // TODO RMC14 lag compensation
         var damaged = false;
         var damage = new DamageSpecifier(stab.Comp.TailDamage);
-        var eve = new RMCGetTailStabBonusDamageEvent(new DamageSpecifier());
+        var eve = new RMCGetTailStabBonusDamageEvent(new DamageSpecifier(), args.Entity);
         RaiseLocalEvent(stab, ref eve);
         damage += eve.Damage;
         if (args.Entity == null ||

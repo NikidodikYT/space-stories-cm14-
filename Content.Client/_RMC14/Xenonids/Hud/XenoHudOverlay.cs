@@ -30,7 +30,6 @@ using static Robust.Shared.Utility.SpriteSpecifier;
 using Content.Shared._RMC14.Slow;
 using Content.Shared._RMC14.Synth;
 using Content.Shared._RMC14.Xenonids.Hedgehog;
-using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.FixedPoint;
 
 namespace Content.Client._RMC14.Xenonids.Hud;
@@ -72,7 +71,6 @@ public sealed class XenoHudOverlay : Overlay
     private readonly ResPath _rsiPath = new("/Textures/_RMC14/Interface/xeno_hud.rsi");
     private readonly ResPath _rsiPathSlow = new("/Textures/_RMC14/Effects/xeno_stomp.rsi");
     private readonly ResPath _rsiPathFreeze = new("/Textures/_RMC14/Effects/xeno_freeze.rsi");
-    private readonly ResPath _rsiPathHypertension = new("/Textures/_RMC14/Interface/Alerts/hypertension.rsi");
 
     public XenoHudOverlay()
     {
@@ -136,7 +134,6 @@ public sealed class XenoHudOverlay : Overlay
             DrawAcidStacks(in args, scaleMatrix, rotationMatrix);
             DrawMarkedIcons(in args, scaleMatrix, rotationMatrix);
             DrawRank(in args, scaleMatrix, rotationMatrix);
-            DrawHypertension(in args, scaleMatrix, rotationMatrix);
 
             DrawSlow(in args, scaleMatrix, rotationMatrix);
             DrawStun(in args, scaleMatrix, rotationMatrix);
@@ -307,56 +304,6 @@ public sealed class XenoHudOverlay : Overlay
 
             var position = new Vector2(xOffset, yOffset);
             handle.DrawTexture(texture, position);
-        }
-    }
-
-    private void DrawHypertension(in OverlayDrawArgs args, Matrix3x2 scaleMatrix, Matrix3x2 rotationMatrix)
-    {
-        var handle = args.WorldHandle;
-        var query = _entity
-            .AllEntityQueryEnumerator<XenoDespoilerHypertensionComponent, XenoComponent, SpriteComponent, TransformComponent>();
-
-        while (query.MoveNext(out var uid, out var hyper, out var xeno, out var sprite, out var xform))
-        {
-            if (xform.MapID != args.MapId)
-                continue;
-
-            if (_container.IsEntityOrParentInContainer(uid, xform: xform))
-                continue;
-
-            if (_invisQuery.HasComp(uid))
-                continue;
-
-            if (_mobStateQuery.TryComp(uid, out var mobState) && _mobState.IsDead(uid, mobState))
-                continue;
-
-            var bounds = sprite.Bounds;
-            var worldPos = _transform.GetWorldPosition(xform, _xformQuery);
-
-            if (!bounds.Translated(worldPos).Intersects(args.WorldAABB))
-                continue;
-
-            var worldMatrix = Matrix3x2.CreateTranslation(worldPos);
-            var scaledWorld = Matrix3x2.Multiply(scaleMatrix, worldMatrix);
-            var matrix = Matrix3x2.Multiply(rotationMatrix, scaledWorld);
-            handle.SetTransform(matrix);
-
-            var level = Math.Clamp(hyper.Stacks, 0, 4);
-            var icon = new Rsi(_rsiPathHypertension, $"level_{level}");
-            var texture = _sprite.GetFrame(icon, _timing.CurTime);
-
-            // Sit beside the bar stack on the RIGHT — same Y anchor as the
-            // bars, then shifted one texture width to the right so it lands
-            // just past the sprite's right edge instead of overlapping.
-            var yOffset = (bounds.Height + sprite.Offset.Y) / 2f
-                          - (float) texture.Height / EyeManager.PixelsPerMeter * bounds.Height
-                          + xeno.HudOffset.Y;
-            var xOffset = (bounds.Width + sprite.Offset.X) / 2f
-                          - (float) texture.Width / EyeManager.PixelsPerMeter * bounds.Width
-                          + xeno.HudOffset.X
-                          + (float) texture.Width / EyeManager.PixelsPerMeter;
-
-            handle.DrawTexture(texture, new Vector2(xOffset, yOffset));
         }
     }
 

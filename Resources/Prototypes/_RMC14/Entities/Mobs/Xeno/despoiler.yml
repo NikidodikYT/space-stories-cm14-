@@ -1,9 +1,3 @@
-# Despoiler — Stories T3 area-denial / acid-stacker caste.
-# Evolves from Spitter (the evolution path is wired in
-# _RMC14/Entities/Mobs/Xeno/spitter.yml via a single added line under
-# XenoEvolution.evolvesTo — duplicate-id override at load time isn't
-# supported by Robust's PrototypeManager). Terminal branch.
-
 - type: entity
   parent:
   - CMXenoDeveloped
@@ -69,11 +63,8 @@
   - type: Xeno
     role: RMCXenoDespoiler
     tier: 3
-    # Bars/icons are drawn from the entity origin; the despoiler sprite sits
-    # higher in its 64×64 frame than the boiler, so no upward Y nudge — bars
-    # sit right under the visible body silhouette.
     hudOffset: 0,0
-    unlockAt: 900 # 15 minutes
+    unlockAt: 900
     actionIds:
     - ActionXenoRest
     - ActionXenoRegurgitate
@@ -89,7 +80,6 @@
   - type: XenoDevolve
     devolvesTo:
     - CMXenoSpitter
-  # Terminal branch — no XenoEvolution.
   - type: XenoPlasma
     plasma: 500
     maxPlasma: 500
@@ -109,20 +99,22 @@
       types:
         Slash: 18
         Heat: 7
-  # ----- Stories-specific despoiler markers -----
   - type: XenoDespoiler
+    finishingStabBonusByTier: [10, 20, 30, 40]
   - type: XenoDespoilerHypertension
     maxStacks: 4
     pointsPerStack: 200
     pointsPerSlash: 100
-    decayDelaySeconds: 10
+    decayDelay: 10
     decayPerSecond: 200
-    bonusBurnPerStack: 5
+    bonusBurnPerStack: 10
   - type: XenoDespoilerSlashOnHit
     enhanceStacksThreshold: 3
-    acidArmorPierce: 10
-    acidLevel3MeleeBioDebuff: 15
-  # ---------------------------------------------
+    acidApplyDuration: 12
+    acidArmorPiercing: 40
+    acidTickDamage:
+      types:
+        Heat: 1
   - type: Tackle
     chance: 0.2
     stunMin: 2
@@ -172,4 +164,3 @@
     id: RMCXenoDespoiler
   - type: IntelRecoverCorpseObjectiveOnDeath
     value: 0.3
-

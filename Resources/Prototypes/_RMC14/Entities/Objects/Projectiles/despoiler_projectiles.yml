@@ -1,18 +1,9 @@
-# Despoiler projectiles and ground-effect entities.
-
 - type: entity
   id: RMCProjectileDespoilerAcidShot
   name: acid shot
   parent: BaseBullet
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
-  # Full layers override — BaseBullet's Sprite has `layers: [{ state: bullet }]`;
-  # SS14 merges parent/child Sprite by replacing `layers` only when child also
-  # declares `layers`, otherwise the inherited `bullet` state is looked up in
-  # OUR rsi and fails. Redeclaring `layers` here fully replaces it.
-  # NOTE: per-projectile random scale (0.9..1.33) is applied at spawn time by
-  # XenoDespoilerAcidBarrageProjectileVisualSystem reading the Scale field from
-  # XenoDespoilerAcidBarrageProjectile.
   - type: Sprite
     sprite: _RMC14/Effects/despoiler_acid_puddle.rsi
     drawdepth: Effects
@@ -30,6 +21,8 @@
     splashRadius: 1
     lingeringAcidChance: 0.25
     enhanceAcid: true
+    splashAcidDuration: 12
+    lingeringAcidProto: RMCEffectDespoilerLingeringAcid
   - type: PointLight
     enabled: true
     radius: 1.2
@@ -41,7 +34,7 @@
   id: RMCEffectDespoilerLingeringAcid
   name: lingering acid
   description: A bubbling pool of corrosive acid.
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   placement:
     mode: SnapgridCenter
   components:
@@ -56,10 +49,9 @@
     radius: 1
     color: "#83ff66"
   - type: XenoDespoilerLingeringAcid
-    minLifetimeSeconds: 15
-    maxLifetimeSeconds: 20
+    minLifetime: 15
+    maxLifetime: 20
     crossBurnDamage: 20
-    slowdownSeconds: 1.5
   - type: Physics
     bodyType: Static
   - type: Fixtures
@@ -78,7 +70,7 @@
   id: RMCEffectDespoilerAcidSpray
   name: acid spray
   description: A hissing burst of acid.
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   placement:
     mode: SnapgridCenter
   components:
@@ -95,8 +87,9 @@
   - type: XenoDespoilerAcidSpray
     damage: 30
     stunsOnEmpowered: false
-    stunSeconds: 1
-    grantImmunitySeconds: 3
+    stunDuration: 1
+    grantImmunityDuration: 3
+    acidApplyDuration: 10
   - type: TimedDespawn
     lifetime: 2
   - type: Physics
@@ -116,61 +109,39 @@
 - type: entity
   id: RMCEffectDespoilerAcidSprayEmpowered
   parent: RMCEffectDespoilerAcidSpray
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
   - type: XenoDespoilerAcidSpray
     damage: 30
     stunsOnEmpowered: true
-    stunSeconds: 1
-    grantImmunitySeconds: 3
+    stunDuration: 1
+    grantImmunityDuration: 3
+    acidApplyDuration: 10
 
-# U-shape Caustic Embrace telegraph. Mirrors CM13's
-# new /obj/effect/xenomorph/xeno_telegraph/green(turf). Brief flash on the
-# tiles that will receive the pounce shockwave.
 - type: entity
   id: RMCEffectDespoilerCausticTelegraph
-  name: caustic telegraph
-  noSpawn: true
-  placement:
-    mode: SnapgridCenter
+  parent: RMCEffectXenoTelegraphGreen
+  categories: [ HideSpawnMenu ]
   components:
-  - type: Transform
-    anchored: true
-  - type: Sprite
-    sprite: _RMC14/Effects/xeno_telegraph.rsi
-    state: xeno_telegraph_base
-    color: "#799657"
-    drawdepth: BelowMobs
-    noRot: true
   - type: TimedDespawn
     lifetime: 0.25
+  - type: Sprite
+    color: "#799657"
 
-# Oozing Wounds spray telegraph (visual-only; the real spray spawns after
-# the distance-based delay tick).
 - type: entity
   id: RMCEffectDespoilerOozingTelegraph
-  name: acid telegraph
-  noSpawn: true
-  placement:
-    mode: SnapgridCenter
+  parent: RMCEffectXenoTelegraphGreen
+  categories: [ HideSpawnMenu ]
   components:
-  - type: Transform
-    anchored: true
-  - type: Sprite
-    sprite: _RMC14/Effects/xeno_telegraph.rsi
-    state: xeno_telegraph_base
-    color: "#c4a23d"
-    drawdepth: BelowMobs
-    noRot: true
   - type: TimedDespawn
     lifetime: 0.4
+  - type: Sprite
+    color: "#c4a23d"
 
-# Catalyze cast visual: bubbles of pressurized acid around the Despoiler.
-# Parented to the caster on spawn; TimedDespawn cleans it up after the loop plays.
 - type: entity
   id: RMCEffectDespoilerCatalyze
   name: hypertension burst
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
   - type: Transform
   - type: Sprite

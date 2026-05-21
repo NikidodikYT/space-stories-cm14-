@@ -4,33 +4,14 @@ using Content.Shared._RMC14.Xenonids.Hive;
 using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Coordinates.Helpers;
 using Content.Shared.Damage;
-using Content.Shared.Damage.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Robust.Server.Audio;
-using Robust.Shared.Map;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
 namespace Content.Server._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-/// Oozing Wounds.
-///
-///   Severity = (HP &lt;= 70%) + (HP &lt;= 30%), radius = BaseRadius + severity
-///   (so 1 / 2 / 3 tiles at 100% / wounded / critical HP).
-///
-///   On cast we spawn the yellow telegraph IMMEDIATELY on every ring tile and
-///   enqueue the actual spray spawn into a per-caster
-///   <see cref="XenoDespoilerOozingWoundsPendingComponent"/>. Each spawn is delayed by
-///   <c>DistanceDelayPerTileSeconds × Chebyshev(tile, caster)</c> so the wave
-///   expands outward (CM13 <c>addtimer(..., 0.2 SECONDS * get_dist())</c>).
-///   The per-caster queue means two despoilers casting at once don't bleed
-///   their waves into a single global list.
-///
-///   20% chance per tile to drop a Lingering Acid puddle on top of the spray
-///   (DM <c>prob(20)</c>).
-/// </summary>
 public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
@@ -40,8 +21,14 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
 
+    private EntityQuery<XenoDespoilerAcidSprayComponent> _sprayQuery;
+    private EntityQuery<XenoDespoilerLingeringAcidComponent> _lingeringQuery;
+
     public override void Initialize()
     {
+        _sprayQuery = GetEntityQuery<XenoDespoilerAcidSprayComponent>();
+        _lingeringQuery = GetEntityQuery<XenoDespoilerLingeringAcidComponent>();
+
         SubscribeLocalEvent<XenoDespoilerComponent, XenoDespoilerOozingWoundsActionEvent>(OnUse);
     }
 
@@ -63,9 +50,9 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
         var origin = Transform(uid).Coordinates;
         var sprayProto = empowered ? action.AcidSprayEmpoweredProto : action.AcidSprayProto;
         var now = _timing.CurTime;
-        var perTile = action.DistanceDelayPerTileSeconds;
 
         var pending = EnsureComp<XenoDespoilerOozingWoundsPendingComponent>(uid);
+        pending.Pending.Clear();
 
         for (var dx = -radius; dx <= radius; dx++)
         {
@@ -78,8 +65,6 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 if (euclid > radius + 0.001f)
                     continue;
 
-                // Chebyshev for tile-counted delay (CM13 get_dist semantics);
-                // euclidean is only used to clip the ring to a circle.
                 var cheby = Math.Max(Math.Abs(dx), Math.Abs(dy));
                 var tile = origin.Offset(new Vector2(dx, dy)).SnapToGrid(EntityManager);
 
@@ -88,13 +73,13 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 
                 pending.Pending.Add(new XenoDespoilerOozingWoundsPendingTile
                 {
-                    SpawnAt = now + TimeSpan.FromSeconds(perTile * cheby),
+                    SpawnAt = now + action.DistanceDelayPerTile * cheby,
                     Tile = tile,
                     SprayProto = sprayProto,
                     PuddleProto = action.LingeringAcidProto,
                     Empowered = empowered,
-                    StunSeconds = action.EmpoweredStunSeconds,
-                    ImmunitySeconds = action.EmpoweredImmunitySeconds,
+                    StunDuration = action.EmpoweredStunDuration,
+                    ImmunityDuration = action.EmpoweredImmunityDuration,
                     PuddleChance = action.LingeringAcidChance,
                 });
             }
@@ -112,8 +97,6 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
         var query = EntityQueryEnumerator<XenoDespoilerOozingWoundsPendingComponent>();
         while (query.MoveNext(out var caster, out var pending))
         {
-            // Walk in reverse so we can drop in place. Anything still
-            // scheduled in the future stays; matured entries fire and exit.
             for (var i = pending.Pending.Count - 1; i >= 0; i--)
             {
                 var entry = pending.Pending[i];
@@ -128,12 +111,12 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 var spray = Spawn(entry.SprayProto, entry.Tile);
                 _hive.SetSameHive(caster, spray);
 
-                if (TryComp<XenoDespoilerAcidSprayComponent>(spray, out var sprayComp))
+                if (_sprayQuery.TryComp(spray, out var sprayComp))
                 {
-                    sprayComp.Owner = caster;
+                    sprayComp.Caster = caster;
                     sprayComp.StunsOnEmpowered = entry.Empowered;
-                    sprayComp.StunSeconds = entry.StunSeconds;
-                    sprayComp.GrantImmunitySeconds = entry.ImmunitySeconds;
+                    sprayComp.StunDuration = entry.StunDuration;
+                    sprayComp.GrantImmunityDuration = entry.ImmunityDuration;
                     Dirty(spray, sprayComp);
                 }
 
@@ -141,9 +124,9 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 {
                     var puddle = Spawn(entry.PuddleProto, entry.Tile);
                     _hive.SetSameHive(caster, puddle);
-                    if (TryComp<XenoDespoilerLingeringAcidComponent>(puddle, out var puddleComp))
+                    if (_lingeringQuery.TryComp(puddle, out var puddleComp))
                     {
-                        puddleComp.Owner = caster;
+                        puddleComp.Caster = caster;
                         Dirty(puddle, puddleComp);
                     }
                 }
@@ -156,22 +139,20 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 
     private int ComputeSeverity(EntityUid uid, XenoDespoilerOozingWoundsActionComponent action)
     {
-        if (!TryComp<DamageableComponent>(uid, out var dmg))
-            return 0;
-        if (!TryComp<MobThresholdsComponent>(uid, out var thresholds))
+        if (!TryComp<DamageableComponent>(uid, out var dmg) ||
+            !TryComp<MobThresholdsComponent>(uid, out var thresholds))
             return 0;
 
         float deadThreshold = 0;
         foreach (var t in thresholds.Thresholds)
         {
-            if (t.Value == MobState.Dead && (float) t.Key > deadThreshold)
-                deadThreshold = (float) t.Key;
+            if (t.Value == MobState.Dead && (float)t.Key > deadThreshold)
+                deadThreshold = (float)t.Key;
         }
         if (deadThreshold <= 0)
             return 0;
 
-        var damageTotal = (float) dmg.TotalDamage;
-        var hpFrac = 1f - Math.Clamp(damageTotal / deadThreshold, 0f, 1f);
+        var hpFrac = 1f - Math.Clamp((float)dmg.TotalDamage / deadThreshold, 0f, 1f);
 
         var severity = 0;
         if (hpFrac <= action.SeverityHpThreshold1) severity++;
