@@ -10,13 +10,6 @@ using Robust.Shared.Map;
 
 namespace Content.Client._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-///     Hold-LMB-to-charge / release-to-fire UX for the Despoiler's Acid Barrage.
-///     Down is intercepted with a <see cref="PointerInputCmdHandler"/> so the normal
-///     LMB attack does not fire while the action is armed. The release is detected via
-///     per-tick polling of <see cref="InputSystem.CmdStates"/> because the Up edge of
-///     a pointer handler can be consumed by other systems before it reaches us.
-/// </summary>
 public sealed class XenoDespoilerBarrageKeybindSystem : EntitySystem
 {
     [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
@@ -28,8 +21,16 @@ public sealed class XenoDespoilerBarrageKeybindSystem : EntitySystem
     [Dependency] private readonly IPlayerManager _player = default!;
     [Dependency] private readonly TransformSystem _transform = default!;
 
+    private EntityQuery<XenoDespoilerComponent> _despoilerQuery;
+    private EntityQuery<XenoDespoilerArmedBarrageComponent> _armedQuery;
+    private EntityQuery<XenoDespoilerChargingBarrageComponent> _chargingQuery;
+
     public override void Initialize()
     {
+        _despoilerQuery = GetEntityQuery<XenoDespoilerComponent>();
+        _armedQuery = GetEntityQuery<XenoDespoilerArmedBarrageComponent>();
+        _chargingQuery = GetEntityQuery<XenoDespoilerChargingBarrageComponent>();
+
         CommandBinds.Builder
             .Bind(EngineKeyFunctions.Use, new PointerInputCmdHandler(OnUseDown, outsidePrediction: true))
             .Register<XenoDespoilerBarrageKeybindSystem>();
@@ -42,18 +43,13 @@ public sealed class XenoDespoilerBarrageKeybindSystem : EntitySystem
 
     private bool OnUseDown(in PointerInputCmdHandler.PointerInputCmdArgs args)
     {
-        // We only intercept the *Down* edge to suppress the normal LMB attack while armed.
-        // Up + auto-fire flow lives in Update.
         if (args.State != BoundKeyState.Down)
             return false;
 
         if (_player.LocalEntity is not { } ent)
             return false;
 
-        if (!HasComp<XenoDespoilerComponent>(ent))
-            return false;
-
-        if (!HasComp<XenoDespoilerArmedBarrageComponent>(ent))
+        if (!_despoilerQuery.HasComp(ent) || !_armedQuery.HasComp(ent))
             return false;
 
         if (!_actionBlocker.CanConsciouslyPerformAction(ent))
@@ -71,18 +67,15 @@ public sealed class XenoDespoilerBarrageKeybindSystem : EntitySystem
         if (_player.LocalEntity is not { } ent)
             return;
 
-        if (!HasComp<XenoDespoilerChargingBarrageComponent>(ent))
+        if (!_chargingQuery.HasComp(ent))
             return;
 
-        // Fire strictly on release. The player can keep holding past the cap; the bar just
-        // stays at 100% and only the release sends a FireRequest.
         if (_inputSystem.CmdStates.GetState(EngineKeyFunctions.Use) == BoundKeyState.Down)
             return;
 
         if (!TryGetCursorCoords(out var coords))
             return;
 
-        // The server clears Charging in response, so the next tick will short-circuit at HasComp.
         RaiseNetworkEvent(new XenoDespoilerBarrageFireRequest(GetNetCoordinates(coords)));
     }
 

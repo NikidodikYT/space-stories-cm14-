@@ -48,17 +48,12 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
     private void OnAction(EntityUid uid, XenoDespoilerComponent comp, XenoDespoilerAcidBarrageActionEvent args)
     {
-        if (args.Handled)
+        if (args.Handled || !HasComp<XenoDespoilerAcidBarrageActionComponent>(args.Action))
             return;
 
-        if (!TryComp<XenoDespoilerAcidBarrageActionComponent>(args.Action, out _))
-            return;
-
-        // Toggle "armed" selection. We never use TryUseAction here so toggling is free;
-        // plasma + post-fire cooldown are deducted only when a volley actually fires.
         if (_armedQuery.HasComp(uid))
         {
-            Disarm(uid, args.Action.Owner);
+            ResetBarrage(uid, args.Action.Owner);
             args.Handled = true;
             return;
         }
@@ -74,10 +69,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (args.SenderSession.AttachedEntity is not { } uid)
             return;
 
-        if (!_despoilerQuery.HasComp(uid) || !_armedQuery.HasComp(uid))
-            return;
-
-        if (_chargingQuery.HasComp(uid))
+        if (!_despoilerQuery.HasComp(uid) || !_armedQuery.HasComp(uid) || _chargingQuery.HasComp(uid))
             return;
 
         if (!_actionBlocker.CanConsciouslyPerformAction(uid))
@@ -106,11 +98,24 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (!_despoilerQuery.HasComp(uid) || !_chargingQuery.TryComp(uid, out var charge))
             return;
 
+        if (!_actionBlocker.CanConsciouslyPerformAction(uid))
+        {
+            ResetBarrage(uid);
+            return;
+        }
+
         var coords = GetCoordinates(msg.Target);
         if (!coords.IsValid(EntityManager))
             coords = GetCoordinates(charge.Target);
 
-        FireAndReset(uid, charge, coords);
+        if (TryGetBarrageAction(uid, out var actionEnt, out var actionComp) &&
+            _rmcActions.TryUseAction(uid, actionEnt.Owner, uid))
+        {
+            FireVolley(uid, actionComp, charge, coords);
+            _actions.SetCooldown((actionEnt.Owner, null), actionComp.PostFireCooldown);
+        }
+
+        ResetBarrage(uid);
     }
 
     public override void Update(float frameTime)
@@ -121,49 +126,28 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         {
             if (!_actionBlocker.CanConsciouslyPerformAction(uid))
             {
-                Disarm(uid);
+                ResetBarrage(uid);
                 continue;
             }
 
-            // The player is allowed to keep holding past ExpiresAt — the bar just sits full.
-            // This loop only catches lost clients (disconnect, deep lag) so charging never
-            // leaks forever; after a long grace we discard the volley silently.
-            if (now < charge.ExpiresAt + TimeSpan.FromSeconds(30))
-                continue;
+            var grace = TryGetBarrageAction(uid, out _, out var action)
+                ? action.ChargeGracePeriod
+                : TimeSpan.FromSeconds(30);
 
-            Disarm(uid);
+            if (now >= charge.ExpiresAt + grace)
+                ResetBarrage(uid);
         }
     }
 
-    private void FireAndReset(EntityUid uid, XenoDespoilerChargingBarrageComponent charge, EntityCoordinates target)
-    {
-        if (TryGetBarrageAction(uid, out var actionEnt, out var actionComp))
-        {
-            // TryUseAction spends plasma and runs the standard use checks; if it fails
-            // (no plasma, etc.) we silently disarm without firing.
-            if (_rmcActions.TryUseAction(uid, actionEnt.Owner, uid))
-            {
-                FireVolley(uid, actionComp, charge, target);
-                _actions.SetCooldown((actionEnt.Owner, null), actionComp.PostFireCooldown);
-            }
-
-            _actions.SetToggled(actionEnt.Owner, false);
-        }
-
-        RemComp<XenoDespoilerChargingBarrageComponent>(uid);
-        RemComp<XenoDespoilerArmedBarrageComponent>(uid);
-    }
-
-    private void Disarm(EntityUid uid, EntityUid? actionEnt = null)
+    private void ResetBarrage(EntityUid uid, EntityUid? actionEnt = null)
     {
         RemComp<XenoDespoilerChargingBarrageComponent>(uid);
         RemComp<XenoDespoilerArmedBarrageComponent>(uid);
 
-        EntityUid? action = actionEnt;
-        if (action is null && TryGetBarrageAction(uid, out var found, out _))
-            action = found.Owner;
+        if (actionEnt is null && TryGetBarrageAction(uid, out var found, out _))
+            actionEnt = found.Owner;
 
-        if (action is { } id)
+        if (actionEnt is { } id)
             _actions.SetToggled(id, false);
     }
 
@@ -207,13 +191,12 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         var baseAngle = MathF.Atan2(aimVec.Y, aimVec.X);
         var aimDir = Vector2.Normalize(aimVec);
         var spawnCoords = casterCoords.Offset(aimDir);
-        var scatterRad = MathF.PI / 180f * action.ScatterDegrees;
+        var scatterRad = MathHelper.DegreesToRadians(action.ScatterDegrees);
         var scaleSpan = action.MaxProjectileScale - action.MinProjectileScale;
 
         for (var i = 0; i < count; i++)
         {
-            var offset = ((float)_random.NextDouble() * 2f - 1f) * scatterRad;
-            var angle = baseAngle + offset;
+            var angle = baseAngle + ((float)_random.NextDouble() * 2f - 1f) * scatterRad;
             var unit = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
             var rangeTiles = _random.Next(action.MinRangeTiles, action.MaxRangeTiles + 1);
 

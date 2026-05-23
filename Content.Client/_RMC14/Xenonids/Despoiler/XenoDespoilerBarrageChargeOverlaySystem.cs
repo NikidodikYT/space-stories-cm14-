@@ -27,18 +27,18 @@ public sealed class XenoDespoilerBarrageChargeOverlaySystem : EntitySystem
     }
 }
 
-/// <summary>
-///     World-space charge bar for the Acid Barrage. Drawn above every charging Despoiler's
-///     sprite, in the same overlay space as the rest of the xeno HUD widgets.
-///     Fills 0 → 1 over <see cref="XenoDespoilerChargingBarrageComponent.ExpiresAt"/> and
-///     stays at 1 if the player keeps holding past the cap.
-/// </summary>
 public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
     private static readonly ResPath BarSprite = new("/Textures/Interface/Misc/progress_bar.rsi");
+    private static readonly Color BarFill = Color.Chartreuse;
+
     private const float StartX = 2f;
     private const float EndX = 22f;
+    private const float FillTop = 3f;
+    private const float FillBottom = 4f;
+    private const float SpriteCullPad = 2f;
+    private const float SpriteHeadroom = 0.05f;
 
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IPlayerManager _player = default!;
@@ -48,11 +48,11 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
 
     private readonly SpriteSystem _sprite;
     private readonly TransformSystem _transform;
-
     private readonly EntityQuery<TransformComponent> _xformQuery;
 
     private readonly Texture _barTexture;
     private readonly ShaderInstance _unshaded;
+    private readonly float _barHalfWidth;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
@@ -64,6 +64,7 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
         _xformQuery = _entity.GetEntityQuery<TransformComponent>();
         _barTexture = _sprite.Frame0(new SpriteSpecifier.Rsi(BarSprite, "icon"));
         _unshaded = _proto.Index(UnshadedShader).Instance();
+        _barHalfWidth = _barTexture.Width / 2f / EyeManager.PixelsPerMeter;
         ZIndex = 1;
     }
 
@@ -74,6 +75,7 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
         var rotation = Matrix3Helpers.CreateRotation(-eyeRot);
         var localEnt = _player.LocalSession?.AttachedEntity;
         var now = _timing.CurTime;
+        var cullBounds = args.WorldAABB.Enlarged(SpriteCullPad);
 
         var query = _entity.AllEntityQueryEnumerator<XenoDespoilerChargingBarrageComponent, SpriteComponent, TransformComponent>();
         while (query.MoveNext(out var uid, out var charge, out var sprite, out var xform))
@@ -82,7 +84,7 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
                 continue;
 
             var worldPos = _transform.GetWorldPosition(xform, _xformQuery);
-            if (!args.WorldAABB.Enlarged(2f).Contains(worldPos))
+            if (!cullBounds.Contains(worldPos))
                 continue;
 
             handle.UseShader(uid == localEnt ? _unshaded : null);
@@ -91,8 +93,8 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
             handle.SetTransform(Matrix3x2.Multiply(rotation, world));
 
             var alpha = sprite.Color.A;
-            var yOffset = _sprite.GetLocalBounds((uid, sprite)).Height / 2f + 0.05f;
-            var origin = new Vector2(-_barTexture.Width / 2f / EyeManager.PixelsPerMeter, yOffset);
+            var yOffset = _sprite.GetLocalBounds((uid, sprite)).Height / 2f + SpriteHeadroom;
+            var origin = new Vector2(-_barHalfWidth, yOffset);
 
             handle.DrawTexture(_barTexture, origin, Color.White.WithAlpha(alpha));
 
@@ -103,11 +105,11 @@ public sealed class XenoDespoilerBarrageChargeOverlay : Overlay
 
             var xProgress = (EndX - StartX) * ratio + StartX;
             var fill = new Box2(
-                new Vector2(StartX, 3f) / EyeManager.PixelsPerMeter,
-                new Vector2(xProgress, 4f) / EyeManager.PixelsPerMeter)
+                new Vector2(StartX, FillTop) / EyeManager.PixelsPerMeter,
+                new Vector2(xProgress, FillBottom) / EyeManager.PixelsPerMeter)
                 .Translated(origin);
 
-            handle.DrawRect(fill, Color.FromHex("#7FFF00").WithAlpha(alpha));
+            handle.DrawRect(fill, BarFill.WithAlpha(alpha));
         }
 
         handle.UseShader(null);

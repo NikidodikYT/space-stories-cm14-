@@ -74,7 +74,6 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 var telegraph = Spawn(action.TelegraphProto, tile);
                 _hive.SetSameHive(uid, telegraph);
 
-                // Stretch the telegraph so it lingers until the spray spawns, not just its prototype lifetime.
                 if (spawnDelay > TimeSpan.Zero)
                 {
                     var despawn = EnsureComp<TimedDespawnComponent>(telegraph);

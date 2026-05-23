@@ -2,13 +2,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Map;
-using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Hive;
 using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Actions;
 using Content.Shared.Damage;
 using Content.Shared.Interaction;
-using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
 using Content.Shared.Stunnable;
 using Robust.Server.Audio;
@@ -19,7 +17,6 @@ namespace Content.Server._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 {
-    /// Half a tile in world units; entity is on a tile when |dx| and |dy| are at most this.
     private const float TileHalfExtent = 0.5f;
 
     [Dependency] private readonly AudioSystem _audio = default!;
@@ -36,14 +33,10 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
     [Dependency] private readonly XenoDespoilerAcidSystem _acid = default!;
 
-    private EntityQuery<MobStateComponent> _mobStateQuery;
-    private EntityQuery<XenoComponent> _xenoQuery;
     private EntityQuery<XenoDespoilerLingeringAcidComponent> _lingeringQuery;
 
     public override void Initialize()
     {
-        _mobStateQuery = GetEntityQuery<MobStateComponent>();
-        _xenoQuery = GetEntityQuery<XenoComponent>();
         _lingeringQuery = GetEntityQuery<XenoDespoilerLingeringAcidComponent>();
 
         SubscribeLocalEvent<XenoDespoilerComponent, XenoDespoilerCausticEmbraceActionEvent>(OnUse);
@@ -121,7 +114,6 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         var backX = -(int)forward.X;
         var backY = -(int)forward.Y;
 
-        // One physics lookup covers the whole 3x3 area; victims are filtered to a single tile below.
         var centerMap = _xform.ToMapCoordinates(center);
         var hits = _lookup.GetEntitiesIntersecting(centerMap.MapId,
             Box2.CenteredAround(centerMap.Position, new Vector2(action.SplashScanDiameter, action.SplashScanDiameter)));
@@ -150,7 +142,6 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
                     if (Math.Abs(entPos.X - tileMap.Position.X) > TileHalfExtent) continue;
                     if (Math.Abs(entPos.Y - tileMap.Position.Y) > TileHalfExtent) continue;
 
-                    // Non-empowered embrace only damages; acid is reserved for the empowered lunge.
                     _damageable.TryChangeDamage(ent, action.SplashDamage, ignoreResistances: false, origin: caster);
                 }
 
@@ -188,7 +179,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             return false;
         }
 
-        if (!_interaction.InRangeUnobstructed(uid, victim.Value, range: action.EmpoweredRange + 1))
+        if (!_interaction.InRangeUnobstructed(uid, victim.Value, range: action.EmpoweredRange + 1f))
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
             victim = null;

@@ -49,6 +49,9 @@ public sealed partial class XenoDespoilerAcidBarrageActionComponent : Component
     public TimeSpan PostFireCooldown = TimeSpan.FromSeconds(12);
 
     [DataField]
+    public TimeSpan ChargeGracePeriod = TimeSpan.FromSeconds(30);
+
+    [DataField]
     public SoundSpecifier? ChargeSound;
 
     [DataField]
