@@ -6,6 +6,7 @@ using Content.Shared._RMC14.Xenonids.Projectile.Spit;
 using Content.Shared._RMC14.Xenonids.Projectile.Spit.Charge;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Weapons.Melee.Events;
 
 namespace Content.Server._RMC14.Xenonids.Despoiler;
@@ -14,6 +15,7 @@ public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
 {
     [Dependency] private readonly XenoDespoilerHypertensionSystem _hyper = default!;
     [Dependency] private readonly XenoSpitSystem _xenoSpit = default!;
+    [Dependency] private readonly MobStateSystem _mobState = default!;
 
     private EntityQuery<XenoComponent> _xenoQuery;
     private EntityQuery<XenoDespoilerComponent> _despoilerQuery;
@@ -38,30 +40,29 @@ public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
 
     private void OnGetMeleeDamage(EntityUid uid, XenoDespoilerSlashOnHitComponent comp, ref GetMeleeDamageEvent args)
     {
-        if (!_hyperQuery.TryComp(uid, out var hyper) || hyper.Stacks <= 0)
-            return;
-
-        var bonus = hyper.Stacks * hyper.BonusBurnPerStack;
-        if (bonus <= 0)
-            return;
-
-        var burn = new DamageSpecifier();
-        burn.DamageDict["Heat"] = FixedPoint2.New(bonus);
-        args.Damage += burn;
+        if (TryGetHyperBurn(uid, out var burn))
+            args.Damage += burn;
     }
 
     private void OnGetTailStabBonusDamage(EntityUid uid, XenoDespoilerSlashOnHitComponent comp, ref RMCGetTailStabBonusDamageEvent args)
     {
+        if (TryGetHyperBurn(uid, out var burn))
+            args.Damage += burn;
+    }
+
+    private bool TryGetHyperBurn(EntityUid uid, out DamageSpecifier burn)
+    {
+        burn = default!;
         if (!_hyperQuery.TryComp(uid, out var hyper) || hyper.Stacks <= 0)
-            return;
+            return false;
 
         var bonus = hyper.Stacks * hyper.BonusBurnPerStack;
         if (bonus <= 0)
-            return;
+            return false;
 
-        var burn = new DamageSpecifier();
+        burn = new DamageSpecifier();
         burn.DamageDict["Heat"] = FixedPoint2.New(bonus);
-        args.Damage += burn;
+        return true;
     }
 
     private void OnMeleeHit(EntityUid uid, XenoDespoilerSlashOnHitComponent comp, MeleeHitEvent args)
@@ -98,6 +99,9 @@ public sealed class XenoDespoilerAcidSystem : SharedXenoDespoilerAcidSystem
     public void ApplyAcid(EntityUid target, EntityUid caster, bool enhance = false)
     {
         if (!_despoilerQuery.TryComp(caster, out var despoilerComp))
+            return;
+
+        if (_mobState.IsDead(target))
             return;
 
         if (!_userAcidedQuery.HasComp(target) && despoilerComp.AcidComponents.Count > 0)

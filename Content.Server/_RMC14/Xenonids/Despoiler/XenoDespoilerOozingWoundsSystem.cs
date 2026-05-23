@@ -5,9 +5,10 @@ using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Coordinates.Helpers;
 using Content.Shared.Damage;
 using Content.Shared.Mobs;
-using Content.Shared.Mobs.Components;
+using Content.Shared.Mobs.Systems;
 using Robust.Server.Audio;
 using Robust.Shared.Random;
+using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
 
 namespace Content.Server._RMC14.Xenonids.Despoiler;
@@ -17,6 +18,7 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly AudioSystem _audio = default!;
+    [Dependency] private readonly MobThresholdSystem _mobThresholds = default!;
     [Dependency] private readonly SharedRMCActionsSystem _rmcActions = default!;
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
@@ -67,19 +69,24 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 
                 var cheby = Math.Max(Math.Abs(dx), Math.Abs(dy));
                 var tile = origin.Offset(new Vector2(dx, dy)).SnapToGrid(EntityManager);
+                var spawnDelay = action.DistanceDelayPerTile * cheby;
 
                 var telegraph = Spawn(action.TelegraphProto, tile);
                 _hive.SetSameHive(uid, telegraph);
 
+                // Stretch the telegraph so it lingers until the spray spawns, not just its prototype lifetime.
+                if (spawnDelay > TimeSpan.Zero)
+                {
+                    var despawn = EnsureComp<TimedDespawnComponent>(telegraph);
+                    despawn.Lifetime = MathF.Max(despawn.Lifetime, (float)spawnDelay.TotalSeconds);
+                }
+
                 pending.Pending.Add(new XenoDespoilerOozingWoundsPendingTile
                 {
-                    SpawnAt = now + action.DistanceDelayPerTile * cheby,
+                    SpawnAt = now + spawnDelay,
                     Tile = tile,
                     SprayProto = sprayProto,
                     PuddleProto = action.LingeringAcidProto,
-                    Empowered = empowered,
-                    StunDuration = action.EmpoweredStunDuration,
-                    ImmunityDuration = action.EmpoweredImmunityDuration,
                     PuddleChance = action.LingeringAcidChance,
                 });
             }
@@ -114,9 +121,6 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 if (_sprayQuery.TryComp(spray, out var sprayComp))
                 {
                     sprayComp.Caster = caster;
-                    sprayComp.StunsOnEmpowered = entry.Empowered;
-                    sprayComp.StunDuration = entry.StunDuration;
-                    sprayComp.GrantImmunityDuration = entry.ImmunityDuration;
                     Dirty(spray, sprayComp);
                 }
 
@@ -139,20 +143,16 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 
     private int ComputeSeverity(EntityUid uid, XenoDespoilerOozingWoundsActionComponent action)
     {
-        if (!TryComp<DamageableComponent>(uid, out var dmg) ||
-            !TryComp<MobThresholdsComponent>(uid, out var thresholds))
+        if (!TryComp<DamageableComponent>(uid, out var dmg))
             return 0;
 
-        float deadThreshold = 0;
-        foreach (var t in thresholds.Thresholds)
+        if (!_mobThresholds.TryGetThresholdForState(uid, MobState.Dead, out var deadThreshold) ||
+            deadThreshold <= 0)
         {
-            if (t.Value == MobState.Dead && (float)t.Key > deadThreshold)
-                deadThreshold = (float)t.Key;
-        }
-        if (deadThreshold <= 0)
             return 0;
+        }
 
-        var hpFrac = 1f - Math.Clamp((float)dmg.TotalDamage / deadThreshold, 0f, 1f);
+        var hpFrac = 1f - Math.Clamp((float)(dmg.TotalDamage / deadThreshold.Value), 0f, 1f);
 
         var severity = 0;
         if (hpFrac <= action.SeverityHpThreshold1) severity++;

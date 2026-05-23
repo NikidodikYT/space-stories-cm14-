@@ -8,13 +8,7 @@ namespace Content.Shared._RMC14.Xenonids.Despoiler;
 public sealed partial class XenoDespoilerAcidBarrageProjectileComponent : Component
 {
     [DataField]
-    public int SplashRadius = 1;
-
-    [DataField]
     public float LingeringAcidChance = 0.25f;
-
-    [DataField]
-    public bool EnhanceAcid = true;
 
     [DataField]
     public EntProtoId LingeringAcidProto = "RMCEffectDespoilerLingeringAcid";

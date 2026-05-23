@@ -16,16 +16,7 @@ public sealed partial class XenoDespoilerOozingWoundsActionComponent : Component
     public float SeverityHpThreshold2 = 0.3f;
 
     [DataField]
-    public float SprayDamage = 30f;
-
-    [DataField]
     public float LingeringAcidChance = 0.2f;
-
-    [DataField]
-    public TimeSpan EmpoweredStunDuration = TimeSpan.FromSeconds(1);
-
-    [DataField]
-    public TimeSpan EmpoweredImmunityDuration = TimeSpan.FromSeconds(3);
 
     [DataField]
     public TimeSpan DistanceDelayPerTile = TimeSpan.FromSeconds(0.2);

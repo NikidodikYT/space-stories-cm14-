@@ -18,9 +18,7 @@
     deleteOnCollide: true
     ignoreShield: false
   - type: XenoDespoilerAcidBarrageProjectile
-    splashRadius: 1
     lingeringAcidChance: 0.25
-    enhanceAcid: true
     lingeringAcidProto: RMCEffectDespoilerLingeringAcid
   - type: PointLight
     enabled: true
@@ -85,9 +83,6 @@
     color: "#83ff66"
   - type: XenoDespoilerAcidSpray
     damage: 30
-    stunsOnEmpowered: false
-    stunDuration: 1
-    grantImmunityDuration: 3
   - type: TimedDespawn
     lifetime: 2
   - type: Physics
@@ -112,8 +107,6 @@
   - type: XenoDespoilerAcidSpray
     damage: 30
     stunsOnEmpowered: true
-    stunDuration: 1
-    grantImmunityDuration: 3
 
 - type: entity
   id: RMCEffectDespoilerCausticTelegraph

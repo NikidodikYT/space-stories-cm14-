@@ -10,7 +10,6 @@ using Content.Shared.Popups;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Server.Audio;
 using Robust.Shared.Map;
-using Robust.Shared.Player;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
@@ -31,33 +30,20 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
 
     private EntityQuery<XenoDespoilerComponent> _despoilerQuery;
+    private EntityQuery<XenoDespoilerArmedBarrageComponent> _armedQuery;
     private EntityQuery<XenoDespoilerChargingBarrageComponent> _chargingQuery;
     private EntityQuery<XenoDespoilerAcidBarrageProjectileComponent> _projectileQuery;
 
     public override void Initialize()
     {
         _despoilerQuery = GetEntityQuery<XenoDespoilerComponent>();
+        _armedQuery = GetEntityQuery<XenoDespoilerArmedBarrageComponent>();
         _chargingQuery = GetEntityQuery<XenoDespoilerChargingBarrageComponent>();
         _projectileQuery = GetEntityQuery<XenoDespoilerAcidBarrageProjectileComponent>();
 
         SubscribeLocalEvent<XenoDespoilerComponent, XenoDespoilerAcidBarrageActionEvent>(OnAction);
-        SubscribeLocalEvent<XenoDespoilerAcidBarrageActionComponent, RMCActionUseAttemptEvent>(OnActionAttempt);
+        SubscribeNetworkEvent<XenoDespoilerBarrageStartChargeRequest>(OnStartChargeRequest);
         SubscribeNetworkEvent<XenoDespoilerBarrageFireRequest>(OnFireRequest);
-        SubscribeNetworkEvent<XenoDespoilerBarrageCancelRequest>(OnCancelRequest);
-    }
-
-    private void OnActionAttempt(Entity<XenoDespoilerAcidBarrageActionComponent> action, ref RMCActionUseAttemptEvent args)
-    {
-        if (!_chargingQuery.HasComp(args.User))
-            return;
-
-        RemComp<XenoDespoilerChargingBarrageComponent>(args.User);
-
-        if (action.Comp.CancelCooldown > TimeSpan.Zero)
-            _actions.SetCooldown((action.Owner, null), action.Comp.CancelCooldown);
-
-        _popup.PopupEntity(Loc.GetString("rmc-despoiler-barrage-cancelled"), args.User, args.User);
-        args.Cancelled = true;
     }
 
     private void OnAction(EntityUid uid, XenoDespoilerComponent comp, XenoDespoilerAcidBarrageActionEvent args)
@@ -65,25 +51,51 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (args.Handled)
             return;
 
-        if (!TryComp<XenoDespoilerAcidBarrageActionComponent>(args.Action, out var action))
+        if (!TryComp<XenoDespoilerAcidBarrageActionComponent>(args.Action, out _))
             return;
 
-        if (!_rmcActions.TryUseAction(args))
+        // Toggle "armed" selection. We never use TryUseAction here so toggling is free;
+        // plasma + post-fire cooldown are deducted only when a volley actually fires.
+        if (_armedQuery.HasComp(uid))
+        {
+            Disarm(uid, args.Action.Owner);
+            args.Handled = true;
+            return;
+        }
+
+        EnsureComp<XenoDespoilerArmedBarrageComponent>(uid);
+        _actions.SetToggled(args.Action.Owner, true);
+        _popup.PopupEntity(Loc.GetString("rmc-despoiler-barrage-armed"), uid, uid);
+        args.Handled = true;
+    }
+
+    private void OnStartChargeRequest(XenoDespoilerBarrageStartChargeRequest msg, EntitySessionEventArgs args)
+    {
+        if (args.SenderSession.AttachedEntity is not { } uid)
+            return;
+
+        if (!_despoilerQuery.HasComp(uid) || !_armedQuery.HasComp(uid))
+            return;
+
+        if (_chargingQuery.HasComp(uid))
+            return;
+
+        if (!_actionBlocker.CanConsciouslyPerformAction(uid))
+            return;
+
+        if (!TryGetBarrageAction(uid, out _, out var action))
             return;
 
         var charging = EnsureComp<XenoDespoilerChargingBarrageComponent>(uid);
         charging.StartedAt = _timing.CurTime;
         charging.ExpiresAt = _timing.CurTime + TimeSpan.FromSeconds(action.MaxChargeSeconds);
-        charging.Empowered = _catalyze.TakeEmpowerment(uid, comp);
-        charging.Target = GetNetCoordinates(args.Target);
+        charging.Empowered = _catalyze.TakeEmpowerment(uid, Comp<XenoDespoilerComponent>(uid));
+        charging.Target = msg.Target;
         charging.SpeedMultiplier = action.ChargingSpeedMultiplier;
         Dirty(uid, charging);
 
         if (action.ChargeSound is { } sound)
             _audio.PlayPvs(sound, uid);
-
-        _popup.PopupEntity(Loc.GetString("rmc-despoiler-barrage-charging"), uid, uid);
-        args.Handled = true;
     }
 
     private void OnFireRequest(XenoDespoilerBarrageFireRequest msg, EntitySessionEventArgs args)
@@ -94,40 +106,11 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (!_despoilerQuery.HasComp(uid) || !_chargingQuery.TryComp(uid, out var charge))
             return;
 
-        if (!_actionBlocker.CanConsciouslyPerformAction(uid))
-        {
-            RemComp<XenoDespoilerChargingBarrageComponent>(uid);
-            return;
-        }
+        var coords = GetCoordinates(msg.Target);
+        if (!coords.IsValid(EntityManager))
+            coords = GetCoordinates(charge.Target);
 
-        if (!TryGetBarrageAction(uid, out _, out var actionComp))
-            return;
-
-        var aim = GetCoordinates(msg.Target);
-        if (!aim.IsValid(EntityManager))
-            return;
-
-        FireVolley(uid, actionComp, charge, aim);
-        RemComp<XenoDespoilerChargingBarrageComponent>(uid);
-    }
-
-    private void OnCancelRequest(XenoDespoilerBarrageCancelRequest msg, EntitySessionEventArgs args)
-    {
-        if (args.SenderSession.AttachedEntity is not { } uid)
-            return;
-
-        if (!_despoilerQuery.HasComp(uid) || !_chargingQuery.HasComp(uid))
-            return;
-
-        RemComp<XenoDespoilerChargingBarrageComponent>(uid);
-
-        if (TryGetBarrageAction(uid, out var actionEnt, out var actionComp) &&
-            actionComp.CancelCooldown > TimeSpan.Zero)
-        {
-            _actions.SetCooldown((actionEnt.Owner, null), actionComp.CancelCooldown);
-        }
-
-        _popup.PopupEntity(Loc.GetString("rmc-despoiler-barrage-cancelled"), uid, uid);
+        FireAndReset(uid, charge, coords);
     }
 
     public override void Update(float frameTime)
@@ -138,19 +121,50 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         {
             if (!_actionBlocker.CanConsciouslyPerformAction(uid))
             {
-                RemComp<XenoDespoilerChargingBarrageComponent>(uid);
-                _popup.PopupEntity(Loc.GetString("rmc-despoiler-barrage-cancelled"), uid, uid);
+                Disarm(uid);
                 continue;
             }
 
-            if (now < charge.ExpiresAt)
+            // The player is allowed to keep holding past ExpiresAt — the bar just sits full.
+            // This loop only catches lost clients (disconnect, deep lag) so charging never
+            // leaks forever; after a long grace we discard the volley silently.
+            if (now < charge.ExpiresAt + TimeSpan.FromSeconds(30))
                 continue;
 
-            if (TryGetBarrageAction(uid, out _, out var actionComp))
-                FireVolley(uid, actionComp, charge, GetCoordinates(charge.Target));
-
-            RemComp<XenoDespoilerChargingBarrageComponent>(uid);
+            Disarm(uid);
         }
+    }
+
+    private void FireAndReset(EntityUid uid, XenoDespoilerChargingBarrageComponent charge, EntityCoordinates target)
+    {
+        if (TryGetBarrageAction(uid, out var actionEnt, out var actionComp))
+        {
+            // TryUseAction spends plasma and runs the standard use checks; if it fails
+            // (no plasma, etc.) we silently disarm without firing.
+            if (_rmcActions.TryUseAction(uid, actionEnt.Owner, uid))
+            {
+                FireVolley(uid, actionComp, charge, target);
+                _actions.SetCooldown((actionEnt.Owner, null), actionComp.PostFireCooldown);
+            }
+
+            _actions.SetToggled(actionEnt.Owner, false);
+        }
+
+        RemComp<XenoDespoilerChargingBarrageComponent>(uid);
+        RemComp<XenoDespoilerArmedBarrageComponent>(uid);
+    }
+
+    private void Disarm(EntityUid uid, EntityUid? actionEnt = null)
+    {
+        RemComp<XenoDespoilerChargingBarrageComponent>(uid);
+        RemComp<XenoDespoilerArmedBarrageComponent>(uid);
+
+        EntityUid? action = actionEnt;
+        if (action is null && TryGetBarrageAction(uid, out var found, out _))
+            action = found.Owner;
+
+        if (action is { } id)
+            _actions.SetToggled(id, false);
     }
 
     private bool TryGetBarrageAction(EntityUid xeno,
@@ -210,7 +224,6 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
             {
                 projComp.Shooter = uid;
                 projComp.LingeringAcidChance = action.LingeringAcidChance;
-                projComp.SplashRadius = action.SplashRadius;
                 var scaleFactor = action.MinProjectileScale + (float)_random.NextDouble() * scaleSpan;
                 projComp.Scale = new Vector2(scaleFactor, scaleFactor);
                 Dirty(proj, projComp);

@@ -31,9 +31,6 @@ public sealed partial class XenoDespoilerAcidBarrageActionComponent : Component
     public float LingeringAcidChance = 0.25f;
 
     [DataField]
-    public int SplashRadius = 1;
-
-    [DataField]
     public float ProjectileSpeed = 12f;
 
     [DataField]
@@ -49,7 +46,7 @@ public sealed partial class XenoDespoilerAcidBarrageActionComponent : Component
     public float MaxProjectileScale = 1.33f;
 
     [DataField]
-    public TimeSpan CancelCooldown = TimeSpan.FromSeconds(2);
+    public TimeSpan PostFireCooldown = TimeSpan.FromSeconds(12);
 
     [DataField]
     public SoundSpecifier? ChargeSound;

@@ -6,5 +6,5 @@ namespace Content.Shared._RMC14.Xenonids.Despoiler;
 public sealed partial class XenoDespoilerSlashOnHitComponent : Component
 {
     [DataField, AutoNetworkedField]
-    public int EnhanceStacksThreshold = 3;
+    public int EnhanceStacksThreshold = 2;
 }

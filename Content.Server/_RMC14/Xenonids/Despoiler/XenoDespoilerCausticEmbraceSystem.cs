@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Map;
@@ -18,6 +19,9 @@ namespace Content.Server._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 {
+    /// Half a tile in world units; entity is on a tile when |dx| and |dy| are at most this.
+    private const float TileHalfExtent = 0.5f;
+
     [Dependency] private readonly AudioSystem _audio = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
@@ -54,7 +58,12 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             return;
 
         var ownerXform = Transform(uid);
-        var approach = args.Target.Position - ownerXform.Coordinates.Position;
+        var ownerMap = _xform.ToMapCoordinates(ownerXform.Coordinates);
+        var targetMap = _xform.ToMapCoordinates(args.Target);
+        if (ownerMap.MapId != targetMap.MapId)
+            return;
+
+        var approach = targetMap.Position - ownerMap.Position;
         var dist = approach.Length();
         if (dist < 0.01f)
             return;
@@ -65,13 +74,15 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 
         if (_catalyze.IsEmpowered(uid, comp))
         {
-            if (TryEmpoweredLunge(uid, action, args, dist))
-            {
-                if (!_rmcActions.TryUseAction(args))
-                    return;
-                _catalyze.TakeEmpowerment(uid, comp);
-                args.Handled = true;
-            }
+            if (!CanEmpoweredLunge(uid, action, args, dist, out var victim))
+                return;
+
+            if (!_rmcActions.TryUseAction(args))
+                return;
+
+            ExecuteEmpoweredLunge(uid, action, victim.Value);
+            _catalyze.TakeEmpowerment(uid, comp);
+            args.Handled = true;
             return;
         }
 
@@ -110,7 +121,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         var backX = -(int)forward.X;
         var backY = -(int)forward.Y;
 
-        // Single lookup at the U-shape center, filter by tile inline — avoids 8 physics calls.
+        // One physics lookup covers the whole 3x3 area; victims are filtered to a single tile below.
         var centerMap = _xform.ToMapCoordinates(center);
         var hits = _lookup.GetEntitiesIntersecting(centerMap.MapId,
             Box2.CenteredAround(centerMap.Position, new Vector2(action.SplashScanDiameter, action.SplashScanDiameter)));
@@ -136,11 +147,11 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
                         continue;
 
                     var entPos = _xform.ToMapCoordinates(Transform(ent).Coordinates).Position;
-                    if (Math.Abs(entPos.X - tileMap.Position.X) > 0.5f) continue;
-                    if (Math.Abs(entPos.Y - tileMap.Position.Y) > 0.5f) continue;
+                    if (Math.Abs(entPos.X - tileMap.Position.X) > TileHalfExtent) continue;
+                    if (Math.Abs(entPos.Y - tileMap.Position.Y) > TileHalfExtent) continue;
 
+                    // Non-empowered embrace only damages; acid is reserved for the empowered lunge.
                     _damageable.TryChangeDamage(ent, action.SplashDamage, ignoreResistances: false, origin: caster);
-                    _acid.ApplyAcid(ent, caster);
                 }
 
                 if (_random.Prob(action.LingeringAcidChance))
@@ -157,18 +168,20 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         }
     }
 
-    private bool TryEmpoweredLunge(EntityUid uid,
+    private bool CanEmpoweredLunge(EntityUid uid,
         XenoDespoilerCausticEmbraceActionComponent action,
         XenoDespoilerCausticEmbraceActionEvent args,
-        float dist)
+        float dist,
+        [NotNullWhen(true)] out EntityUid? victim)
     {
+        victim = null;
         if (dist > action.EmpoweredRange)
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-out-of-range"), uid, uid);
             return false;
         }
 
-        var victim = FindEmpoweredVictim(uid, args);
+        victim = FindEmpoweredVictim(uid, args);
         if (victim is null)
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-caustic-no-target"), uid, uid);
@@ -178,20 +191,26 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         if (!_interaction.InRangeUnobstructed(uid, victim.Value, range: action.EmpoweredRange + 1))
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
+            victim = null;
             return false;
         }
 
-        _xform.SetCoordinates(uid, Transform(victim.Value).Coordinates);
+        return true;
+    }
+
+    private void ExecuteEmpoweredLunge(EntityUid uid,
+        XenoDespoilerCausticEmbraceActionComponent action,
+        EntityUid victim)
+    {
+        _xform.SetCoordinates(uid, Transform(victim).Coordinates);
 
         if (action.PounceSound is { } sound)
             _audio.PlayPvs(sound, uid);
 
-        _damageable.TryChangeDamage(victim.Value, action.EmpoweredDamage, ignoreResistances: false, origin: uid);
-        _acid.ApplyAcid(victim.Value, uid, enhance: true);
+        _damageable.TryChangeDamage(victim, action.EmpoweredDamage, ignoreResistances: false, origin: uid);
+        _acid.ApplyAcid(victim, uid, enhance: true);
 
-        _stun.TryParalyze(victim.Value, action.EmpoweredWeakenDuration, true);
-
-        return true;
+        _stun.TryParalyze(victim, action.EmpoweredWeakenDuration, true);
     }
 
     private EntityUid? FindEmpoweredVictim(EntityUid caster, XenoDespoilerCausticEmbraceActionEvent args)

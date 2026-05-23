@@ -15,8 +15,5 @@ public struct XenoDespoilerOozingWoundsPendingTile
     public EntityCoordinates Tile;
     public EntProtoId SprayProto;
     public EntProtoId PuddleProto;
-    public bool Empowered;
-    public TimeSpan StunDuration;
-    public TimeSpan ImmunityDuration;
     public float PuddleChance;
 }

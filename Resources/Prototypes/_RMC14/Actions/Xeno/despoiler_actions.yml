@@ -10,11 +10,7 @@
       sprite: _RMC14/Interface/Actions/despoiler.rsi
       state: acid_barrage
     checkCanInteract: false
-    useDelay: 12
-  - type: TargetAction
-    range: 12
-    checkCanAccess: false
-  - type: WorldTargetAction
+  - type: InstantAction
     event: !type:XenoDespoilerAcidBarrageActionEvent
   - type: XenoDespoilerAcidBarrageAction
     maxChargeSeconds: 3
@@ -25,13 +21,12 @@
     chargingSpeedMultiplier: 0.5
     projectileId: RMCProjectileDespoilerAcidShot
     lingeringAcidChance: 0.25
-    splashRadius: 1
     projectileSpeed: 12
     minRangeTiles: 1
     maxRangeTiles: 6
     minProjectileScale: 0.9
     maxProjectileScale: 1.33
-    cancelCooldown: 2
+    postFireCooldown: 12
     chargeSound:
       path: /Audio/_RMC14/Xeno/acid_sizzle1.ogg
     fireSound:
@@ -94,10 +89,7 @@
     baseRadius: 1
     severityHpThreshold1: 0.7
     severityHpThreshold2: 0.3
-    sprayDamage: 30
     lingeringAcidChance: 0.2
-    empoweredStunDuration: 1
-    empoweredImmunityDuration: 3
     distanceDelayPerTile: 0.2
     telegraphProto: RMCEffectDespoilerOozingTelegraph
     acidSprayProto: RMCEffectDespoilerAcidSpray

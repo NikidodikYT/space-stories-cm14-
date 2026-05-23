@@ -24,6 +24,9 @@ public sealed class XenoDespoilerFinishingStabSystem : EntitySystem
         SubscribeLocalEvent<XenoDespoilerComponent, MeleeHitEvent>(OnMeleeHit);
     }
 
+    // SharedXenoTailStabSystem raises RMCGetTailStabBonusDamageEvent and then MeleeHitEvent
+    // back-to-back inside the same handler. We mark CurTime here so the MeleeHitEvent handler
+    // can tell a tail stab apart from a normal slash — MeleeHitEvent itself carries no flag for that.
     private void OnGetTailStabBonus(EntityUid uid, XenoDespoilerComponent comp, ref RMCGetTailStabBonusDamageEvent args)
     {
         var server = EnsureComp<XenoDespoilerServerComponent>(uid);

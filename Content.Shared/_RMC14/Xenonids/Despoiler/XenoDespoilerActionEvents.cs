@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
-public sealed partial class XenoDespoilerAcidBarrageActionEvent : WorldTargetActionEvent;
+public sealed partial class XenoDespoilerAcidBarrageActionEvent : InstantActionEvent;
 
 public sealed partial class XenoDespoilerCausticEmbraceActionEvent : WorldTargetActionEvent;
 
@@ -13,11 +13,17 @@ public sealed partial class XenoDespoilerOozingWoundsActionEvent : InstantAction
 public sealed partial class XenoDespoilerCatalyzeActionEvent : InstantActionEvent;
 
 [Serializable, NetSerializable]
-public sealed class XenoDespoilerBarrageFireRequest : EntityEventArgs
+public sealed class XenoDespoilerBarrageStartChargeRequest : EntityEventArgs
 {
     public NetCoordinates Target;
-    public XenoDespoilerBarrageFireRequest(NetCoordinates target) => Target = target;
+
+    public XenoDespoilerBarrageStartChargeRequest(NetCoordinates target) => Target = target;
 }
 
 [Serializable, NetSerializable]
-public sealed class XenoDespoilerBarrageCancelRequest : EntityEventArgs;
+public sealed class XenoDespoilerBarrageFireRequest : EntityEventArgs
+{
+    public NetCoordinates Target;
+
+    public XenoDespoilerBarrageFireRequest(NetCoordinates target) => Target = target;
+}

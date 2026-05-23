@@ -1,9 +1,8 @@
 using Robust.Shared.GameStates;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class XenoDespoilerLingeringAcidComponent : Component
 {
     [DataField]
@@ -11,9 +10,6 @@ public sealed partial class XenoDespoilerLingeringAcidComponent : Component
 
     [DataField]
     public TimeSpan MaxLifetime = TimeSpan.FromSeconds(20);
-
-    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
-    public TimeSpan ExpiresAt;
 
     [DataField]
     public float CrossBurnDamage = 20f;
