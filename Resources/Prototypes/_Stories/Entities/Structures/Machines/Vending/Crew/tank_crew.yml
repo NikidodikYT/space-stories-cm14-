@@ -6,12 +6,12 @@
   components:
   - type: AccessReader
     access:
-    - [ "STAccessTankCrew" ]
+    - [ "CMAccessCrewman" ]
   - type: Sprite
     sprite: _RMC14/Structures/Machines/VendingMachines/ColMarTech/clothing.rsi
   - type: CMAutomatedVendor
     jobs:
-    - STTankCrew
+    - CMVehicleCrewman
     sections:
     - name: Стандартное Оборудование
       takeAll: CMStandard
@@ -166,12 +166,12 @@
   components:
   - type: AccessReader
     access:
-    - [ "STAccessTankCrew" ]
+    - [ "CMAccessCrewman" ]
   - type: Sprite
     sprite: _RMC14/Structures/Machines/VendingMachines/ColMarTech/guns.rsi
   - type: CMAutomatedVendor
     jobs:
-    - STTankCrew
+    - CMVehicleCrewman
     sections:
     - name: Primary Firearms
       entries:
