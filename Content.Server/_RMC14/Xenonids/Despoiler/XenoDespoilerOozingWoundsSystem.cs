@@ -54,7 +54,6 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
         var now = _timing.CurTime;
 
         var pending = EnsureComp<XenoDespoilerOozingWoundsPendingComponent>(uid);
-        pending.Pending.Clear();
 
         for (var dx = -radius; dx <= radius; dx++)
         {
@@ -75,10 +74,7 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 _hive.SetSameHive(uid, telegraph);
 
                 if (spawnDelay > TimeSpan.Zero)
-                {
-                    var despawn = EnsureComp<TimedDespawnComponent>(telegraph);
-                    despawn.Lifetime = MathF.Max(despawn.Lifetime, (float)spawnDelay.TotalSeconds);
-                }
+                    EnsureComp<TimedDespawnComponent>(telegraph).Lifetime = (float)spawnDelay.TotalSeconds;
 
                 pending.Pending.Add(new XenoDespoilerOozingWoundsPendingTile
                 {

@@ -1,7 +1,6 @@
 using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Damage;
-using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Stunnable;
 using Robust.Shared.Physics.Events;
@@ -35,9 +34,7 @@ public sealed class XenoDespoilerAcidSpraySystem : EntitySystem
         if (!_mobStateQuery.HasComp(target) || _xenoQuery.HasComp(target) || _immunityQuery.HasComp(target))
             return;
 
-        var dmg = new DamageSpecifier();
-        dmg.DamageDict["Heat"] = FixedPoint2.New(comp.Damage);
-        _damageable.TryChangeDamage(target, dmg, ignoreResistances: false, origin: comp.Caster);
+        _damageable.TryChangeDamage(target, comp.Damage, ignoreResistances: false, origin: comp.Caster);
 
         if (comp.Caster is { } caster)
             _acid.ApplyAcid(target, caster);
@@ -61,7 +58,7 @@ public sealed class XenoDespoilerAcidSpraySystem : EntitySystem
         while (query.MoveNext(out var uid, out var immunity))
         {
             if (now >= immunity.ExpiresAt)
-                RemComp<XenoDespoilerAcidImmunityComponent>(uid);
+                RemCompDeferred<XenoDespoilerAcidImmunityComponent>(uid);
         }
     }
 }

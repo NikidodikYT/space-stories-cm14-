@@ -26,6 +26,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
     [Dependency] private readonly SharedGunSystem _gun = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedRMCActionsSystem _rmcActions = default!;
+    [Dependency] private readonly SharedTransformSystem _xform = default!;
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
 
@@ -53,7 +54,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
         if (_armedQuery.HasComp(uid))
         {
-            ResetBarrage(uid, args.Action.Owner);
+            ResetBarrage(uid, args.Action);
             args.Handled = true;
             return;
         }
@@ -81,7 +82,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         var charging = EnsureComp<XenoDespoilerChargingBarrageComponent>(uid);
         charging.StartedAt = _timing.CurTime;
         charging.ExpiresAt = _timing.CurTime + TimeSpan.FromSeconds(action.MaxChargeSeconds);
-        charging.Empowered = _catalyze.TakeEmpowerment(uid, Comp<XenoDespoilerComponent>(uid));
+        charging.Empowered = _catalyze.IsEmpowered(uid, Comp<XenoDespoilerComponent>(uid));
         charging.Target = msg.Target;
         charging.SpeedMultiplier = action.ChargingSpeedMultiplier;
         Dirty(uid, charging);
@@ -95,7 +96,10 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (args.SenderSession.AttachedEntity is not { } uid)
             return;
 
-        if (!_despoilerQuery.HasComp(uid) || !_chargingQuery.TryComp(uid, out var charge))
+        if (!TryComp<XenoDespoilerComponent>(uid, out var comp))
+            return;
+
+        if (!_chargingQuery.TryComp(uid, out var charge))
             return;
 
         if (!_actionBlocker.CanConsciouslyPerformAction(uid))
@@ -108,11 +112,12 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (!coords.IsValid(EntityManager))
             coords = GetCoordinates(charge.Target);
 
-        if (TryGetBarrageAction(uid, out var actionEnt, out var actionComp) &&
+        if (TryGetBarrageAction(uid, out var actionEnt, out var action) &&
             _rmcActions.TryUseAction(uid, actionEnt.Owner, uid))
         {
-            FireVolley(uid, actionComp, charge, coords);
-            _actions.SetCooldown((actionEnt.Owner, null), actionComp.PostFireCooldown);
+            FireVolley(uid, action, charge, coords);
+            _actions.SetCooldown((actionEnt.Owner, null), action.PostFireCooldown);
+            _catalyze.TakeEmpowerment(uid, comp);
         }
 
         ResetBarrage(uid);
@@ -130,19 +135,18 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
                 continue;
             }
 
-            var grace = TryGetBarrageAction(uid, out _, out var action)
-                ? action.ChargeGracePeriod
-                : TimeSpan.FromSeconds(30);
+            if (!TryGetBarrageAction(uid, out _, out var action))
+                continue;
 
-            if (now >= charge.ExpiresAt + grace)
+            if (now >= charge.ExpiresAt + action.ChargeGracePeriod)
                 ResetBarrage(uid);
         }
     }
 
     private void ResetBarrage(EntityUid uid, EntityUid? actionEnt = null)
     {
-        RemComp<XenoDespoilerChargingBarrageComponent>(uid);
-        RemComp<XenoDespoilerArmedBarrageComponent>(uid);
+        RemCompDeferred<XenoDespoilerChargingBarrageComponent>(uid);
+        RemCompDeferred<XenoDespoilerArmedBarrageComponent>(uid);
 
         if (actionEnt is null && TryGetBarrageAction(uid, out var found, out _))
             actionEnt = found.Owner;
@@ -181,15 +185,26 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (charge.Empowered)
             count += action.EmpowerBonusProjectiles;
 
-        var casterXform = Transform(uid);
-        var casterCoords = casterXform.Coordinates;
+        var casterCoords = Transform(uid).Coordinates;
+        var casterMap = _xform.ToMapCoordinates(casterCoords);
+        var targetMap = _xform.ToMapCoordinates(target);
 
-        var aimVec = target.Position - casterCoords.Position;
-        if (aimVec.LengthSquared() < 0.0001f)
-            aimVec = casterXform.LocalRotation.ToWorldVec();
+        Vector2 aimDir;
+        float baseAngle;
+        if (casterMap.MapId == targetMap.MapId &&
+            (targetMap.Position - casterMap.Position).LengthSquared() >= 0.0001f)
+        {
+            var mapAim = targetMap.Position - casterMap.Position;
+            baseAngle = MathF.Atan2(mapAim.Y, mapAim.X);
+            aimDir = Vector2.Normalize(mapAim);
+        }
+        else
+        {
+            var fallback = Transform(uid).LocalRotation.ToWorldVec();
+            baseAngle = MathF.Atan2(fallback.Y, fallback.X);
+            aimDir = Vector2.Normalize(fallback);
+        }
 
-        var baseAngle = MathF.Atan2(aimVec.Y, aimVec.X);
-        var aimDir = Vector2.Normalize(aimVec);
         var spawnCoords = casterCoords.Offset(aimDir);
         var scatterRad = MathHelper.DegreesToRadians(action.ScatterDegrees);
         var scaleSpan = action.MaxProjectileScale - action.MinProjectileScale;

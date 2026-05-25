@@ -82,7 +82,9 @@
     radius: 0.9
     color: "#83ff66"
   - type: XenoDespoilerAcidSpray
-    damage: 30
+    damage:
+      types:
+        Heat: 30
   - type: TimedDespawn
     lifetime: 2
   - type: Physics
@@ -105,7 +107,9 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: XenoDespoilerAcidSpray
-    damage: 30
+    damage:
+      types:
+        Heat: 30
     stunsOnEmpowered: true
 
 - type: entity

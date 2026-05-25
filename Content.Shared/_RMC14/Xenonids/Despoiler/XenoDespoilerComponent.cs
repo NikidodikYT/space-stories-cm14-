@@ -1,3 +1,4 @@
+using Content.Shared.Damage;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -14,7 +15,7 @@ public sealed partial class XenoDespoilerComponent : Component
     public TimeSpan EmpowerExpiresAt;
 
     [DataField]
-    public List<float> FinishingStabBonusByTier = new() { 10f, 20f, 30f, 40f };
+    public List<DamageSpecifier> FinishingStabBonusByTier = new();
 
     [DataField]
     public ComponentRegistry AcidComponents = new();

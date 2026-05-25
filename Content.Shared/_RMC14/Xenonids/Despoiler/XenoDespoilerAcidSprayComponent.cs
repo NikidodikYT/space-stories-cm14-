@@ -1,3 +1,4 @@
+using Content.Shared.Damage;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
@@ -6,7 +7,7 @@ namespace Content.Shared._RMC14.Xenonids.Despoiler;
 public sealed partial class XenoDespoilerAcidSprayComponent : Component
 {
     [DataField]
-    public float Damage = 30f;
+    public DamageSpecifier Damage = new();
 
     [DataField, AutoNetworkedField]
     public bool StunsOnEmpowered;

@@ -4,6 +4,4 @@ namespace Content.Server._RMC14.Xenonids.Despoiler;
 public sealed partial class XenoDespoilerServerComponent : Component
 {
     public EntityUid? CatalyzeVisual;
-
-    public TimeSpan? LastTailStabTime;
 }

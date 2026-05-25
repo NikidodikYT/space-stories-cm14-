@@ -18,6 +18,7 @@ namespace Content.Server._RMC14.Xenonids.Despoiler;
 public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 {
     private const float TileHalfExtent = 0.5f;
+    private const float UnobstructedRangeBuffer = 1f;
 
     [Dependency] private readonly AudioSystem _audio = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
@@ -82,7 +83,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         var landing = ownerXform.Coordinates.Offset(step);
 
         if (_rmcMap.IsTileBlocked(landing) ||
-            !_interaction.InRangeUnobstructed(uid, landing, range: action.NormalRange + 1f))
+            !_interaction.InRangeUnobstructed(uid, landing, range: action.NormalRange + UnobstructedRangeBuffer))
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
             return;
@@ -96,7 +97,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         if (action.PounceSound is { } sound)
             _audio.PlayPvs(sound, uid);
 
-        SpawnUShape(uid, action, landing, step);
+        SpawnSplashAroundExceptBack(uid, action, landing, step);
 
         args.Handled = true;
     }
@@ -106,7 +107,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         return new Vector2(Math.Sign(MathF.Round(dir.X)), Math.Sign(MathF.Round(dir.Y)));
     }
 
-    private void SpawnUShape(EntityUid caster,
+    private void SpawnSplashAroundExceptBack(EntityUid caster,
         XenoDespoilerCausticEmbraceActionComponent action,
         EntityCoordinates center,
         Vector2 forward)
@@ -179,7 +180,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             return false;
         }
 
-        if (!_interaction.InRangeUnobstructed(uid, victim.Value, range: action.EmpoweredRange + 1f))
+        if (!_interaction.InRangeUnobstructed(uid, victim.Value, range: action.EmpoweredRange + UnobstructedRangeBuffer))
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
             victim = null;

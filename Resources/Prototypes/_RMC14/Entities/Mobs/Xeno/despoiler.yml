@@ -100,7 +100,15 @@
         Slash: 18
         Heat: 7
   - type: XenoDespoiler
-    finishingStabBonusByTier: [10, 20, 30, 40]
+    finishingStabBonusByTier:
+    - types:
+        Heat: 10
+    - types:
+        Heat: 20
+    - types:
+        Heat: 30
+    - types:
+        Heat: 40
     acidComponents:
     - type: UserAcided
       armorPiercing: 40
