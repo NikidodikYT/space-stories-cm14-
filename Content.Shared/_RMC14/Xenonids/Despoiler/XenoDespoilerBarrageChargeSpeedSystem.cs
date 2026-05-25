@@ -9,7 +9,13 @@ public sealed class XenoDespoilerBarrageChargeSpeedSystem : EntitySystem
     public override void Initialize()
     {
         SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, RefreshMovementSpeedModifiersEvent>(OnRefresh);
+        SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentShutdown>(OnShutdown);
+    }
+
+    private void OnStartup(EntityUid uid, XenoDespoilerChargingBarrageComponent comp, ComponentStartup args)
+    {
+        _speed.RefreshMovementSpeedModifiers(uid);
     }
 
     private void OnShutdown(EntityUid uid, XenoDespoilerChargingBarrageComponent comp, ComponentShutdown args)

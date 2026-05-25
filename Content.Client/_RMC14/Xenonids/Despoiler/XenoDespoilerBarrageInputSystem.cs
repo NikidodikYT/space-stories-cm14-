@@ -7,18 +7,9 @@ using Robust.Client.Player;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
-using Robust.Shared.Player;
 
 namespace Content.Client._RMC14.Xenonids.Despoiler;
 
-/// <summary>
-///     Dynamic-bind variant of the old global keybind. The Use-keybind is registered
-///     ONLY while the local player has either <see cref="XenoDespoilerArmedBarrageComponent"/>
-///     or <see cref="XenoDespoilerChargingBarrageComponent"/>, and unregistered the
-///     moment both come off. In every other moment of the game — and for every player
-///     who is not a Despoiler that just selected the ability — the handler does not
-///     exist in the engine's command pipeline at all.
-/// </summary>
 public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
 {
     [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
@@ -32,75 +23,19 @@ public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
     private EntityQuery<XenoDespoilerArmedBarrageComponent> _armedQuery;
     private EntityQuery<XenoDespoilerChargingBarrageComponent> _chargingQuery;
 
-    private bool _bindRegistered;
-
     public override void Initialize()
     {
         _armedQuery = GetEntityQuery<XenoDespoilerArmedBarrageComponent>();
         _chargingQuery = GetEntityQuery<XenoDespoilerChargingBarrageComponent>();
 
-        SubscribeLocalEvent<XenoDespoilerArmedBarrageComponent, ComponentStartup>(OnLifecycleChange);
-        SubscribeLocalEvent<XenoDespoilerArmedBarrageComponent, ComponentShutdown>(OnLifecycleChange);
-        SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentStartup>(OnLifecycleChange);
-        SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentShutdown>(OnLifecycleChange);
-        SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnLocalPlayerAttached);
-        SubscribeLocalEvent<LocalPlayerDetachedEvent>(OnLocalPlayerDetached);
+        CommandBinds.Builder
+            .Bind(EngineKeyFunctions.Use, new PointerInputCmdHandler(OnUse, ignoreUp: false, outsidePrediction: true))
+            .Register<XenoDespoilerBarrageInputSystem>();
     }
 
     public override void Shutdown()
     {
-        UnregisterBind();
-    }
-
-    private void OnLifecycleChange<T>(EntityUid uid, T comp, object args) where T : IComponent
-    {
-        if (_player.LocalEntity == uid)
-            RefreshBind();
-    }
-
-    private void OnLocalPlayerAttached(LocalPlayerAttachedEvent args)
-    {
-        RefreshBind();
-    }
-
-    private void OnLocalPlayerDetached(LocalPlayerDetachedEvent args)
-    {
-        UnregisterBind();
-    }
-
-    private void RefreshBind()
-    {
-        if (_player.LocalEntity is not { } ent)
-        {
-            UnregisterBind();
-            return;
-        }
-
-        var shouldBind = _armedQuery.HasComp(ent) || _chargingQuery.HasComp(ent);
-        if (shouldBind)
-            EnsureBind();
-        else
-            UnregisterBind();
-    }
-
-    private void EnsureBind()
-    {
-        if (_bindRegistered)
-            return;
-
-        CommandBinds.Builder
-            .Bind(EngineKeyFunctions.Use, new PointerInputCmdHandler(OnUse, outsidePrediction: true))
-            .Register<XenoDespoilerBarrageInputSystem>();
-        _bindRegistered = true;
-    }
-
-    private void UnregisterBind()
-    {
-        if (!_bindRegistered)
-            return;
-
         CommandBinds.Unregister<XenoDespoilerBarrageInputSystem>();
-        _bindRegistered = false;
     }
 
     private bool OnUse(in PointerInputCmdHandler.PointerInputCmdArgs args)
@@ -108,23 +43,26 @@ public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
         if (_player.LocalEntity is not { } ent)
             return false;
 
-        if (!_actionBlocker.CanConsciouslyPerformAction(ent))
-            return false;
-
-        var charging = _chargingQuery.HasComp(ent);
-        var armed = _armedQuery.HasComp(ent);
-
-        if (args.State == BoundKeyState.Down && armed && !charging)
+        if (args.State == BoundKeyState.Down)
         {
-            if (!args.Coordinates.IsValid(EntityManager))
+            if (!_armedQuery.HasComp(ent) || _chargingQuery.HasComp(ent))
                 return false;
 
-            RaiseNetworkEvent(new XenoDespoilerBarrageStartChargeRequest(GetNetCoordinates(args.Coordinates)));
+            if (!_actionBlocker.CanConsciouslyPerformAction(ent))
+                return false;
+
+            if (!TryGetCursorCoords(out var coords))
+                return false;
+
+            RaiseNetworkEvent(new XenoDespoilerBarrageStartChargeRequest(GetNetCoordinates(coords)));
             return true;
         }
 
-        if (args.State == BoundKeyState.Up && charging)
+        if (args.State == BoundKeyState.Up)
         {
+            if (!_chargingQuery.HasComp(ent))
+                return false;
+
             if (!TryGetCursorCoords(out var coords))
                 return false;
 
