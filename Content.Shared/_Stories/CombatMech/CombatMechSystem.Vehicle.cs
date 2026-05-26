@@ -122,15 +122,15 @@ public sealed partial class CombatMechSystem
 
         args.Handled = true;
 
-        if (GetWeapon(ent, true) == null)
+        if (GetWeapon(ent, WeaponSlot.Primary) == null)
         {
-            StartInstallWeapon(ent, args.User, args.Used, true);
+            StartInstallWeapon(ent, args.User, args.Used, WeaponSlot.Primary);
             return;
         }
 
-        if (GetWeapon(ent, false) == null)
+        if (GetWeapon(ent, WeaponSlot.Secondary) == null)
         {
-            StartInstallWeapon(ent, args.User, args.Used, false);
+            StartInstallWeapon(ent, args.User, args.Used, WeaponSlot.Secondary);
             return;
         }
 
@@ -276,34 +276,34 @@ public sealed partial class CombatMechSystem
             args.Verbs.Add(new AlternativeVerb
             {
                 Text = Loc.GetString("stories-rx47-verb-install-left-weapon"),
-                Act = () => StartInstallWeapon(ent, user, held, true),
+                Act = () => StartInstallWeapon(ent, user, held, WeaponSlot.Primary),
                 Priority = 70,
             });
 
             args.Verbs.Add(new AlternativeVerb
             {
                 Text = Loc.GetString("stories-rx47-verb-install-right-weapon"),
-                Act = () => StartInstallWeapon(ent, user, held, false),
+                Act = () => StartInstallWeapon(ent, user, held, WeaponSlot.Secondary),
                 Priority = 69,
             });
         }
 
-        if (pilot == null && GetWeapon(ent, true) is { } primary)
+        if (pilot == null && GetWeapon(ent, WeaponSlot.Primary) is { } primary)
         {
             args.Verbs.Add(new AlternativeVerb
             {
                 Text = Loc.GetString("stories-rx47-verb-detach-left-weapon", ("weapon", Name(primary))),
-                Act = () => StartDetachWeapon(ent, user, true),
+                Act = () => StartDetachWeapon(ent, user, WeaponSlot.Primary),
                 Priority = 60,
             });
         }
 
-        if (pilot == null && GetWeapon(ent, false) is { } secondary)
+        if (pilot == null && GetWeapon(ent, WeaponSlot.Secondary) is { } secondary)
         {
             args.Verbs.Add(new AlternativeVerb
             {
                 Text = Loc.GetString("stories-rx47-verb-detach-right-weapon", ("weapon", Name(secondary))),
-                Act = () => StartDetachWeapon(ent, user, false),
+                Act = () => StartDetachWeapon(ent, user, WeaponSlot.Secondary),
                 Priority = 59,
             });
         }
@@ -802,6 +802,17 @@ public sealed partial class CombatMechSystem
         return Math.Clamp(100f - totalDamage / mech.MaxHealth * 100f, 0f, 100f);
     }
 
+    /// <summary>
+    /// Updates the RX47's reference max-health value used to compute the damaged/critical
+    /// alert thresholds in <see cref="GetHealthPercent"/>. Called from
+    /// <c>CombatMechDestructibleSystem</c> on startup so the alerts stay aligned with the
+    /// actual <c>Destructible</c> destroyedAt threshold defined on the mech prototype,
+    /// even when the prototype is rebalanced without touching this component.
+    /// </summary>
+    /// <remarks>
+    /// Does not modify <c>DamageableComponent</c> — it only changes the divisor in the
+    /// health-percent calculation. Replicates the new value via field delta.
+    /// </remarks>
     public void SetMaxHealth(Entity<CombatMechComponent> ent, float maxHealth)
     {
         if (ent.Comp.MaxHealth == maxHealth)

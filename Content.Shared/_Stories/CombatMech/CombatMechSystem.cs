@@ -95,7 +95,6 @@ public sealed partial class CombatMechSystem : EntitySystem
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly SharedRMCFlammableSystem _flammable = default!;
-    [Dependency] private readonly SharedGunSystem _gun = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
     [Dependency] private readonly SharedInteractionSystem _interaction = default!;
     [Dependency] private readonly MovementSpeedModifierSystem _movementSpeed = default!;
@@ -110,10 +109,7 @@ public sealed partial class CombatMechSystem : EntitySystem
     [Dependency] private readonly SharedSolutionContainerSystem _solution = default!;
     [Dependency] private readonly StandingStateSystem _standingState = default!;
     [Dependency] private readonly SharedStunSystem _stun = default!;
-    [Dependency] private readonly SharedStatusEffectsSystem _newStatusEffects = default!;
-#pragma warning disable CS0618 // TODO RX47: migrate cleanup once RMC protected statuses move fully to StatusEffectNew.
     [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
-#pragma warning restore CS0618
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly EntityWhitelistSystem _whitelist = default!;
@@ -208,8 +204,8 @@ public sealed partial class CombatMechSystem : EntitySystem
             var oldPrimaryState = mech.PrimaryWeaponState;
             var oldSecondaryState = mech.SecondaryWeaponState;
 
-            var primaryReady = EnsureWeapon((pending, mech), true);
-            var secondaryReady = EnsureWeapon((pending, mech), false);
+            var primaryReady = EnsureWeapon((pending, mech), WeaponSlot.Primary);
+            var secondaryReady = EnsureWeapon((pending, mech), WeaponSlot.Secondary);
             if (!primaryReady || !secondaryReady)
             {
                 if (mech.DefaultWeaponEnsureAttempts < mech.DefaultWeaponEnsureMaxAttempts)
@@ -252,8 +248,8 @@ public sealed partial class CombatMechSystem : EntitySystem
         ProcessMarineStepStuns();
         ProcessOpenFaceplateDamageOverTime();
 
-        // ClearProtectedStatuses internally calls the legacy synchronous _statusEffects.TryRemoveStatusEffect,
-        // whose subscribers may reenter and mutate _pilotsInCombatMechs (e.g. ejecting the pilot mid-cleanup).
+        // ClearProtectedStatuses calls _statusEffects.TryRemoveStatusEffect, whose subscribers
+        // may reenter and mutate _pilotsInCombatMechs (e.g. ejecting the pilot mid-cleanup).
         // Snapshot into a re-used buffer so the foreach never iterates the live HashSet.
         _pilotsIterBuffer.Clear();
         _pilotsIterBuffer.AddRange(_pilotsInCombatMechs);

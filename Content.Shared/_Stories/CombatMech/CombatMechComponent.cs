@@ -13,6 +13,17 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._Stories.CombatMech;
 
+/// <summary>
+/// Marker and configuration component for the RX47 Colonial Marines combat mech.
+/// Owns mountable weapon slots, faceplate-driven pilot protection, step-stun and
+/// barricade-bump damage profiles, health alert thresholds, and the body-overlay
+/// visual stack used to render the helmet/arms above the seated pilot.
+/// </summary>
+/// <remarks>
+/// Most behaviour is driven by <see cref="CombatMechSystem"/>; this component only
+/// holds tunables and replicated runtime state. Pilot-side protection and visuals
+/// live on <see cref="InsideCombatVehicleComponent"/>.
+/// </remarks>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 [Access(typeof(CombatMechSystem))]
 public sealed partial class CombatMechComponent : Component
@@ -164,9 +175,6 @@ public sealed partial class CombatMechComponent : Component
     };
 
     [DataField]
-    public HashSet<EntProtoId> ProtectedStatusEffectEntities = [];
-
-    [DataField]
     public EntProtoId<SkillDefinitionComponent> WeaponSkill = "RMCSkillPowerLoader";
 
     [DataField]
@@ -238,9 +246,18 @@ public sealed partial class CombatMechComponent : Component
     public TimeSpan NextStepStunCheckAt;
 }
 
+/// <summary>
+/// Marks a weapon entity as an RX47 mountable module. Tracks the firing arc relative
+/// to the mech's facing and the link back to the owning mech so the weapon can only
+/// be fired by the seated pilot and within the allowed cone.
+/// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class CombatMechWeaponComponent : Component
 {
+    /// <summary>
+    /// Full cone (degrees) centred on the mech facing in which this weapon is allowed to fire.
+    /// Shots outside the arc are cancelled with the <c>stories-rx47-weapon-out-of-arc</c> popup.
+    /// </summary>
     [DataField]
     public float FiringArc = 150f;
 
@@ -255,19 +272,44 @@ public sealed partial class CombatMechWeaponComponent : Component
     public EntityUid? LinkedMech;
 }
 
+/// <summary>
+/// Marks an attachable as an RX47 underbarrel. Underbarrel shots check that the
+/// holder weapon is mounted on a mech and that the shooter is the current pilot,
+/// preventing a looted weapon from being fired outside the mech.
+/// </summary>
 [RegisterComponent]
 public sealed partial class CombatMechUnderbarrelComponent : Component;
 
+/// <summary>
+/// Multiplies the base melee damage of attacks against an RX47 mech. Used by RMC
+/// anti-mech weapons (e.g. xeno ravager strikes) to scale up their effective damage
+/// against vehicle armour without altering their damage against organic targets.
+/// </summary>
 [RegisterComponent]
 public sealed partial class CombatMechMeleeDamageMultiplierComponent : Component
 {
+    /// <summary>
+    /// Final damage multiplier applied on hit. <c>1.0</c> means no bonus; values
+    /// less than or equal to 1 are skipped to avoid pointless work.
+    /// </summary>
     [DataField(required: true)]
     public float Multiplier;
 }
 
+/// <summary>
+/// Marks an entity as a valid target for the RX47 barricade-bumper damage pulse.
+/// Used in addition to <c>BarricadeComponent</c> so non-barricade structures
+/// (sandbags, tankfeed crates, etc.) can also opt in to being shoved aside.
+/// </summary>
 [RegisterComponent]
 public sealed partial class CombatMechBumpDamageableComponent : Component;
 
+/// <summary>
+/// Marks a flamer-style RX47 weapon module that must keep its local fuel solution
+/// in sync with the shared mech tank. The shot/ammo-count event handlers copy the
+/// contents of the mounted weapon's tank into this attachable so vanilla flamer
+/// code sees a single source of truth.
+/// </summary>
 // Not [NetworkedComponent]: fields are static container-ID strings; actual fuel state is
 // tracked through SolutionContainerManager (which is networked) on the tank entity.
 [RegisterComponent]
@@ -284,6 +326,12 @@ public sealed partial class CombatMechWeaponFlamerTankComponent : Component
     public string LocalTankContainerId = "gun_magazine";
 }
 
+/// <summary>
+/// Pilot-side marker placed on a mob currently buckled into an RX47. Stores both the
+/// vehicle link and a snapshot of mob-level components that are temporarily removed
+/// while the pilot is sealed (infection susceptibility, weed effects, explosion stun)
+/// so they can be restored on dismount without losing their RMC tuning.
+/// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class InsideCombatVehicleComponent : Component
 {
@@ -355,6 +403,18 @@ public readonly partial record struct CombatMechFixtureCollisionState
     }
 }
 
+/// <summary>
+/// Identifies one of the two RX47 mountable weapon slots. Used throughout the system
+/// in place of a <c>bool primary</c> flag so call sites read intent directly
+/// (<c>WeaponSlot.Primary</c>) rather than guessing which boolean polarity means what.
+/// </summary>
+[Serializable, NetSerializable]
+public enum WeaponSlot : byte
+{
+    Primary,
+    Secondary,
+}
+
 [Serializable, NetSerializable]
 public enum CombatMechVisuals : byte
 {
@@ -384,13 +444,13 @@ public enum CombatMechVisualLayers : byte
 public sealed partial class CombatMechInstallWeaponDoAfterEvent : SimpleDoAfterEvent
 {
     [DataField]
-    public bool Primary;
+    public WeaponSlot Slot;
 
-    public override DoAfterEvent Clone() => new CombatMechInstallWeaponDoAfterEvent { Primary = Primary };
+    public override DoAfterEvent Clone() => new CombatMechInstallWeaponDoAfterEvent { Slot = Slot };
 
     public override bool IsDuplicate(DoAfterEvent other)
     {
-        return other is CombatMechInstallWeaponDoAfterEvent install && install.Primary == Primary;
+        return other is CombatMechInstallWeaponDoAfterEvent install && install.Slot == Slot;
     }
 }
 
@@ -398,13 +458,13 @@ public sealed partial class CombatMechInstallWeaponDoAfterEvent : SimpleDoAfterE
 public sealed partial class CombatMechDetachWeaponDoAfterEvent : SimpleDoAfterEvent
 {
     [DataField]
-    public bool Primary;
+    public WeaponSlot Slot;
 
-    public override DoAfterEvent Clone() => new CombatMechDetachWeaponDoAfterEvent { Primary = Primary };
+    public override DoAfterEvent Clone() => new CombatMechDetachWeaponDoAfterEvent { Slot = Slot };
 
     public override bool IsDuplicate(DoAfterEvent other)
     {
-        return other is CombatMechDetachWeaponDoAfterEvent detach && detach.Primary == Primary;
+        return other is CombatMechDetachWeaponDoAfterEvent detach && detach.Slot == Slot;
     }
 }
 

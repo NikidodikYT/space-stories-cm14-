@@ -58,7 +58,7 @@ public sealed partial class CombatMechSystem
 
     private void OnInstallWeaponDoAfter(Entity<CombatMechComponent> ent, ref CombatMechInstallWeaponDoAfterEvent args)
     {
-        SetInstallInProgress(ent, args.Primary, false);
+        SetInstallInProgress(ent, args.Slot, false);
 
         if (args.Cancelled || args.Handled || args.Used == null || Deleted(args.Used.Value))
             return;
@@ -67,7 +67,7 @@ public sealed partial class CombatMechSystem
         if (_net.IsClient)
             return;
 
-        InstallWeapon(ent, args.User, args.Used.Value, args.Primary);
+        InstallWeapon(ent, args.User, args.Used.Value, args.Slot);
     }
 
     private void OnDetachWeaponDoAfter(Entity<CombatMechComponent> ent, ref CombatMechDetachWeaponDoAfterEvent args)
@@ -79,29 +79,27 @@ public sealed partial class CombatMechSystem
         if (_net.IsClient)
             return;
 
-        DetachWeapon(ent, args.User, args.Primary);
+        DetachWeapon(ent, args.User, args.Slot);
     }
 
-    private void StartInstallWeapon(Entity<CombatMechComponent> mech, EntityUid user, EntityUid weapon, bool primary)
+    private void StartInstallWeapon(Entity<CombatMechComponent> mech, EntityUid user, EntityUid weapon, WeaponSlot slot)
     {
         if (!CanModifyWeapons(mech, user) || !TryComp(weapon, out CombatMechWeaponComponent? weaponComp))
             return;
 
-        if (GetWeapon(mech, primary) != null)
+        var slotName = GetSlotName(slot);
+
+        if (GetWeapon(mech, slot) != null)
         {
-            _popup.PopupClient(Loc.GetString("stories-rx47-weapon-slot-occupied", ("slot", GetSlotName(primary))),
-                mech,
-                user,
-                PopupType.MediumCaution);
+            _popup.PopupClient(Loc.GetString("stories-rx47-weapon-slot-occupied", ("slot", slotName)),
+                mech, user, PopupType.MediumCaution);
             return;
         }
 
-        if (IsInstallInProgress(mech, primary))
+        if (IsInstallInProgress(mech, slot))
         {
-            _popup.PopupClient(Loc.GetString("stories-rx47-weapon-install-in-progress", ("slot", GetSlotName(primary))),
-                mech,
-                user,
-                PopupType.MediumCaution);
+            _popup.PopupClient(Loc.GetString("stories-rx47-weapon-install-in-progress", ("slot", slotName)),
+                mech, user, PopupType.MediumCaution);
             return;
         }
 
@@ -111,7 +109,7 @@ public sealed partial class CombatMechSystem
             return;
         }
 
-        var ev = new CombatMechInstallWeaponDoAfterEvent { Primary = primary };
+        var ev = new CombatMechInstallWeaponDoAfterEvent { Slot = slot };
         var doAfter = new DoAfterArgs(EntityManager, user, mech.Comp.WeaponInstallDelay, ev, mech, mech, used: weapon)
         {
             NeedHand = true,
@@ -121,26 +119,25 @@ public sealed partial class CombatMechSystem
             DistanceThreshold = SharedInteractionSystem.InteractionRange,
         };
 
-        if (_doAfter.TryStartDoAfter(doAfter))
-        {
-            SetInstallInProgress(mech, primary, true);
-            if (_timing.IsFirstTimePredicted)
-            {
-                var slot = GetSlotName(primary);
-                _popup.PopupPredicted(Loc.GetString("stories-rx47-weapon-install-start-self", ("slot", slot)),
-                    Loc.GetString("stories-rx47-weapon-install-start-others", ("user", user), ("slot", slot)),
-                    user,
-                    user);
-            }
-        }
+        if (!_doAfter.TryStartDoAfter(doAfter))
+            return;
+
+        SetInstallInProgress(mech, slot, true);
+
+        if (!_timing.IsFirstTimePredicted)
+            return;
+
+        _popup.PopupPredicted(Loc.GetString("stories-rx47-weapon-install-start-self", ("slot", slotName)),
+            Loc.GetString("stories-rx47-weapon-install-start-others", ("user", user), ("slot", slotName)),
+            user, user);
     }
 
-    private void StartDetachWeapon(Entity<CombatMechComponent> mech, EntityUid user, bool primary)
+    private void StartDetachWeapon(Entity<CombatMechComponent> mech, EntityUid user, WeaponSlot slot)
     {
         if (!CanModifyWeapons(mech, user))
             return;
 
-        if (GetWeapon(mech, primary) == null)
+        if (GetWeapon(mech, slot) == null)
         {
             _popup.PopupClient(Loc.GetString("stories-rx47-weapon-slot-empty"), mech, user, PopupType.MediumCaution);
             return;
@@ -152,7 +149,7 @@ public sealed partial class CombatMechSystem
             return;
         }
 
-        var ev = new CombatMechDetachWeaponDoAfterEvent { Primary = primary };
+        var ev = new CombatMechDetachWeaponDoAfterEvent { Slot = slot };
         var doAfter = new DoAfterArgs(EntityManager, user, mech.Comp.WeaponDetachDelay, ev, mech, mech)
         {
             NeedHand = true,
@@ -162,46 +159,44 @@ public sealed partial class CombatMechSystem
             DistanceThreshold = SharedInteractionSystem.InteractionRange,
         };
 
-        if (_doAfter.TryStartDoAfter(doAfter))
-        {
-            if (_timing.IsFirstTimePredicted)
-            {
-                var slot = GetSlotName(primary);
-                _popup.PopupPredicted(Loc.GetString("stories-rx47-weapon-detach-start-self", ("slot", slot)),
-                    Loc.GetString("stories-rx47-weapon-detach-start-others", ("user", user), ("slot", slot)),
-                    user,
-                    user);
-            }
-        }
+        if (!_doAfter.TryStartDoAfter(doAfter) || !_timing.IsFirstTimePredicted)
+            return;
+
+        var slotName = GetSlotName(slot);
+        _popup.PopupPredicted(Loc.GetString("stories-rx47-weapon-detach-start-self", ("slot", slotName)),
+            Loc.GetString("stories-rx47-weapon-detach-start-others", ("user", user), ("slot", slotName)),
+            user, user);
     }
 
-    private bool IsInstallInProgress(Entity<CombatMechComponent> mech, bool primary)
+    private bool IsInstallInProgress(Entity<CombatMechComponent> mech, WeaponSlot slot)
     {
-        return primary ? mech.Comp.PrimaryWeaponInstallInProgress : mech.Comp.SecondaryWeaponInstallInProgress;
+        return slot == WeaponSlot.Primary
+            ? mech.Comp.PrimaryWeaponInstallInProgress
+            : mech.Comp.SecondaryWeaponInstallInProgress;
     }
 
-    private void SetInstallInProgress(Entity<CombatMechComponent> mech, bool primary, bool installing)
+    private void SetInstallInProgress(Entity<CombatMechComponent> mech, WeaponSlot slot, bool installing)
     {
-        if (primary)
+        if (slot == WeaponSlot.Primary)
             mech.Comp.PrimaryWeaponInstallInProgress = installing;
         else
             mech.Comp.SecondaryWeaponInstallInProgress = installing;
     }
 
-    private bool InstallWeapon(Entity<CombatMechComponent> mech, EntityUid user, EntityUid weapon, bool primary)
+    private bool InstallWeapon(Entity<CombatMechComponent> mech, EntityUid user, EntityUid weapon, WeaponSlot slot)
     {
         if (!CanModifyWeapons(mech, user) || !TryComp(weapon, out CombatMechWeaponComponent? weaponComp))
             return false;
 
-        if (GetWeapon(mech, primary) == weapon && weaponComp.LinkedMech == mech.Owner)
+        if (GetWeapon(mech, slot) == weapon && weaponComp.LinkedMech == mech.Owner)
             return true;
 
-        if (GetWeapon(mech, primary) != null)
+        var slotName = GetSlotName(slot);
+
+        if (GetWeapon(mech, slot) != null)
         {
-            _popup.PopupClient(Loc.GetString("stories-rx47-weapon-slot-occupied", ("slot", GetSlotName(primary))),
-                mech,
-                user,
-                PopupType.MediumCaution);
+            _popup.PopupClient(Loc.GetString("stories-rx47-weapon-slot-occupied", ("slot", slotName)),
+                mech, user, PopupType.MediumCaution);
             return false;
         }
 
@@ -224,13 +219,13 @@ public sealed partial class CombatMechSystem
             return false;
         }
 
-        SetWeapon(mech, primary, weapon);
+        SetWeapon(mech, slot, weapon);
         LinkWeaponToMech(weapon, mech);
 
         var mounted = false;
         if (TryComp(mech, out HandsComponent? hands))
         {
-            var hand = FindHand(mech, hands, primary ? HandLocation.Left : HandLocation.Right);
+            var hand = FindHand(mech, hands, GetHandLocationFor(slot));
             if (hand != null && _hands.TryPickup(mech, weapon, hand, checkActionBlocker: false, animate: false, handsComp: hands))
             {
                 EnsureWeaponUnremoveable(weapon);
@@ -241,21 +236,20 @@ public sealed partial class CombatMechSystem
         if (!mounted)
         {
             ClearWeaponMechLink((weapon, weaponComp));
-            SetWeapon(mech, primary, null);
+            SetWeapon(mech, slot, null);
             _transform.SetCoordinates(weapon, safeDropCoordinates);
             return false;
         }
 
         UpdateAppearance(mech);
 
-        var slot = GetSlotName(primary);
-        _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-installed", ("weapon", weapon), ("slot", slot)), mech, user);
+        _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-installed", ("weapon", weapon), ("slot", slotName)), mech, user);
         return true;
     }
 
-    private void DetachWeapon(Entity<CombatMechComponent> mech, EntityUid user, bool primary)
+    private void DetachWeapon(Entity<CombatMechComponent> mech, EntityUid user, WeaponSlot slot)
     {
-        if (GetWeapon(mech, primary) is not { } weapon)
+        if (GetWeapon(mech, slot) is not { } weapon)
             return;
 
         var coordinates = GetSafeWeaponDropCoordinates(mech, user);
@@ -278,14 +272,13 @@ public sealed partial class CombatMechSystem
         if (!heldByMech)
             _transform.SetCoordinates(weapon, coordinates);
 
-        SetWeapon(mech, primary, null);
+        SetWeapon(mech, slot, null);
 
         _hands.TryPickup(user, weapon, checkActionBlocker: false, animate: false);
 
         UpdateAppearance(mech);
 
-        var slot = GetSlotName(primary);
-        _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-detached", ("weapon", weapon), ("slot", slot)), mech, user);
+        _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-detached", ("weapon", weapon), ("slot", GetSlotName(slot))), mech, user);
     }
 
     private EntityCoordinates GetSafeWeaponDropCoordinates(Entity<CombatMechComponent> mech, EntityUid user)
@@ -427,9 +420,9 @@ public sealed partial class CombatMechSystem
         PopupCannotModifyPiloted(ent, args.User);
     }
 
-    private bool EnsureWeapon(Entity<CombatMechComponent> mech, bool primary)
+    private bool EnsureWeapon(Entity<CombatMechComponent> mech, WeaponSlot slot)
     {
-        if (GetWeapon(mech, primary) is { })
+        if (GetWeapon(mech, slot) is { })
             return true;
 
         if (!TryComp(mech, out HandsComponent? hands))
@@ -438,14 +431,15 @@ public sealed partial class CombatMechSystem
             return false;
         }
 
-        var hand = FindHand(mech, hands, primary ? HandLocation.Left : HandLocation.Right);
+        var handLocation = GetHandLocationFor(slot);
+        var hand = FindHand(mech, hands, handLocation);
         if (hand == null)
         {
-            Log.Warning($"RX47 {ToPrettyString(mech.Owner)} could not spawn default weapon: missing {(primary ? "left" : "right")} hand.");
+            Log.Warning($"RX47 {ToPrettyString(mech.Owner)} could not spawn default weapon: missing {handLocation} hand.");
             return false;
         }
 
-        var proto = primary ? mech.Comp.PrimaryWeapon : mech.Comp.SecondaryWeapon;
+        var proto = slot == WeaponSlot.Primary ? mech.Comp.PrimaryWeapon : mech.Comp.SecondaryWeapon;
         if (string.IsNullOrEmpty(proto))
             return true;
 
@@ -471,7 +465,7 @@ public sealed partial class CombatMechSystem
             return false;
         }
 
-        SetWeapon(mech, primary, spawned);
+        SetWeapon(mech, slot, spawned);
         LinkWeaponToMech(spawned, mech);
         EnsureWeaponUnremoveable(spawned);
         return true;
@@ -496,9 +490,9 @@ public sealed partial class CombatMechSystem
         return null;
     }
 
-    private EntityUid? GetWeapon(Entity<CombatMechComponent> ent, bool primary)
+    private EntityUid? GetWeapon(Entity<CombatMechComponent> ent, WeaponSlot slot)
     {
-        var weapon = primary ? ent.Comp.PrimaryWeaponEntity : ent.Comp.SecondaryWeaponEntity;
+        var weapon = slot == WeaponSlot.Primary ? ent.Comp.PrimaryWeaponEntity : ent.Comp.SecondaryWeaponEntity;
         if (weapon == null || Deleted(weapon.Value))
             return null;
 
@@ -507,7 +501,7 @@ public sealed partial class CombatMechSystem
 
     private bool IsMountedWeapon(Entity<CombatMechComponent> mech, EntityUid weapon)
     {
-        return GetWeapon(mech, true) == weapon || GetWeapon(mech, false) == weapon;
+        return GetWeapon(mech, WeaponSlot.Primary) == weapon || GetWeapon(mech, WeaponSlot.Secondary) == weapon;
     }
 
     private bool IsMountedWeaponForPilot(EntityUid user, Entity<CombatMechWeaponComponent> weapon)
@@ -789,13 +783,13 @@ public sealed partial class CombatMechSystem
         DirtyField(weapon.Owner, weapon.Comp, nameof(CombatMechWeaponComponent.LinkedMech));
     }
 
-    private void SetWeapon(Entity<CombatMechComponent> mech, bool primary, EntityUid? weapon)
+    private void SetWeapon(Entity<CombatMechComponent> mech, WeaponSlot slot, EntityUid? weapon)
     {
         var state = mech.Comp.EmptyWeaponState;
         if (weapon != null && TryComp(weapon.Value, out CombatMechWeaponComponent? weaponComp))
-            state = BuildWeaponState(weaponComp.ArmState, primary);
+            state = BuildWeaponState(weaponComp.ArmState, slot);
 
-        if (primary)
+        if (slot == WeaponSlot.Primary)
         {
             mech.Comp.PrimaryWeaponEntity = weapon;
             mech.Comp.PrimaryWeaponState = state;
@@ -811,11 +805,18 @@ public sealed partial class CombatMechSystem
         }
     }
 
-    private string GetSlotName(bool primary) =>
-        Loc.GetString(primary ? "stories-rx47-left-slot" : "stories-rx47-right-slot");
+    /// <summary>
+    /// Physical hand a given weapon slot is mounted on. Primary slot lives on the left hand,
+    /// secondary on the right - matches the RX47 visualizer "weapon_*_left/right" sprite states.
+    /// </summary>
+    private static HandLocation GetHandLocationFor(WeaponSlot slot) =>
+        slot == WeaponSlot.Primary ? HandLocation.Left : HandLocation.Right;
 
-    private static string BuildWeaponState(string armState, bool primary) =>
-        $"weapon_{armState}_{(primary ? "left" : "right")}";
+    private string GetSlotName(WeaponSlot slot) =>
+        Loc.GetString(slot == WeaponSlot.Primary ? "stories-rx47-left-slot" : "stories-rx47-right-slot");
+
+    private static string BuildWeaponState(string armState, WeaponSlot slot) =>
+        $"weapon_{armState}_{(slot == WeaponSlot.Primary ? "left" : "right")}";
 
     private bool CanModifyWeapons(Entity<CombatMechComponent> mech, EntityUid user)
     {

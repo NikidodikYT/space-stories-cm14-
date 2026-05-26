@@ -34,7 +34,7 @@ public sealed partial class CombatMechSystem
             return;
         }
 
-        if (GetWeapon(ent, true) == null || GetWeapon(ent, false) == null)
+        if (GetWeapon(ent, WeaponSlot.Primary) == null || GetWeapon(ent, WeaponSlot.Secondary) == null)
         {
             if (args.Popup)
                 _popup.PopupClient(Loc.GetString("stories-rx47-missing-weapons"), ent, user, PopupType.MediumCaution);
@@ -91,8 +91,8 @@ public sealed partial class CombatMechSystem
         {
             _rmcPulling.TryStopAllPullsFromAndOn(pilot);
 
-            if (!TransferWeaponToPilot(ent, pilot, true) ||
-                !TransferWeaponToPilot(ent, pilot, false))
+            if (!TransferWeaponToPilot(ent, pilot, WeaponSlot.Primary) ||
+                !TransferWeaponToPilot(ent, pilot, WeaponSlot.Secondary))
             {
                 EjectPilotAfterWeaponTransferFailure(ent, pilot);
                 return;
@@ -108,8 +108,8 @@ public sealed partial class CombatMechSystem
 
         if (_net.IsServer)
         {
-            TransferWeaponToMech(ent, pilot, true);
-            TransferWeaponToMech(ent, pilot, false);
+            TransferWeaponToMech(ent, pilot, WeaponSlot.Primary);
+            TransferWeaponToMech(ent, pilot, WeaponSlot.Secondary);
         }
 
         RemCompDeferred<InsideCombatVehicleComponent>(pilot);
@@ -117,15 +117,15 @@ public sealed partial class CombatMechSystem
         _audio.PlayPredicted(ent.Comp.ExitSound, ent, pilot);
     }
 
-    private bool TransferWeaponToPilot(Entity<CombatMechComponent> ent, EntityUid pilot, bool primary)
+    private bool TransferWeaponToPilot(Entity<CombatMechComponent> ent, EntityUid pilot, WeaponSlot slot)
     {
-        if (GetWeapon(ent, primary) is not { } weapon)
+        if (GetWeapon(ent, slot) is not { } weapon)
             return false;
 
         if (!TryComp(pilot, out HandsComponent? pilotHands))
             return false;
 
-        var hand = FindHand(pilot, pilotHands, primary ? HandLocation.Left : HandLocation.Right);
+        var hand = FindHand(pilot, pilotHands, GetHandLocationFor(slot));
         if (hand == null)
             return false;
 
@@ -143,7 +143,7 @@ public sealed partial class CombatMechSystem
 
         if (!_hands.TryPickup(pilot, weapon, hand, checkActionBlocker: false, animate: false, handsComp: pilotHands))
         {
-            TransferWeaponToMech(ent, pilot, primary);
+            TransferWeaponToMech(ent, pilot, slot);
             return false;
         }
 
@@ -151,15 +151,15 @@ public sealed partial class CombatMechSystem
         return true;
     }
 
-    private void TransferWeaponToMech(Entity<CombatMechComponent> ent, EntityUid pilot, bool primary)
+    private void TransferWeaponToMech(Entity<CombatMechComponent> ent, EntityUid pilot, WeaponSlot slot)
     {
-        if (GetWeapon(ent, primary) is not { } weapon)
+        if (GetWeapon(ent, slot) is not { } weapon)
             return;
 
         if (!TryComp(ent.Owner, out HandsComponent? mechHands))
             return;
 
-        var hand = FindHand(ent.Owner, mechHands, primary ? HandLocation.Left : HandLocation.Right);
+        var hand = FindHand(ent.Owner, mechHands, GetHandLocationFor(slot));
         if (hand == null)
             return;
 
@@ -186,9 +186,9 @@ public sealed partial class CombatMechSystem
             RemComp<UnremoveableComponent>(weapon);
             if (TryComp(weapon, out CombatMechWeaponComponent? weaponComp))
                 ClearWeaponMechLink((weapon, weaponComp));
-            SetWeapon(ent, primary, null);
+            SetWeapon(ent, slot, null);
             _transform.SetCoordinates(weapon, Transform(ent).Coordinates);
-            Log.Warning($"RX47 failed to return {ToPrettyString(weapon)} to {ToPrettyString(ent.Owner)} hand {hand} ({(primary ? "primary" : "secondary")}).");
+            Log.Warning($"RX47 failed to return {ToPrettyString(weapon)} to {ToPrettyString(ent.Owner)} hand {hand} ({slot}).");
             return;
         }
 
@@ -214,8 +214,8 @@ public sealed partial class CombatMechSystem
         {
             if (_net.IsServer)
             {
-                TransferWeaponToMech(mech, pilot, true);
-                TransferWeaponToMech(mech, pilot, false);
+                TransferWeaponToMech(mech, pilot, WeaponSlot.Primary);
+                TransferWeaponToMech(mech, pilot, WeaponSlot.Secondary);
             }
 
             RemCompDeferred<InsideCombatVehicleComponent>(pilot);

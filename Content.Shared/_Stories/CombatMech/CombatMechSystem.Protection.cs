@@ -322,14 +322,7 @@ public sealed partial class CombatMechSystem
 
         foreach (var status in mech.ProtectedStatusEffects)
         {
-#pragma warning disable CS0618 // Existing protection cleanup still uses legacy status ids.
             _statusEffects.TryRemoveStatusEffect(pilot, status);
-#pragma warning restore CS0618
-        }
-
-        foreach (var status in mech.ProtectedStatusEffectEntities)
-        {
-            _newStatusEffects.TryRemoveStatusEffect(pilot, status);
         }
     }
 
@@ -398,8 +391,7 @@ public sealed partial class CombatMechSystem
     private bool IsProtectedStatus(Entity<InsideCombatVehicleComponent> pilot, EntProtoId status)
     {
         return TryComp(pilot.Comp.Vehicle, out CombatMechComponent? mech) &&
-               (mech.ProtectedStatusEffects.Contains(status.Id) ||
-                mech.ProtectedStatusEffectEntities.Contains(status));
+               mech.ProtectedStatusEffects.Contains(status.Id);
     }
 
     private void SplitForwardedDamage(
