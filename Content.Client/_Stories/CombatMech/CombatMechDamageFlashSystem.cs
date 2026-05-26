@@ -4,11 +4,8 @@ using Robust.Shared.GameObjects;
 
 namespace Content.Client._Stories.CombatMech;
 
-// The body overlay sprite must mirror the mech body color every frame. RMC's damage flash tweens the
-// mech sprite color from red back to white over multiple frames; an event-driven sync only catches the
-// initial hit and leaves the overlay stuck at the flashed color until the next damage event. There is
-// no public hook into the tween, so per-frame mirroring is the only reliable option. Mech count per
-// round is bounded (event/admin spawn), so the per-frame cost is negligible.
+// Mirrors the body-overlay sprite colour to the mech body every frame so RMC's damage-flash
+// tween stays in sync. There is no public hook into the tween itself.
 public sealed class CombatMechDamageFlashSystem : EntitySystem
 {
     [Dependency] private readonly SpriteSystem _sprite = default!;
@@ -34,8 +31,6 @@ public sealed class CombatMechDamageFlashSystem : EntitySystem
             if (_spriteQuery.TryComp(overlay, out var overlaySprite) &&
                 overlaySprite.Color != mechSprite.Color)
             {
-                // Go through SpriteSystem so the sprite-tree / render cache invalidates correctly;
-                // direct field assignment can leave stale render entries on child sprites.
                 _sprite.SetColor((overlay, overlaySprite), mechSprite.Color);
             }
         }

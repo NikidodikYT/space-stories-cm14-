@@ -45,8 +45,6 @@ public sealed partial class CombatMechSystem
 
     private void OnInsideVehicleAttackAttempt(Entity<InsideCombatVehicleComponent> ent, ref AttackAttemptEvent args)
     {
-        // Mechs fight with their mounted guns; melee swings (including AltFireMelee right-clicks) would otherwise
-        // race the underbarrel shoot input and steal the click.
         if (args.Cancelled || Deleted(ent.Comp.Vehicle))
             return;
 
@@ -69,7 +67,6 @@ public sealed partial class CombatMechSystem
         if (args.Handled || !TryComp(ent.Comp.Vehicle, out TransformComponent? vehicleXform))
             return;
 
-        // Origin is expressed in the vehicle's parent coordinate space, so rotate the local offset in that space too.
         var rotation = vehicleXform.LocalRotation;
         var rotatedOffset = rotation.RotateVec(args.Offset);
         args.Origin = vehicleXform.Coordinates.Offset(rotatedOffset);
@@ -78,8 +75,7 @@ public sealed partial class CombatMechSystem
 
     private void OnInsideVehicleBeforeDamage(Entity<InsideCombatVehicleComponent> ent, ref BeforeDamageChangedEvent args)
     {
-        // Damage forwarding is server-authoritative. A predicted client run could otherwise cascade
-        // through TryChangeDamage -> DamageChangedEvent -> alert popups/sounds before being rolled back.
+        // Server-authoritative: a predicted client cascade would fire alert popups/sounds that get rolled back.
         if (_net.IsClient)
             return;
 
@@ -135,23 +131,22 @@ public sealed partial class CombatMechSystem
             args.Cancelled = true;
     }
 
+    // Legacy StatusEffectsSystem.TryAddStatusEffect does not raise BeforeStatusEffectAddedEvent,
+    // so catch stun/knockdown/daze post-application and strip them.
     private void OnInsideVehicleStunned(Entity<InsideCombatVehicleComponent> ent, ref StunnedEvent args)
     {
-        // Legacy stun sources can bypass BeforeStatusEffectAddedEvent; clear them after application too.
         if (IsPilotSealed(ent))
             ClearProtectedStatuses(ent);
     }
 
     private void OnInsideVehicleKnockedDown(Entity<InsideCombatVehicleComponent> ent, ref KnockedDownEvent args)
     {
-        // Legacy knockdown sources can bypass BeforeStatusEffectAddedEvent; clear them after application too.
         if (IsPilotSealed(ent))
             ClearProtectedStatuses(ent);
     }
 
     private void OnInsideVehicleDazed(Entity<InsideCombatVehicleComponent> ent, ref DazedEvent args)
     {
-        // Legacy daze sources can bypass BeforeStatusEffectAddedEvent; clear them after application too.
         if (IsPilotSealed(ent))
             ClearProtectedStatuses(ent);
     }
@@ -388,6 +383,8 @@ public sealed partial class CombatMechSystem
         RemCompDeferred<RMCRootedComponent>(pilot);
     }
 
+    // StatusEffectNew EntProtoId is matched by string id against the legacy protected set —
+    // both systems share the same id namespace.
     private bool IsProtectedStatus(Entity<InsideCombatVehicleComponent> pilot, EntProtoId status)
     {
         return TryComp(pilot.Comp.Vehicle, out CombatMechComponent? mech) &&

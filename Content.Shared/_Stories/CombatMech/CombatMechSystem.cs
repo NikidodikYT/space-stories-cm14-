@@ -65,12 +65,11 @@ public sealed partial class CombatMechSystem : EntitySystem
     private const float PositionMoveEpsilon = 0.0001f;
     private const float DirectionEpsilon = 0.001f;
     private const float FiringTargetEpsilon = 0.01f;
-    // Upper-bound the cadence of MoveEvent-driven step-stun probes; the periodic Update pass fills the gap.
     private static readonly TimeSpan StepStunMoveCheckInterval = TimeSpan.FromMilliseconds(100);
     private static readonly ProtoId<DamageTypePrototype> BluntDamageType = "Blunt";
 
     private float _protectionCleanupAccumulator;
-    // Scratch buffers used only inside Update's sequential server pass.
+    // Scratch buffers — only valid inside Update's sequential server pass.
     private readonly HashSet<EntityUid> _contacts = new();
     private readonly HashSet<Entity<DamageOverTimeComponent>> _damageContacts = new();
     private readonly HashSet<EntityUid> _bumpDamageTargets = new();
@@ -78,13 +77,10 @@ public sealed partial class CombatMechSystem : EntitySystem
     private readonly HashSet<EntityUid> _pilotsInCombatMechs = new();
     private readonly List<EntityUid> _staleDictionaryKeys = new();
     private readonly List<EntityUid> _stalePilots = new();
-    // Entities that need default weapons spawned on the next tick (deferred past MapInit so hand containers exist).
-    // Retries land in _nextTickDefaultWeapons so a failed attempt waits for the following Update pass instead of
-    // re-running in the same tick (each tick gives GiveHands another chance to finish populating the mech).
     private readonly Queue<EntityUid> _pendingDefaultWeapons = new();
     private readonly Queue<EntityUid> _nextTickDefaultWeapons = new();
-    // Snapshot buffer for safe iteration over _pilotsInCombatMechs while cleanup may reenter and mutate it.
     private readonly List<EntityUid> _pilotsIterBuffer = new();
+    private readonly List<EntityUid> _dotPilotsBuffer = new();
 
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
@@ -114,7 +110,6 @@ public sealed partial class CombatMechSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly EntityWhitelistSystem _whitelist = default!;
 
-    // Hot-path EntityQuery caches. Used inside MoveEvent / PreventCollideEvent handlers that may fire many times per tick.
     private EntityQuery<InputMoverComponent> _moverQuery;
     private EntityQuery<ItemComponent> _itemQuery;
 
@@ -248,9 +243,8 @@ public sealed partial class CombatMechSystem : EntitySystem
         ProcessMarineStepStuns();
         ProcessOpenFaceplateDamageOverTime();
 
-        // ClearProtectedStatuses calls _statusEffects.TryRemoveStatusEffect, whose subscribers
-        // may reenter and mutate _pilotsInCombatMechs (e.g. ejecting the pilot mid-cleanup).
-        // Snapshot into a re-used buffer so the foreach never iterates the live HashSet.
+        // ClearProtectedStatuses can re-enter and mutate _pilotsInCombatMechs (e.g. eject mid-cleanup),
+        // so iterate a snapshot rather than the live set.
         _pilotsIterBuffer.Clear();
         _pilotsIterBuffer.AddRange(_pilotsInCombatMechs);
 
@@ -267,7 +261,6 @@ public sealed partial class CombatMechSystem : EntitySystem
             if (!IsPilotSealed((uid, inside)))
                 continue;
 
-            // Most effects are blocked by events; this slower pass catches late-added components without ticking every frame.
             ClearProtectedStatuses((uid, inside));
             ClearProtectedMovementDebuffs((uid, inside));
             ClearProtectedOngoingEffects((uid, inside));
@@ -287,13 +280,12 @@ public sealed partial class CombatMechSystem : EntitySystem
             return;
         }
 
-        // EnsureBodyOverlay is called transitively by UpdateAppearance on the server.
         UpdateAppearance(ent);
 
         if (ent.Comp.DefaultWeaponEnsureQueued)
             return;
 
-        // GiveHands finishes after MapInit; defer one tick so the mech hand containers exist before mounting weapons.
+        // GiveHands finishes after MapInit; defer one tick so hand containers exist before mounting.
         ent.Comp.DefaultWeaponEnsureQueued = true;
         _pendingDefaultWeapons.Enqueue(ent.Owner);
     }
@@ -304,16 +296,10 @@ public sealed partial class CombatMechSystem : EntitySystem
         if (string.IsNullOrEmpty(proto.Id))
             return;
 
-        // Always ensure the slot exists so client replication has a stable destination for the overlay
-        // entity and PVS late-joiners see it via container state instead of a stray transform.
-        // ShowContents = true is mandatory: BaseContainer defaults hide the contained sprite from
-        // rendering (the overlay literally disappears otherwise). OccludesLight = false because the
-        // overlay is decorative and must not cast shadows onto the mech body underneath it.
         var slot = _container.EnsureContainer<ContainerSlot>(ent.Owner, ent.Comp.BodyOverlayContainerId, out var alreadyExisted);
 
-        // Direct mutation of ContainerSlot fields does not mark the manager dirty, so PVS state would
-        // ship the engine defaults (ShowContents=false) to clients and the overlay would render as
-        // invisible. Always re-apply the desired settings and explicitly dirty the manager on changes.
+        // ContainerSlot field writes do not dirty the manager; re-apply and dirty explicitly so
+        // PVS does not ship engine defaults (ShowContents=false) and hide the overlay on clients.
         if (!alreadyExisted || slot.ShowContents != true || slot.OccludesLight != false)
         {
             slot.ShowContents = true;
@@ -326,8 +312,6 @@ public sealed partial class CombatMechSystem : EntitySystem
             if (slot.ContainedEntity == existing)
                 return;
 
-            // Old overlay drifted out of the slot (VV, another system, container reset). Delete it
-            // before spawning the replacement so we do not leak orphan entities each respawn.
             QueueDel(existing);
         }
 

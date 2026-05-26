@@ -8,6 +8,7 @@ stories-rx47-faceplate-opened = The RX47 faceplate opens.
 stories-rx47-faceplate-closed = The RX47 faceplate locks shut.
 stories-rx47-faceplate-blocks-exit = Open the RX47 faceplate before leaving the cockpit.
 stories-rx47-weapon-not-linked = The weapon is not linked to this mechsuit.
+stories-rx47-weapon-pilot-mismatch = Only the seated pilot can fire this weapon.
 stories-rx47-weapon-out-of-arc = The target is outside the weapon's firing arc.
 stories-rx47-underbarrel-pilot-only = This attachment only works while piloting an RX47.
 stories-rx47-left-slot = left hardpoint

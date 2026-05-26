@@ -13,17 +13,15 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._Stories.CombatMech;
 
-/// <summary>
-/// Marker and configuration component for the RX47 Colonial Marines combat mech.
-/// Owns mountable weapon slots, faceplate-driven pilot protection, step-stun and
-/// barricade-bump damage profiles, health alert thresholds, and the body-overlay
-/// visual stack used to render the helmet/arms above the seated pilot.
-/// </summary>
-/// <remarks>
-/// Most behaviour is driven by <see cref="CombatMechSystem"/>; this component only
-/// holds tunables and replicated runtime state. Pilot-side protection and visuals
-/// live on <see cref="InsideCombatVehicleComponent"/>.
-/// </remarks>
+// Shared container IDs between CombatMechComponent and weapon-side components.
+// Field initializers cannot reference instance members of another component, so the
+// literals would otherwise be duplicated and drift apart.
+public static class CombatMechContainerIds
+{
+    public const string FlamerTank = "rx47_flamer_tank";
+    public const string GunMagazine = "gun_magazine";
+}
+
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 [Access(typeof(CombatMechSystem))]
 public sealed partial class CombatMechComponent : Component
@@ -35,13 +33,13 @@ public sealed partial class CombatMechComponent : Component
     public string UnderbarrelSlot = "rmc-aslot-underbarrel";
 
     [DataField]
-    public string GunMagazineContainerId = "gun_magazine";
+    public string GunMagazineContainerId = CombatMechContainerIds.GunMagazine;
 
     [DataField]
     public string GunChamberContainerId = "gun_chamber";
 
     [DataField]
-    public string WeaponTankContainerId = "rx47_flamer_tank";
+    public string WeaponTankContainerId = CombatMechContainerIds.FlamerTank;
 
     [DataField]
     public string BodyOverlayContainerId = "rx47_body_overlay";
@@ -52,7 +50,6 @@ public sealed partial class CombatMechComponent : Component
     [DataField(required: true)]
     public EntProtoId SecondaryWeapon;
 
-    // "empty" matches the EmptyWeaponState default; the runtime field is set explicitly when a weapon is mounted.
     [DataField, AutoNetworkedField]
     public string PrimaryWeaponState = "empty";
 
@@ -149,8 +146,8 @@ public sealed partial class CombatMechComponent : Component
     [DataField]
     public Vector2 PilotVisualOffsetEastWest = new(0f, 0.28f);
 
-    // Fallback only for vehicles without a Damageable damageContainer; RX47 damage forwarding
-    // normally derives from the mounted mech's supported damage container types.
+    // Used only when the vehicle has no Damageable damageContainer; otherwise forwarding is
+    // derived from the container's supported types/groups.
     [DataField]
     public List<ProtoId<DamageTypePrototype>> ForwardedDamageTypes = new()
     {
@@ -195,7 +192,6 @@ public sealed partial class CombatMechComponent : Component
     [DataField]
     public SoundSpecifier? DamageAlertSound = new SoundPathSpecifier("/Audio/Machines/warning_buzzer.ogg");
 
-    // Runtime references, not safe across save/restart - intentionally not [DataField].
     [AutoNetworkedField]
     public EntityUid? PrimaryWeaponEntity;
 
@@ -215,10 +211,10 @@ public sealed partial class CombatMechComponent : Component
     public int PilotRenderOrder = 1;
 
     [ViewVariables]
-    public bool DamageAlert25;
+    public bool DamagedAlertTriggered;
 
     [ViewVariables]
-    public bool DamageAlert10;
+    public bool CriticalAlertTriggered;
 
     [ViewVariables]
     public TimeSpan NextBarricadeBumpAt;
@@ -241,105 +237,55 @@ public sealed partial class CombatMechComponent : Component
     [ViewVariables]
     public bool SecondaryWeaponInstallInProgress;
 
-    // Throttle for OnMechMove-driven step-stun checks. ProcessMarineStepStuns covers the gap from Update.
     [ViewVariables]
-    public TimeSpan NextStepStunCheckAt;
+    public TimeSpan NextStepStunCheckAfter;
 }
 
-/// <summary>
-/// Marks a weapon entity as an RX47 mountable module. Tracks the firing arc relative
-/// to the mech's facing and the link back to the owning mech so the weapon can only
-/// be fired by the seated pilot and within the allowed cone.
-/// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class CombatMechWeaponComponent : Component
 {
-    /// <summary>
-    /// Full cone (degrees) centred on the mech facing in which this weapon is allowed to fire.
-    /// Shots outside the arc are cancelled with the <c>stories-rx47-weapon-out-of-arc</c> popup.
-    /// </summary>
     [DataField]
     public float FiringArc = 150f;
 
-    /// <summary>
-    /// Must match weapon_{armState}_{left/right} states in the RX47 visualizer.
-    /// </summary>
+    // Must match the weapon_{armState}_{left/right} states in the RX47 visualizer.
     [DataField(required: true)]
     public string ArmState = string.Empty;
 
-    // Valid only within a single round; not safe across save/restart.
     [AutoNetworkedField]
     public EntityUid? LinkedMech;
 }
 
-/// <summary>
-/// Marks an attachable as an RX47 underbarrel. Underbarrel shots check that the
-/// holder weapon is mounted on a mech and that the shooter is the current pilot,
-/// preventing a looted weapon from being fired outside the mech.
-/// </summary>
 [RegisterComponent]
 public sealed partial class CombatMechUnderbarrelComponent : Component;
 
-/// <summary>
-/// Multiplies the base melee damage of attacks against an RX47 mech. Used by RMC
-/// anti-mech weapons (e.g. xeno ravager strikes) to scale up their effective damage
-/// against vehicle armour without altering their damage against organic targets.
-/// </summary>
 [RegisterComponent]
 public sealed partial class CombatMechMeleeDamageMultiplierComponent : Component
 {
-    /// <summary>
-    /// Final damage multiplier applied on hit. <c>1.0</c> means no bonus; values
-    /// less than or equal to 1 are skipped to avoid pointless work.
-    /// </summary>
     [DataField(required: true)]
     public float Multiplier;
 }
 
-/// <summary>
-/// Marks an entity as a valid target for the RX47 barricade-bumper damage pulse.
-/// Used in addition to <c>BarricadeComponent</c> so non-barricade structures
-/// (sandbags, tankfeed crates, etc.) can also opt in to being shoved aside.
-/// </summary>
 [RegisterComponent]
 public sealed partial class CombatMechBumpDamageableComponent : Component;
 
-/// <summary>
-/// Marks a flamer-style RX47 weapon module that must keep its local fuel solution
-/// in sync with the shared mech tank. The shot/ammo-count event handlers copy the
-/// contents of the mounted weapon's tank into this attachable so vanilla flamer
-/// code sees a single source of truth.
-/// </summary>
-// Not [NetworkedComponent]: fields are static container-ID strings; actual fuel state is
-// tracked through SolutionContainerManager (which is networked) on the tank entity.
 [RegisterComponent]
 public sealed partial class CombatMechWeaponFlamerTankComponent : Component
 {
-    // Defaults mirror CombatMechComponent.WeaponTankContainerId / GunMagazineContainerId.
-    // Duplicated literally because field initializers cannot reference instance members of another component.
     [DataField]
-    public string WeaponTankContainerId = "rx47_flamer_tank";
+    public string WeaponTankContainerId = CombatMechContainerIds.FlamerTank;
 
-    // Most RX47 flamers keep the local RMCFlamerTank directly on the attachable; this is only
-    // a fallback for attachables that store their local tank in a container.
     [DataField]
-    public string LocalTankContainerId = "gun_magazine";
+    public string LocalTankContainerId = CombatMechContainerIds.GunMagazine;
 }
 
-/// <summary>
-/// Pilot-side marker placed on a mob currently buckled into an RX47. Stores both the
-/// vehicle link and a snapshot of mob-level components that are temporarily removed
-/// while the pilot is sealed (infection susceptibility, weed effects, explosion stun)
-/// so they can be restored on dismount without losing their RMC tuning.
-/// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class InsideCombatVehicleComponent : Component
 {
     [DataField, AutoNetworkedField]
     public EntityUid Vehicle;
 
-    // Runtime delta flags - not DataField: prototyping or save/restore with these
-    // set would produce incorrect RestorePilotProtection behaviour.
+    // Snapshot of mob-level components captured on seal-up and restored on dismount.
+    // Not [DataField]: pre-set values would make Restore think it owns components it never took.
     [ViewVariables]
     public bool RemovedInfectable;
 
@@ -384,7 +330,6 @@ public sealed partial class InsideCombatVehicleComponent : Component
 
     [ViewVariables]
     public Dictionary<string, CombatMechFixtureCollisionState> Fixtures = new();
-
 }
 
 [DataDefinition, Serializable, NetSerializable]
@@ -403,11 +348,6 @@ public readonly partial record struct CombatMechFixtureCollisionState
     }
 }
 
-/// <summary>
-/// Identifies one of the two RX47 mountable weapon slots. Used throughout the system
-/// in place of a <c>bool primary</c> flag so call sites read intent directly
-/// (<c>WeaponSlot.Primary</c>) rather than guessing which boolean polarity means what.
-/// </summary>
 [Serializable, NetSerializable]
 public enum WeaponSlot : byte
 {

@@ -255,8 +255,7 @@ public sealed partial class CombatMechSystem
         var coordinates = GetSafeWeaponDropCoordinates(mech, user);
         var heldByMech = _hands.IsHolding(mech.Owner, weapon);
 
-        // UnremoveableComponent cancels ContainerGettingRemovedAttemptEvent which is raised by
-        // TryDrop's CanRemove check. Must remove the component before attempting the drop.
+        // UnremoveableComponent cancels the drop's CanRemove check — strip first, drop, then re-add.
         RemComp<UnremoveableComponent>(weapon);
 
         if (heldByMech &&
@@ -323,7 +322,6 @@ public sealed partial class CombatMechSystem
             return;
         }
 
-        // RX47 underbarrel slot is locked single-slot; only the first entity is valid.
         var attachable = container.ContainedEntities[0];
         if (!TryComp(attachable, out AttachableToggleableComponent? toggleable))
             return;
@@ -365,7 +363,7 @@ public sealed partial class CombatMechSystem
             (!TryComp(args.User, out InsideCombatVehicleComponent? pilot) || pilot.Vehicle != mech.Owner))
         {
             args.Cancelled = true;
-            args.Message = Loc.GetString("stories-rx47-weapon-not-linked");
+            args.Message = Loc.GetString("stories-rx47-weapon-pilot-mismatch");
             return;
         }
 
@@ -565,8 +563,6 @@ public sealed partial class CombatMechSystem
         if (args.Cancelled)
             return;
 
-        // The underbarrel must be inside an RX47-mounted weapon and the shooter must currently pilot
-        // that mech. Otherwise a marine carrying a looted RX47 flamer outside the mech could fire it.
         if (!TryResolveMountedAttachable(ent.Owner, args.User, out var weapon, out var mech))
         {
             args.Cancelled = true;
@@ -702,9 +698,6 @@ public sealed partial class CombatMechSystem
 
     private void CopySolution(Entity<SolutionComponent> source, Entity<SolutionComponent> target)
     {
-        // Hot path: called per shot and per ammo-count probe. The old implementation
-        // allocated a fresh Solution + reagent list via Clone() every call; here we mutate
-        // the existing target in place and skip work entirely when contents already match.
         var sourceSol = source.Comp.Solution;
         var targetSol = target.Comp.Solution;
 
@@ -752,8 +745,6 @@ public sealed partial class CombatMechSystem
         weapon = default;
         mech = default;
 
-        // TryGetOuterContainer walks to the topmost container which is the pilot's hand, not the
-        // RX47 weapon. We need the nearest ancestor that actually has CombatMechWeaponComponent.
         if (!TryGetContainingCombatMechWeapon(attachable, out var holderWeapon) ||
             !TryComp(holderWeapon, out CombatMechWeaponComponent? weaponComp))
         {
@@ -805,10 +796,6 @@ public sealed partial class CombatMechSystem
         }
     }
 
-    /// <summary>
-    /// Physical hand a given weapon slot is mounted on. Primary slot lives on the left hand,
-    /// secondary on the right - matches the RX47 visualizer "weapon_*_left/right" sprite states.
-    /// </summary>
     private static HandLocation GetHandLocationFor(WeaponSlot slot) =>
         slot == WeaponSlot.Primary ? HandLocation.Left : HandLocation.Right;
 

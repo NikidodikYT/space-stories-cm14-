@@ -68,12 +68,11 @@ public sealed partial class CombatMechSystem
             return;
         var healthPercent = health.Value;
 
-        // Repair events are not damage increases, but they still need to re-arm the threshold alerts.
-        if (healthPercent > ent.Comp.DamagedAlertThreshold && ent.Comp.DamageAlert25)
-            ent.Comp.DamageAlert25 = false;
+        if (healthPercent > ent.Comp.DamagedAlertThreshold && ent.Comp.DamagedAlertTriggered)
+            ent.Comp.DamagedAlertTriggered = false;
 
-        if (healthPercent > ent.Comp.CriticalAlertThreshold && ent.Comp.DamageAlert10)
-            ent.Comp.DamageAlert10 = false;
+        if (healthPercent > ent.Comp.CriticalAlertThreshold && ent.Comp.CriticalAlertTriggered)
+            ent.Comp.CriticalAlertTriggered = false;
 
         if (!args.DamageIncreased)
             return;
@@ -82,21 +81,18 @@ public sealed partial class CombatMechSystem
         if (pilot == null)
             return;
 
-        // PlayEntity (not PlayPredicted) because OnDamageChanged runs server-only here - the
-        // pilot has nothing to predict, so PlayPredicted would skip them as the supposed predictor.
-        if (healthPercent <= ent.Comp.CriticalAlertThreshold && !ent.Comp.DamageAlert10)
+        if (healthPercent <= ent.Comp.CriticalAlertThreshold && !ent.Comp.CriticalAlertTriggered)
         {
-            ent.Comp.DamageAlert10 = true;
-            // Arm the 25% flag too so it does not retrigger after the critical alert on the next hit.
-            ent.Comp.DamageAlert25 = true;
+            ent.Comp.CriticalAlertTriggered = true;
+            ent.Comp.DamagedAlertTriggered = true;
             _audio.PlayEntity(ent.Comp.DamageAlertSound, pilot.Value, ent);
             _popup.PopupClient(Loc.GetString("stories-rx47-alert-critical"), ent, pilot.Value, PopupType.LargeCaution);
             return;
         }
 
-        if (healthPercent <= ent.Comp.DamagedAlertThreshold && !ent.Comp.DamageAlert25)
+        if (healthPercent <= ent.Comp.DamagedAlertThreshold && !ent.Comp.DamagedAlertTriggered)
         {
-            ent.Comp.DamageAlert25 = true;
+            ent.Comp.DamagedAlertTriggered = true;
             _audio.PlayEntity(ent.Comp.DamageAlertSound, pilot.Value, ent);
             _popup.PopupClient(Loc.GetString("stories-rx47-alert-damaged"), ent, pilot.Value, PopupType.MediumCaution);
         }
@@ -188,21 +184,16 @@ public sealed partial class CombatMechSystem
         if ((args.OldPosition.Position - args.NewPosition.Position).LengthSquared() < PositionMoveEpsilon)
             return;
 
-        // Only count pilot-driven motion as a "step". Marines bumping the mech can nudge its
-        // KinematicController position by physics resolution; without this gate those nudges
-        // would replay the step-stun on idle bystanders.
+        // Skip physics-resolution nudges from marines bumping the mech — those would replay the step-stun on bystanders.
         if (!_moverQuery.TryComp(ent, out var mover) || !TryGetMovementDirection(mover, out _))
             return;
 
         ent.Comp.LastStepMoveAt = _timing.CurTime;
 
-        // MoveEvent can fire multiple times per tick; physics-contact lookup + per-target AABBs
-        // inside TryProcessMarineStepStuns are too costly to run every time. The 0.25s Update
-        // pass covers any gap via LastStepMoveAt + StepActiveDuration.
-        if (_timing.CurTime < ent.Comp.NextStepStunCheckAt)
+        if (_timing.CurTime < ent.Comp.NextStepStunCheckAfter)
             return;
 
-        ent.Comp.NextStepStunCheckAt = _timing.CurTime + StepStunMoveCheckInterval;
+        ent.Comp.NextStepStunCheckAfter = _timing.CurTime + StepStunMoveCheckInterval;
         TryProcessMarineStepStuns(ent, Transform(ent.Owner), _timing.CurTime);
     }
 
@@ -224,14 +215,11 @@ public sealed partial class CombatMechSystem
 
     private void OnMechAttemptMobCollide(Entity<CombatMechComponent> ent, ref AttemptMobCollideEvent args)
     {
-        // The RX47 applies its own step-stun/damage from actual movement. Letting the generic
-        // mob-push resolver run on the kinematic mech allows idle marines to shove the mech body.
         args.Cancelled = true;
     }
 
     private void OnMechAttemptMobTargetCollide(Entity<CombatMechComponent> ent, ref AttemptMobTargetCollideEvent args)
     {
-        // Anything that isn't another mech is forbidden from accumulating push direction against the mech.
         if (HasComp<CombatMechComponent>(args.Entity))
             return;
 
@@ -351,8 +339,6 @@ public sealed partial class CombatMechSystem
 
     private void StartForceEject(Entity<CombatMechComponent> mech, EntityUid user)
     {
-        // Pre-check prevents starting a doafter that would immediately cancel on completion.
-        // OnForceEjectDoAfter re-checks because the user may have moved during the delay.
         if (!_interaction.InRangeUnobstructed(user, mech.Owner, popup: true))
             return;
 
@@ -380,7 +366,6 @@ public sealed partial class CombatMechSystem
 
     private bool CanForceEject(Entity<CombatMechComponent> mech, EntityUid user)
     {
-        // Event/admin rescue rule: any trained fireman can force a sealed pilot out.
         return mech.Comp.HelmetClosed &&
                _skills.HasSkill(user, mech.Comp.ForceEjectSkill, mech.Comp.ForceEjectSkillRequired);
     }
@@ -400,8 +385,7 @@ public sealed partial class CombatMechSystem
             return;
         }
 
-        // The deferred remove eventually runs OnInsideVehicleShutdown which clears _pilotsInCombatMechs,
-        // but until then the Update pass keeps re-processing an orphan pilot — drop tracking now.
+        // RemCompDeferred runs Shutdown next tick; drop tracking now so Update does not re-process an orphan pilot.
         if (_net.IsServer)
             _pilotsInCombatMechs.Remove(pilot);
 
@@ -650,9 +634,7 @@ public sealed partial class CombatMechSystem
             return false;
 
         mech.Comp.NextStepStunAt[target] = time + mech.Comp.StepStunCooldown;
-        // Allocated per-hit deliberately: DamageModifyAfterResistEvent runs even with ignoreResistances=true,
-        // and some subscribers (e.g. XenoShieldSystem) mutate args.Damage.DamageDict in place. A shared/cached
-        // DamageSpecifier would accumulate those mutations across calls.
+        // Fresh DamageSpecifier per hit — DamageModifyAfterResistEvent subscribers mutate DamageDict in place.
         _damageable.TryChangeDamage(
             target,
             CreateBluntDamage(mech.Comp.StepDamage),
@@ -676,15 +658,21 @@ public sealed partial class CombatMechSystem
     private void ProcessOpenFaceplateDamageOverTime()
     {
         var time = _timing.CurTime;
+
+        // Snapshot first — TryChangeDamage below may synchronously remove InsideCombatVehicleComponent.
+        _dotPilotsBuffer.Clear();
         var query = EntityQueryEnumerator<InsideCombatVehicleComponent>();
-        while (query.MoveNext(out var pilotUid, out var inside))
+        while (query.MoveNext(out var pilotUid, out _))
+            _dotPilotsBuffer.Add(pilotUid);
+
+        foreach (var pilotUid in _dotPilotsBuffer)
         {
-            var pilot = (pilotUid, inside);
-            if (!HasLiveVehicle(pilot))
+            if (!TryComp(pilotUid, out InsideCombatVehicleComponent? inside))
                 continue;
 
-            // Skip sealed/dead/critical pilots before any work - they cannot take open-faceplate DOT.
-            if (IsPilotSealed(pilot) ||
+            var pilot = (pilotUid, inside);
+            if (!HasLiveVehicle(pilot) ||
+                IsPilotSealed(pilot) ||
                 _mobState.IsDead(pilotUid) ||
                 _mobState.IsCritical(pilotUid))
             {
@@ -697,14 +685,12 @@ public sealed partial class CombatMechSystem
             var (worldPosition, worldRotation) = _transform.GetWorldPositionRotation(vehicleXform);
             var bounds = _lookup.GetAABBNoContainer(inside.Vehicle, worldPosition, worldRotation);
 
-            // Hoisted out of the contacts foreach: FixturesComponent on the vehicle is the same for every contact.
             TryComp(inside.Vehicle, out FixturesComponent? vehicleFixtures);
 
             _damageContacts.Clear();
             _lookup.GetEntitiesIntersecting(vehicleXform.MapID, bounds, _damageContacts, LookupFlags.Uncontained | LookupFlags.Sensors);
             foreach (var contact in _damageContacts)
             {
-                // DamageOverTime sources choose their own collision mask; acid smoke is MidImpassable via MobMask.
                 if (!FixturesOverlapLayer(vehicleFixtures, contact.Comp.Collision) ||
                     (!contact.Comp.AffectsCrit && _mobState.IsCritical(pilotUid)) ||
                     (!contact.Comp.AffectsDead && _mobState.IsDead(pilotUid)) ||
@@ -767,9 +753,6 @@ public sealed partial class CombatMechSystem
         if (!CanBumperDamageTarget(target))
             return false;
 
-        // ignoreResistances: mech mass shoves aside barricades regardless of material/reinforcement.
-        // Allocated per-hit deliberately: DamageModifyAfterResistEvent runs even with ignoreResistances=true,
-        // and some subscribers mutate args.Damage.DamageDict in place.
         _damageable.TryChangeDamage(
             target,
             CreateBluntDamage(mech.Comp.BarricadeCollisionDamage),
@@ -802,17 +785,6 @@ public sealed partial class CombatMechSystem
         return Math.Clamp(100f - totalDamage / mech.MaxHealth * 100f, 0f, 100f);
     }
 
-    /// <summary>
-    /// Updates the RX47's reference max-health value used to compute the damaged/critical
-    /// alert thresholds in <see cref="GetHealthPercent"/>. Called from
-    /// <c>CombatMechDestructibleSystem</c> on startup so the alerts stay aligned with the
-    /// actual <c>Destructible</c> destroyedAt threshold defined on the mech prototype,
-    /// even when the prototype is rebalanced without touching this component.
-    /// </summary>
-    /// <remarks>
-    /// Does not modify <c>DamageableComponent</c> — it only changes the divisor in the
-    /// health-percent calculation. Replicates the new value via field delta.
-    /// </remarks>
     public void SetMaxHealth(Entity<CombatMechComponent> ent, float maxHealth)
     {
         if (ent.Comp.MaxHealth == maxHealth)

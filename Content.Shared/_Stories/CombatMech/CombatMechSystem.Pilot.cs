@@ -131,7 +131,6 @@ public sealed partial class CombatMechSystem
 
         LinkWeaponToMech(weapon, ent);
 
-        // Only toggle UnremoveableComponent if we actually need to drop the weapon out of mech's hand.
         if (_hands.IsHolding(ent.Owner, weapon))
         {
             RemComp<UnremoveableComponent>(weapon);
@@ -171,7 +170,6 @@ public sealed partial class CombatMechSystem
             return;
         }
 
-        // Only toggle UnremoveableComponent if we actually need to drop the weapon out of pilot's hand.
         if (_hands.IsHolding(pilot, weapon))
         {
             RemComp<UnremoveableComponent>(weapon);
@@ -204,12 +202,9 @@ public sealed partial class CombatMechSystem
             if (_buckle.TryUnbuckle(pilot, pilot, buckle, popup: false))
                 return;
 
-            // TryUnbuckle was blocked by an event; force-release through the no-check Unbuckle.
-            // It still raises UnstrappedEvent so OnUnstrapped runs the normal weapon-return path.
             _buckle.Unbuckle((pilot, buckle), null);
         }
 
-        // Last-resort cleanup if buckle is missing or Unbuckle did not propagate to OnUnstrapped.
         if (mech.Comp.PilotEntity == pilot)
         {
             if (_net.IsServer)
@@ -257,13 +252,9 @@ public sealed partial class CombatMechSystem
 
     private void OnInsideVehicleGetEyeOffsetAttempt(Entity<InsideCombatVehicleComponent> ent, ref GetEyeOffsetAttemptEvent args)
     {
-        // Keep the pilot camera anchored to the mech instead of applying the mob's own visual offset.
         args.Cancelled = true;
     }
 
-    // Cancels the suicide doafter at its source instead of trying to scrape the verb out of the menu
-    // by matching a localized string. Survives Loc-key renames and verb-text suffix changes upstream.
-    // Subscribed `before` RMCSuicideSystem so setting Handled=true short-circuits its OnSuicideDoAfter.
     private void OnInsideVehicleSuicideAttempt(Entity<InsideCombatVehicleComponent> ent, ref RMCSuicideDoAfterEvent args)
     {
         if (args.Cancelled || args.Handled)
@@ -323,10 +314,8 @@ public sealed partial class CombatMechSystem
         RestorePilotDefaultVisuals(pilot.Owner);
     }
 
-    // Zero the SpriteSetRenderOrder fields rather than removing the component:
-    // the visualizer FrameUpdate keeps applying these (so removal would skip the
-    // last reset), and removal/re-add on every strap cycle causes the bouncing
-    // pattern that previously broke render order on re-entry.
+    // Zero the fields rather than removing the component — the visualizer FrameUpdate keeps
+    // applying these, and add/remove churn on every strap cycle glitches render order on re-entry.
     private void RestorePilotDefaultVisuals(EntityUid pilot)
     {
         if (HasComp<SpriteSetRenderOrderComponent>(pilot))

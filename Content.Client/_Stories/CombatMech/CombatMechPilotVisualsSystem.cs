@@ -5,10 +5,6 @@ using DrawDepthType = Content.Shared.DrawDepth.DrawDepth;
 
 namespace Content.Client._Stories.CombatMech;
 
-// Pilot render order and offset are driven by SpriteSetRenderOrderComponent +
-// RMCSpriteVisualizerSystem.FrameUpdate (existing infrastructure shared with the
-// mech base and overlay). This system only forces draw depth so the pilot stays
-// at Mobs depth between mech base and overlay layers.
 public sealed class CombatMechPilotVisualsSystem : EntitySystem
 {
     public override void Initialize()
