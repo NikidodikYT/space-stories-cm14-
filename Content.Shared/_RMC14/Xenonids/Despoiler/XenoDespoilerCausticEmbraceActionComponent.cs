@@ -32,7 +32,7 @@ public sealed partial class XenoDespoilerCausticEmbraceActionComponent : Compone
     public TimeSpan EmpoweredWeakenDuration = TimeSpan.FromSeconds(1);
 
     [DataField]
-    public float SplashScanDiameter = 3f;
+    public float SplashScanSize = 3f;
 
     [DataField]
     public EntProtoId TelegraphProto = "RMCEffectDespoilerCausticTelegraph";

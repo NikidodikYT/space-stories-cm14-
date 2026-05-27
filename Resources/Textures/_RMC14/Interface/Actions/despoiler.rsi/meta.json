@@ -7,7 +7,6 @@
     "y": 32
   },
   "states": [
-    { "name": "finishing_stab" },
     { "name": "acid_barrage" },
     { "name": "caustic_embrace" },
     { "name": "oozing_wounds" },

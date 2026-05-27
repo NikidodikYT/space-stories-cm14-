@@ -78,7 +78,7 @@
     evolvesTo:
     - CMXenoBoiler
     - CMXenoPraetorian
-    - RMCMobXenoDespoiler # Stories
+    - RMCMobXenoDespoiler
   - type: XenoSpit
   - type: XenoChargeSpit
   - type: XenoScatteredSpit

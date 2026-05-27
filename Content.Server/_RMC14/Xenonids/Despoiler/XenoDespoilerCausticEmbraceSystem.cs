@@ -117,7 +117,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 
         var centerMap = _xform.ToMapCoordinates(center);
         var hits = _lookup.GetEntitiesIntersecting(centerMap.MapId,
-            Box2.CenteredAround(centerMap.Position, new Vector2(action.SplashScanDiameter, action.SplashScanDiameter)));
+            Box2.CenteredAround(centerMap.Position, new Vector2(action.SplashScanSize, action.SplashScanSize)));
 
         for (var dx = -1; dx <= 1; dx++)
         {

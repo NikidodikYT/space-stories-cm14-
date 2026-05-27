@@ -3,9 +3,6 @@ rmc-xeno-despoiler-description = A massive, hunched xenomorph with hyper-pressur
 
 rmc-job-name-xeno-despoiler = Despoiler
 
-rmc-action-despoiler-finishing-acid-stab-name = Finishing Acid Stab
-rmc-action-despoiler-finishing-acid-stab-desc = If the target is already coated in acid, deals a limb-melting strike. Damage and penetration scale with acid tier.
-
 rmc-action-despoiler-acid-barrage-name = Acid Barrage
 rmc-action-despoiler-acid-barrage-desc = Activate to arm — the icon lights up green. Hold LMB to charge the volley: the longer you hold, the more projectiles. Release LMB to fire at the cursor.
 
@@ -18,7 +15,6 @@ rmc-action-despoiler-oozing-wounds-desc = Creates a ring of acid spray around yo
 rmc-action-despoiler-catalyze-name = Catalyze
 rmc-action-despoiler-catalyze-desc = Spends 1 Hypertension stack and empowers your next active ability.
 
-rmc-despoiler-finishing-needs-acid = Target must be coated in acid!
 rmc-despoiler-no-hypertension = Not enough Hypertension stacks.
 rmc-despoiler-catalyze-active = The next ability is empowered!
 rmc-despoiler-barrage-armed = Barrage armed: hold LMB to charge, release to fire.

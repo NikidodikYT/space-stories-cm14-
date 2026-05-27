@@ -3,9 +3,6 @@ rmc-xeno-despoiler-description = Огромный, сгорбленный ксе
 
 rmc-job-name-xeno-despoiler = Дисбойлер
 
-rmc-action-despoiler-finishing-acid-stab-name = Добивающий кислотный укол
-rmc-action-despoiler-finishing-acid-stab-desc = Если на цели уже висит кислота, наносит удар, плавящий конечность. Урон и пробивание масштабируются по уровню кислоты.
-
 rmc-action-despoiler-acid-barrage-name = Кислотный шквал
 rmc-action-despoiler-acid-barrage-desc = Активируй способность — она подсветится. Зажми ЛКМ для зарядки залпа: чем дольше держишь, тем больше снарядов. Отпусти ЛКМ — залп уйдёт в направлении курсора.
 
@@ -18,7 +15,6 @@ rmc-action-despoiler-oozing-wounds-desc = Создаёт кольцо кисло
 rmc-action-despoiler-catalyze-name = Катализ
 rmc-action-despoiler-catalyze-desc = Расходует 1 стэк Гипертензии и усиливает следующую активную способность.
 
-rmc-despoiler-finishing-needs-acid = Цель должна быть покрыта кислотой!
 rmc-despoiler-no-hypertension = Недостаточно стэков Гипертензии.
 rmc-despoiler-catalyze-active = Следующая способность усилена!
 rmc-despoiler-barrage-armed = Шквал готов: зажми ЛКМ для зарядки, отпусти — для выстрела.
