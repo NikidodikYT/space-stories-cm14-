@@ -182,6 +182,13 @@ public sealed partial class CombatMechSystem : EntitySystem
             before: [typeof(RMCSuicideSystem)]);
     }
 
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        _forceEjectingPilots.Clear();
+        _pilotsInCombatMechs.Clear();
+    }
+
     public override void Update(float frameTime)
     {
         if (_net.IsClient)

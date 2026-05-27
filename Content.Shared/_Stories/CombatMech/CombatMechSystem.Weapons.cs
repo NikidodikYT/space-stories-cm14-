@@ -63,6 +63,9 @@ public sealed partial class CombatMechSystem
         if (args.Cancelled || args.Handled || args.Used == null || Deleted(args.Used.Value))
             return;
 
+        if (!_interaction.InRangeUnobstructed(args.User, ent.Owner))
+            return;
+
         args.Handled = true;
         if (_net.IsClient)
             return;

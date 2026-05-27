@@ -203,6 +203,7 @@ public sealed partial class CombatMechSystem
                 return;
 
             _buckle.Unbuckle((pilot, buckle), null);
+            return;
         }
 
         if (mech.Comp.PilotEntity == pilot)
