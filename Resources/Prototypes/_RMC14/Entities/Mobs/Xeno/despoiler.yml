@@ -6,7 +6,7 @@
   - RMCXenoSpeechSounds
   - RMCXenoCommendationReceiver
   - RMCXenoMobCollision
-  id: RMCMobXenoDespoiler
+  id: RMCXenoDespoiler
   name: Despoiler
   description: A massive, hunched xenomorph with hyper-pressurized acid sacs lining its spine. Steam hisses from cracks in its carapace.
   components:
@@ -26,9 +26,6 @@
       visible: false
     - map: [ "enum.RMCShieldVisuals.Base" ]
       sprite: _RMC14/Effects/xeno_shields.rsi
-      visible: false
-    - map: [ "enum.XenoAcidAnimationVisualLayers.Base" ]
-      state: spit
       visible: false
   - type: Fixtures
     fixtures:
