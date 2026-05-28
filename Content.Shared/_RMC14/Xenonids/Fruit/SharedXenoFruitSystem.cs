@@ -1111,6 +1111,23 @@ public sealed class SharedXenoFruitSystem : EntitySystem
             _aura.GiveAura(uid, fruit.OutlineColor, null);
         }
 
+        // Handle planter capacity increases
+        var planterQuery = EntityQueryEnumerator<XenoFruitPlanterComponent>(); // Stories-Fixes Start
+        while (planterQuery.MoveNext(out var uid, out var planter))
+        {
+            if (planter.MaxFruitAllowed >= planter.MaxFruitCap)
+                continue;
+
+            planter.NextCapacityIncrease ??= time + planter.CapacityIncreaseDelay;
+
+            if (time < planter.NextCapacityIncrease.Value)
+                continue;
+
+            planter.MaxFruitAllowed++;
+            planter.NextCapacityIncrease = time + planter.CapacityIncreaseDelay;
+            Dirty(uid, planter);
+        } // Stories-Fixes End
+
         // Handle fruit effects
         // Speed
         var speedQuery = EntityQueryEnumerator<XenoFruitEffectSpeedComponent>();

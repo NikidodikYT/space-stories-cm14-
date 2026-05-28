@@ -23,9 +23,21 @@ public sealed partial class XenoFruitPlanterComponent : Component
         Params = AudioParams.Default.WithVolume(-10f)
     };
 
-    // Maximum number of fruit allowed for planter
+    // Maximum number of fruit allowed for planter at start
     [DataField, AutoNetworkedField]
-    public int MaxFruitAllowed = 3;
+    public int MaxFruitAllowed = 6;
+
+    // Absolute maximum capacity cap
+    [DataField, AutoNetworkedField]
+    public int MaxFruitCap = 6; // Stories-Fixes
+
+    // How often to increase capacity
+    [DataField, AutoNetworkedField]
+    public TimeSpan CapacityIncreaseDelay = TimeSpan.FromMinutes(10); // Stories-Fixes
+
+    // When the next increase happens
+    [DataField(customTypeSerializer: typeof(Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
+    public TimeSpan? NextCapacityIncrease; // Stories-Fixes
 
     // List of fruit planted by planter
     [DataField, AutoNetworkedField]
