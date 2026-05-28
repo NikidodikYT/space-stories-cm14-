@@ -157,6 +157,12 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         if (!EntMan.TryGetComponent(Owner, out XenoEvolutionComponent? xeno))
             return;
 
+        var state = State as XenoEvolveBuiState;
+        // Stories-start: only offer the lottery once the xeno can afford the evolution, mirroring the
+        // normal evolve buttons which are gated on points below.
+        var lotteryChoices = xeno.Points >= xeno.Max ? state?.LotteryChoices : null;
+        // Stories-end
+
         _window.PointsLabel.Visible = xeno.Max > FixedPoint2.Zero;
 
         foreach (var control in _evolutionControls.Values)
@@ -168,13 +174,19 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         if (xeno.Points >= xeno.Max)
         {
             foreach (var evolutionId in xeno.EvolvesTo)
+            {
+                // Castes still being raffled appear only as lottery toggles below, not as normal buttons.
+                if (lotteryChoices != null && lotteryChoices.Contains(evolutionId))
+                    continue;
+
                 AddEvolution(evolutionId);
+            }
         }
 
         _window.Separator.Visible = _window.EvolutionsContainer.Children.Any(child => child.Visible) &&
                                     _window.StrainsContainer.Children.Any(child => child.Visible);
 
-        var lackingOvipositor = State is XenoEvolveBuiState { LackingOvipositor: true };
+        var lackingOvipositor = state is { LackingOvipositor: true };
         var points = xeno.Points;
 
         _window.PointsLabel.Text = Loc.GetString("rmc-xeno-ui-evolution-points",
@@ -194,10 +206,10 @@ public sealed class XenoEvolutionBui : BoundUserInterface
             _window.OvipositorNeededLabel.Visible = false;
         }
 
-        RefreshLottery();
+        RefreshLottery(lotteryChoices);
     }
 
-    private void RefreshLottery()
+    private void RefreshLottery(List<EntProtoId>? lotteryChoices)
     {
         if (_window == null)
             return;
@@ -206,11 +218,11 @@ public sealed class XenoEvolutionBui : BoundUserInterface
             control.Visible = false;
 
         var lotteryOpen = false;
-        if (State is XenoEvolveBuiState { LotteryOpen: true } state && state.LotteryChoices.Count > 0)
+        if (lotteryChoices is { Count: > 0 } choices)
         {
             lotteryOpen = true;
 
-            foreach (var choice in state.LotteryChoices)
+            foreach (var choice in choices)
                 AddLottery(choice);
 
             _window.LotteryLabel.SetMarkupPermissive(Loc.GetString("rmc-xeno-ui-lottery-label"));
@@ -221,6 +233,8 @@ public sealed class XenoEvolutionBui : BoundUserInterface
             control.Button.Pressed = registration != null && registration.Target == id;
 
         _window.LotteryLabel.Visible = lotteryOpen;
-        _window.LotterySeparator.Visible = lotteryOpen && _window.EvolutionsContainer.Children.Any(child => child.Visible);
+        _window.LotterySeparator.Visible = lotteryOpen &&
+                                           (_window.EvolutionsContainer.Children.Any(child => child.Visible) ||
+                                            _window.StrainsContainer.Children.Any(child => child.Visible));
     }
 }

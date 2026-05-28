@@ -258,6 +258,12 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
         else
         {
+            // Stories-start: a xeno must be able to afford the evolution to enter the lottery, matching
+            // the points gate on the normal evolve path.
+            if (xeno.Comp.Points < xeno.Comp.Max)
+                return;
+            // Stories-end
+
             registration = EnsureComp<XenoLotteryRegistrationComponent>(xeno);
             registration.Target = args.Choice;
             Dirty(xeno, registration);
@@ -821,22 +827,18 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private XenoEvolveBuiState BuildEvolveState(Entity<XenoEvolutionComponent> xeno)
     {
-        var lotteryOpen = false;
         var lotteryChoices = new List<EntProtoId>();
 
         if (_tierLotteryEnabled)
         {
             foreach (var choice in xeno.Comp.EvolvesTo)
             {
-                if (!IsLotteryOpenFor(xeno, choice, out _))
-                    continue;
-
-                lotteryOpen = true;
-                lotteryChoices.Add(choice);
+                if (IsLotteryOpenFor(xeno, choice, out _))
+                    lotteryChoices.Add(choice);
             }
         }
 
-        return new XenoEvolveBuiState(LackingOvipositor(), lotteryOpen, lotteryChoices);
+        return new XenoEvolveBuiState(LackingOvipositor(), lotteryChoices);
     }
 
     /// <summary>
@@ -877,8 +879,11 @@ public sealed class XenoEvolutionSystem : EntitySystem
             var drew = false;
             while (_xenoHive.TryGetDueLotteryTier((hiveId, hive), roundDuration, out var tier))
             {
-                RunLottery((hiveId, hive), tier);
+                // Stories-start: mark the tier drawn before running so CanEvolvePopup (used per winner)
+                // no longer treats the lottery as pending and blocks the evolutions we're handing out.
                 _xenoHive.MarkLotteryDrawn((hiveId, hive), tier);
+                RunLottery((hiveId, hive), tier);
+                // Stories-end
                 drew = true;
             }
 
@@ -888,8 +893,9 @@ public sealed class XenoEvolutionSystem : EntitySystem
     }
 
     /// <summary>
-    /// Draws the one-time evolution lottery for a tier: all currently free tier slots are handed out
-    /// randomly among the registrants, the rest are notified they were not chosen.
+    /// Draws the one-time evolution lottery for a tier: the registrants are shuffled and each is offered
+    /// the evolution through the normal <see cref="CanEvolvePopup"/> checks, so the live tier cap limits
+    /// how many win. Everyone who can't evolve is told they were not chosen.
     /// </summary>
     private void RunLottery(Entity<HiveComponent> hive, int tier)
     {
@@ -904,45 +910,40 @@ public sealed class XenoEvolutionSystem : EntitySystem
             if (!TryGetCasteTier(registration.Target, out var targetTier) || targetTier != tier)
                 continue;
 
-            if (!CanEvolveLottery((uid, evo)))
-                continue;
-
             registrants.Add(((uid, evo), registration.Target));
         }
 
         if (registrants.Count == 0)
             return;
 
-        _xenoHive.GetTierOccupancy(hive, tier, out var total, out var existing, out _);
-        var limit = _xenoHive.TryGetTierLimit((hive.Owner, hive.Comp), tier, out var tierLimit) ? tierLimit.Double() : 0;
-
-        // Hand out every slot the cap allows so none are left to race for afterwards: the normal cap
-        // blocks once existing / total >= limit, i.e. the hive holds up to ceil(limit * total) of the tier.
-        var freeSlots = (int) Math.Ceiling(limit * total) - existing;
-
+        // Stories-start: hand out slots by running each shuffled registrant through the normal evolution
+        // checks instead of a precomputed slot count. As winners evolve the live tier cap fills, so the
+        // rest lose; this also enforces the target's own unlock time, caste caps and same-caste cooldown.
         _random.Shuffle(registrants);
-        var winnerCount = Math.Clamp(freeSlots, 0, registrants.Count);
 
-        for (var i = 0; i < registrants.Count; i++)
+        foreach (var (registrant, target) in registrants)
         {
-            var (registrant, target) = registrants[i];
-
-            if (i < winnerCount)
-            {
-                // The old entity (and its registration) is deleted by EvolveXeno.
-                var newXeno = EvolveXeno(registrant, target, subtractPoints: true, endPopup: false);
-                _popup.PopupEntity(Loc.GetString("rmc-xeno-lottery-won"), newXeno, newXeno, PopupType.Large);
-                _adminLog.Add(LogType.RMCEvolve, $"Xenonid {ToPrettyString(registrant)} won the tier {tier} evolution lottery into {target.Id}");
-            }
-            else
+            if (!CanWinLottery(registrant, target))
             {
                 RemComp<XenoLotteryRegistrationComponent>(registrant);
                 _popup.PopupEntity(Loc.GetString("rmc-xeno-lottery-lost"), registrant, registrant, PopupType.LargeCaution);
+                continue;
             }
+
+            // The old entity (and its registration) is deleted by EvolveXeno, so capture the log name first.
+            var prettyOld = ToPrettyString(registrant);
+            var newXeno = EvolveXeno(registrant, target, subtractPoints: true, endPopup: false);
+            _popup.PopupEntity(Loc.GetString("rmc-xeno-lottery-won"), newXeno, newXeno, PopupType.Large);
+            _adminLog.Add(LogType.RMCEvolve, $"Xenonid {prettyOld} won the tier {tier} evolution lottery into {target.Id}");
         }
+        // Stories-end
     }
 
-    private bool CanEvolveLottery(Entity<XenoEvolutionComponent> xeno)
+    /// <summary>
+    /// Whether a lottery registrant may currently win: alive, player-controlled, can afford the evolution
+    /// and passes the normal evolution checks for the target caste.
+    /// </summary>
+    private bool CanWinLottery(Entity<XenoEvolutionComponent> xeno, EntProtoId target)
     {
         if (_mobState.IsDead(xeno))
             return false;
@@ -950,10 +951,10 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (!_mind.TryGetMind(xeno, out _, out _))
             return false;
 
-        if (_container.IsEntityInContainer(xeno))
+        if (xeno.Comp.Points < xeno.Comp.Max)
             return false;
 
-        return xeno.Comp.CanEvolveWithoutGranter || HasLiving<XenoEvolutionGranterComponent>(1);
+        return CanEvolvePopup(xeno, target, doPopup: false);
     }
 
     private void RefreshHiveEvolutionUis(EntityUid hiveId)
