@@ -7,6 +7,7 @@ namespace Content.Shared._RMC14.Xenonids.Fruit.Components;
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
 [Access(typeof(SharedXenoFruitSystem))]
+[AutoGenerateComponentPause]
 public sealed partial class XenoFruitPlanterComponent : Component
 {
     // Which fruits can this xeno plant?
@@ -23,19 +24,16 @@ public sealed partial class XenoFruitPlanterComponent : Component
         Params = AudioParams.Default.WithVolume(-10f)
     };
 
-    // Maximum number of fruit allowed for planter at start
+    // Maximum number of fruit allowed for planter
     [DataField, AutoNetworkedField]
     public int MaxFruitAllowed = 6;
 
-    // Absolute maximum capacity cap
     [DataField, AutoNetworkedField]
     public int MaxFruitCap = 6; // Stories-Fixes
 
-    // How often to increase capacity
     [DataField, AutoNetworkedField]
     public TimeSpan CapacityIncreaseDelay = TimeSpan.FromMinutes(10); // Stories-Fixes
 
-    // When the next increase happens
     [DataField(customTypeSerializer: typeof(Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
     public TimeSpan? NextCapacityIncrease; // Stories-Fixes
 

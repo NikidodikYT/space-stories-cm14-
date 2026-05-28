@@ -280,6 +280,7 @@
     canPlant:
     - XenoFruitLesser
     maxFruitAllowed: 3
+    maxFruitCap: 3 # Stories-Fixes
   - type: Tackle
     max: 4
     stunMin: 3
