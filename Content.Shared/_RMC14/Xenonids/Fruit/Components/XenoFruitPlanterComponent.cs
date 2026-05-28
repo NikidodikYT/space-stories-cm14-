@@ -2,6 +2,7 @@ using Content.Shared.FixedPoint;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared._RMC14.Xenonids.Fruit.Components;
 
@@ -34,7 +35,7 @@ public sealed partial class XenoFruitPlanterComponent : Component
     [DataField, AutoNetworkedField]
     public TimeSpan CapacityIncreaseDelay = TimeSpan.FromMinutes(10); // Stories-Fixes
 
-    [DataField(customTypeSerializer: typeof(Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
     public TimeSpan? NextCapacityIncrease; // Stories-Fixes
 
     // List of fruit planted by planter
