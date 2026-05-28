@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Map;
+using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Hive;
 using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Actions;
@@ -33,6 +34,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
     [Dependency] private readonly XenoDespoilerAcidSystem _acid = default!;
+    [Dependency] private readonly XenoSystem _xeno = default!;
 
     private EntityQuery<XenoDespoilerLingeringAcidComponent> _lingeringQuery;
 
@@ -136,7 +138,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 
                 foreach (var ent in hits)
                 {
-                    if (!XenoDespoilerVictims.IsValidVictim(EntityManager, ent, caster))
+                    if (!_xeno.CanAbilityAttackTarget(caster, ent))
                         continue;
 
                     var entPos = _xform.ToMapCoordinates(Transform(ent).Coordinates).Position;
@@ -207,14 +209,14 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 
     private EntityUid? FindEmpoweredVictim(EntityUid caster, XenoDespoilerCausticEmbraceActionEvent args)
     {
-        if (args.Entity is { } target && XenoDespoilerVictims.IsValidVictim(EntityManager, target, caster))
+        if (args.Entity is { } target && _xeno.CanAbilityAttackTarget(caster, target))
             return target;
 
         var landingMap = _xform.ToMapCoordinates(args.Target);
         foreach (var ent in _lookup.GetEntitiesIntersecting(landingMap.MapId,
                      Box2.CenteredAround(landingMap.Position, new Vector2(1f, 1f))))
         {
-            if (XenoDespoilerVictims.IsValidVictim(EntityManager, ent, caster))
+            if (_xeno.CanAbilityAttackTarget(caster, ent))
                 return ent;
         }
 
