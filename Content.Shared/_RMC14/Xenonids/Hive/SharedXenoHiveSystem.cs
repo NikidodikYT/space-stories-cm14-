@@ -127,6 +127,8 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         ent.Comp.AnnouncedUnlocks.Clear();
         ent.Comp.Unlocks.Clear();
         ent.Comp.AnnouncementsLeft.Clear();
+        ent.Comp.LotteryTierTimes.Clear();
+        ent.Comp.LotteryTiersLeft.Clear();
 
         foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
         {
@@ -140,6 +142,15 @@ public abstract class SharedXenoHiveSystem : EntitySystem
 
             if (!ent.Comp.AnnouncementsLeft.Contains(xeno.UnlockAt))
                 ent.Comp.AnnouncementsLeft.Add(xeno.UnlockAt);
+
+            // Tier-limited combat castes without a guaranteed slot are handed out via a one-time
+            // lottery at their first unlock instead of a click race. The fire time per tier is the
+            // earliest unlock among such castes. See XenoEvolutionSystem for the draw.
+            if (IsLotteryCasteData(ent.Comp, prototype.ID, xeno) &&
+                (!ent.Comp.LotteryTierTimes.TryGetValue(xeno.Tier, out var lotteryAt) || xeno.UnlockAt < lotteryAt))
+            {
+                ent.Comp.LotteryTierTimes[xeno.Tier] = xeno.UnlockAt;
+            }
         }
 
         foreach (var unlock in ent.Comp.Unlocks)
@@ -148,6 +159,112 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         }
 
         ent.Comp.AnnouncementsLeft.Sort();
+
+        ent.Comp.LotteryTiersLeft = new List<int>(ent.Comp.LotteryTierTimes.Keys);
+        ent.Comp.LotteryTiersLeft.Sort();
+    }
+
+    /// <summary>
+    /// Whether evolving into the given caste goes through the tier lottery for this hive: a
+    /// tier-limited caste that has no guaranteed free slot. Purely data-driven, no hardcoded castes.
+    /// </summary>
+    public bool IsLotteryCaste(Entity<HiveComponent> hive, EntProtoId caste)
+    {
+        if (!_prototypes.TryIndex(caste, out var proto) ||
+            !proto.TryGetComponent(out XenoComponent? xeno, _compFactory))
+        {
+            return false;
+        }
+
+        return IsLotteryCasteData(hive.Comp, caste, xeno);
+    }
+
+    private static bool IsLotteryCasteData(HiveComponent hive, EntProtoId caste, XenoComponent xeno)
+    {
+        // A lottery caste is one whose tier is capped (TierLimits) yet has no guaranteed slot
+        // (FreeSlots) and isn't exempt from the tier count - purely data-driven, no caste list.
+        return xeno.UnlockAt > TimeSpan.Zero &&
+               !xeno.BypassTierCount &&
+               xeno.CountedInSlots &&
+               hive.TierLimits.ContainsKey(xeno.Tier) &&
+               !hive.FreeSlots.ContainsKey(caste);
+    }
+
+    /// <summary>
+    /// Whether the lottery for the given tier is still pending (not yet drawn) and outputs the round
+    /// time at which it fires.
+    /// </summary>
+    public bool IsLotteryPending(Entity<HiveComponent> hive, int tier, out TimeSpan at)
+    {
+        at = default;
+        return hive.Comp.LotteryTiersLeft.Contains(tier) && hive.Comp.LotteryTierTimes.TryGetValue(tier, out at);
+    }
+
+    /// <summary>
+    /// Returns the first pending lottery tier whose fire time has been reached, if any.
+    /// </summary>
+    public bool TryGetDueLotteryTier(Entity<HiveComponent> hive, TimeSpan roundTime, out int tier)
+    {
+        tier = 0;
+        foreach (var pending in hive.Comp.LotteryTiersLeft)
+        {
+            if (hive.Comp.LotteryTierTimes.TryGetValue(pending, out var at) && roundTime >= at)
+            {
+                tier = pending;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Marks a tier's evolution lottery as drawn so it never fires again.
+    /// </summary>
+    public void MarkLotteryDrawn(Entity<HiveComponent> hive, int tier)
+    {
+        if (hive.Comp.LotteryTiersLeft.Remove(tier))
+            Dirty(hive);
+    }
+
+    /// <summary>
+    /// Computes how the hive's tier slots are occupied, mirroring the tier-cap check in
+    /// <see cref="XenoEvolutionSystem"/>. <paramref name="total"/> is the effective hive size,
+    /// <paramref name="existing"/> the number of slot-counted xenos at or above <paramref name="tier"/>
+    /// not covered by a free slot, and <paramref name="freeSlotCount"/> the remaining per-caste free slots.
+    /// </summary>
+    public void GetTierOccupancy(
+        Entity<HiveComponent> hive,
+        int tier,
+        out double total,
+        out int existing,
+        out Dictionary<EntProtoId, int> freeSlotCount)
+    {
+        existing = 0;
+        total = Math.Sqrt(hive.Comp.BurrowedLarva * hive.Comp.BurrowedLarvaSlotFactor);
+        total = Math.Min(total, hive.Comp.BurrowedLarva);
+
+        freeSlotCount = new Dictionary<EntProtoId, int>(hive.Comp.FreeSlots);
+
+        var current = EntityQueryEnumerator<XenoComponent, HiveMemberComponent>();
+        while (current.MoveNext(out var uid, out var existingComp, out var member))
+        {
+            if (_mobState.IsDead(uid))
+                continue;
+
+            if (member.Hive != hive.Owner || !existingComp.CountedInSlots)
+                continue;
+
+            total++;
+
+            if (existingComp.Tier < tier)
+                continue;
+
+            if (freeSlotCount.TryGetValue(existingComp.Role.Id, out var slots) && slots > 0)
+                freeSlotCount[existingComp.Role.Id] = slots - 1;
+            else
+                existing++;
+        }
     }
 
     /// <summary>

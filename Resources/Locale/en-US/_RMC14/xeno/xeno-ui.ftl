@@ -26,4 +26,6 @@ rmc-xeno-tracker-target-HiveCore = Hive Core
 
 rmc-xeno-ui-ovi-needed-label = [bold][color=red]The Queen must be in their\novipositor for you to gain points![/color][/bold]
 rmc-xeno-ui-evolution-points = Evolution points: { $points } / { $maxPoints }
+rmc-xeno-ui-lottery-label = [bold][color=#88aaff]Evolution lottery[/color][/bold]
+    Select a caste to enter the hive's lottery. When the tier opens, free slots are drawn among all who entered.
 rmc-ui-xeno-strain-confirm = Confirm

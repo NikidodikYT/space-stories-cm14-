@@ -13,9 +13,14 @@
             <BoxContainer Orientation="Vertical" Name="EvolutionsContainer" Access="Public" />
             <userInterface:BlueHorizontalSeparator Name="Separator" Access="Public" 
                            Visible="false" Margin="4 8" />
-            <Label Name="StrainsLabel" Access="Public" Text="Strains:" 
+            <Label Name="StrainsLabel" Access="Public" Text="Strains:"
                    StyleClasses="LabelBold" HorizontalExpand="True" HorizontalAlignment="Center" />
             <BoxContainer Orientation="Vertical" Name="StrainsContainer" Access="Public" />
+            <userInterface:BlueHorizontalSeparator Name="LotterySeparator" Access="Public"
+                           Visible="false" Margin="4 8" />
+            <RichTextLabel Name="LotteryLabel" Access="Public" Visible="false"
+                           HorizontalExpand="True" HorizontalAlignment="Center" Margin="0 4" />
+            <BoxContainer Orientation="Vertical" Name="LotteryContainer" Access="Public" />
         </BoxContainer>
     </ScrollContainer>
 </cc:XenoEvolutionWindow>

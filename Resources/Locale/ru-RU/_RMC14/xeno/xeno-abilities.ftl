@@ -57,6 +57,10 @@ rmc-xeno-evolution-failed-early-weeds = Улей еще не настолько 
 rmc-xeno-evolution-failed-bad-location = Мы не можем развиваться здесь.
 rmc-xeno-evolution-start-self = Мы начинаем скручиваться и деформироваться.
 rmc-xeno-evolution-start-others = { $xeno } начинает крутиться и извиваться.
+rmc-xeno-lottery-registered = Мы заявляем себя в лотерею улья, чтобы стать кастой { $caste }.
+rmc-xeno-lottery-cancelled = Мы выходим из лотереи улья.
+rmc-xeno-lottery-won = Улей счёл нас достойными! Мы возвышаемся, чтобы сражаться за улей!
+rmc-xeno-lottery-lost = Улей пока не посчитал нас достойными для борьбы с врагами.
 
 # Fortify
 cm-xeno-fortify-cant-headbutt = Вы не можете ударить головой во время укрепления!

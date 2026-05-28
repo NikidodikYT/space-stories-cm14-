@@ -26,4 +26,6 @@ rmc-xeno-tracker-target-HiveCore = Ядро Улья
 
 rmc-xeno-ui-ovi-needed-label = [bold][color=red]Для получения очков Королева должна находиться в своем\n яйцекладе![/color][/bold]
 rmc-xeno-ui-evolution-points = Очки эволюции: { $points } / { $maxPoints }
+rmc-xeno-ui-lottery-label = [bold][color=#88aaff]Лотерея эволюции[/color][/bold]
+    Выберите касту для участия в лотерее улья. При открытии тира свободные слоты разыгрываются среди всех участников.
 rmc-ui-xeno-strain-confirm = Подтвердить
