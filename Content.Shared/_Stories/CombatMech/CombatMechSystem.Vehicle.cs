@@ -385,10 +385,6 @@ public sealed partial class CombatMechSystem
             return;
         }
 
-        // RemCompDeferred runs Shutdown next tick; drop tracking now so Update does not re-process an orphan pilot.
-        if (_net.IsServer)
-            _pilotsInCombatMechs.Remove(pilot);
-
         RemCompDeferred<InsideCombatVehicleComponent>(pilot);
     }
 

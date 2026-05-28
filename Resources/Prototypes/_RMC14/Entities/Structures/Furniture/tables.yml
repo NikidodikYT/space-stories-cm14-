@@ -37,7 +37,9 @@
   - type: XenoLeapDestroyOnPass
   - type: XenoToggleChargingDamage
     destroy: true
+  # Stories-start
   - type: CombatMechBumpDamageable
+  # Stories-end
   - type: XenoCrusherChargable
     instantDestroy: true
     passOnDestroy: true
@@ -88,7 +90,9 @@
   - type: XenoLeapDestroyOnPass
   - type: XenoToggleChargingDamage
     destroy: true
+  # Stories-start
   - type: CombatMechBumpDamageable
+  # Stories-end
   - type: Animateable
   - type: Damageable
     damageContainer: StructuralInorganic

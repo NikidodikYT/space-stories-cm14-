@@ -74,7 +74,6 @@ public sealed partial class CombatMechSystem : EntitySystem
     private readonly HashSet<Entity<DamageOverTimeComponent>> _damageContacts = new();
     private readonly HashSet<EntityUid> _bumpDamageTargets = new();
     private readonly HashSet<EntityUid> _forceEjectingPilots = new();
-    private readonly HashSet<EntityUid> _pilotsInCombatMechs = new();
     private readonly List<EntityUid> _staleDictionaryKeys = new();
     private readonly List<EntityUid> _stalePilots = new();
     private readonly Queue<EntityUid> _pendingDefaultWeapons = new();
@@ -186,7 +185,6 @@ public sealed partial class CombatMechSystem : EntitySystem
     {
         base.Shutdown();
         _forceEjectingPilots.Clear();
-        _pilotsInCombatMechs.Clear();
     }
 
     public override void Update(float frameTime)
@@ -250,10 +248,12 @@ public sealed partial class CombatMechSystem : EntitySystem
         ProcessMarineStepStuns();
         ProcessOpenFaceplateDamageOverTime();
 
-        // ClearProtectedStatuses can re-enter and mutate _pilotsInCombatMechs (e.g. eject mid-cleanup),
-        // so iterate a snapshot rather than the live set.
+        // ClearProtectedStatuses can re-enter and remove InsideCombatVehicleComponent (e.g. eject mid-cleanup),
+        // so iterate a snapshot rather than the live query.
         _pilotsIterBuffer.Clear();
-        _pilotsIterBuffer.AddRange(_pilotsInCombatMechs);
+        var pilotQuery = EntityQueryEnumerator<InsideCombatVehicleComponent>();
+        while (pilotQuery.MoveNext(out var pilotUid, out _))
+            _pilotsIterBuffer.Add(pilotUid);
 
         _stalePilots.Clear();
         foreach (var uid in _pilotsIterBuffer)

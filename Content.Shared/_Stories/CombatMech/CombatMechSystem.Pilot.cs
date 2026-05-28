@@ -75,8 +75,6 @@ public sealed partial class CombatMechSystem
         var inside = EnsureComp<InsideCombatVehicleComponent>(pilot);
         inside.Vehicle = ent;
         DirtyField(pilot, inside, nameof(InsideCombatVehicleComponent.Vehicle));
-        if (_net.IsServer)
-            _pilotsInCombatMechs.Add(pilot);
         UpdatePilotProtection((pilot, inside));
         ApplyPilotVisuals((pilot, inside));
 
@@ -230,9 +228,6 @@ public sealed partial class CombatMechSystem
 
     private void OnInsideVehicleShutdown(Entity<InsideCombatVehicleComponent> ent, ref ComponentShutdown args)
     {
-        if (_net.IsServer)
-            _pilotsInCombatMechs.Remove(ent.Owner);
-
         RestorePilotProtection(ent);
         RestorePilotVisuals(ent);
         RemComp<RelayInputMoverComponent>(ent.Owner);
