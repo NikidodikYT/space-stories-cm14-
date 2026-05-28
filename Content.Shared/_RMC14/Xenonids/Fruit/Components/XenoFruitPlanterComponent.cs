@@ -27,7 +27,7 @@ public sealed partial class XenoFruitPlanterComponent : Component
 
     // Maximum number of fruit allowed for planter
     [DataField, AutoNetworkedField]
-    public int MaxFruitAllowed = 6;
+    public int MaxFruitAllowed = 3;
 
     [DataField, AutoNetworkedField]
     public int MaxFruitCap = 6; // Stories-Fixes
