@@ -903,8 +903,8 @@ public sealed class SharedXenoFruitSystem : EntitySystem
         if (!TryComp<MovementSpeedModifierComponent>(xeno, out var baseSpeed))
             return;
 
-        var modSpeedWalk = baseSpeed.BaseWalkSpeed + comp.SpeedModifier.Float();
-        var modSpeedSprint = baseSpeed.BaseSprintSpeed + comp.SpeedModifier.Float();
+        var modSpeedWalk = baseSpeed.BaseWalkSpeed * (1 + comp.SpeedModifier.Float()); // Stories-Fixes
+        var modSpeedSprint = baseSpeed.BaseSprintSpeed * (1 + comp.SpeedModifier.Float()); // Stories-Fixes
 
         args.ModifySpeed(modSpeedWalk / baseSpeed.BaseWalkSpeed, modSpeedSprint / baseSpeed.BaseSprintSpeed);
     }
