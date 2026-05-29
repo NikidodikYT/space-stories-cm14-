@@ -127,8 +127,10 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         ent.Comp.AnnouncedUnlocks.Clear();
         ent.Comp.Unlocks.Clear();
         ent.Comp.AnnouncementsLeft.Clear();
+        // Stories-Lottery-Start
         ent.Comp.LotteryTierTimes.Clear();
         ent.Comp.LotteryTiersLeft.Clear();
+        // Stories-Lottery-End
 
         foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
         {
@@ -143,6 +145,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
             if (!ent.Comp.AnnouncementsLeft.Contains(xeno.UnlockAt))
                 ent.Comp.AnnouncementsLeft.Add(xeno.UnlockAt);
 
+            // Stories-Lottery-Start
             // Tier-limited combat castes without a guaranteed slot are handed out via a one-time
             // lottery at their first unlock instead of a click race. The fire time per tier is the
             // earliest unlock among such castes. See XenoEvolutionSystem for the draw.
@@ -151,6 +154,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
             {
                 ent.Comp.LotteryTierTimes[xeno.Tier] = xeno.UnlockAt;
             }
+            // Stories-Lottery-End
         }
 
         foreach (var unlock in ent.Comp.Unlocks)
@@ -160,10 +164,13 @@ public abstract class SharedXenoHiveSystem : EntitySystem
 
         ent.Comp.AnnouncementsLeft.Sort();
 
+        // Stories-Lottery-Start
         ent.Comp.LotteryTiersLeft = new List<int>(ent.Comp.LotteryTierTimes.Keys);
         ent.Comp.LotteryTiersLeft.Sort();
+        // Stories-Lottery-End
     }
 
+    // Stories-Lottery-Start
     /// <summary>
     /// Whether evolving into the given caste goes through the tier lottery for this hive: a
     /// tier-limited caste that has no guaranteed free slot. Purely data-driven, no hardcoded castes.
@@ -266,6 +273,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
                 existing++;
         }
     }
+    // Stories-Lottery-End
 
     /// <summary>
     /// Tries to get the hive from a member, returning null if it has no hive or it is invalid.

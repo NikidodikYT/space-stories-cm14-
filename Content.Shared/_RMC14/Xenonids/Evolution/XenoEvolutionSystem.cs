@@ -31,7 +31,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Random;
+using Robust.Shared.Random; // Stories-Lottery
 using Robust.Shared.Timing;
 
 namespace Content.Shared._RMC14.Xenonids.Evolution;
@@ -53,7 +53,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
     [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private readonly IRobustRandom _random = default!; // Stories-Lottery
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
@@ -68,7 +68,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
     private TimeSpan _evolutionAccumulatePointsBefore;
     private TimeSpan _evolveSameCasteCooldown;
     private TimeSpan _earlyEvoBoostBefore;
-    private bool _tierLotteryEnabled;
+    private bool _tierLotteryEnabled; // Stories-Lottery
 
     private readonly HashSet<EntityUid> _climbable = new();
     private readonly HashSet<EntityUid> _doors = new();
@@ -99,7 +99,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
             {
                 subs.Event<XenoEvolveBuiMsg>(OnXenoEvolveBui);
                 subs.Event<XenoStrainBuiMsg>(OnXenoStrainBui);
-                subs.Event<XenoLotteryRegisterBuiMsg>(OnXenoLotteryRegisterBui);
+                subs.Event<XenoLotteryRegisterBuiMsg>(OnXenoLotteryRegisterBui); // Stories-Lottery
             });
 
         Subs.BuiEvents<XenoDevolveComponent>(XenoDevolveUIKey.Key,
@@ -112,7 +112,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         Subs.CVar(_config, RMCCVars.RMCEvolutionPointsAccumulateBeforeMinutes, v => _evolutionAccumulatePointsBefore = TimeSpan.FromMinutes(v), true);
         Subs.CVar(_config, RMCCVars.RMCXenoEvolveSameCasteCooldownSeconds, v => _evolveSameCasteCooldown = TimeSpan.FromSeconds(v), true);
         Subs.CVar(_config, RMCCVars.RMCXenoEarlyEvoPointBoostBeforeMinutes, v => _earlyEvoBoostBefore = TimeSpan.FromMinutes(v), true);
-        Subs.CVar(_config, RMCCVars.RMCXenoTierLotteryEnabled, v => _tierLotteryEnabled = v, true);
+        Subs.CVar(_config, RMCCVars.RMCXenoTierLotteryEnabled, v => _tierLotteryEnabled = v, true); // Stories-Lottery
     }
 
     private void OnXenoOpenDevolveAction(Entity<XenoDevolveComponent> xeno, ref XenoOpenDevolveActionEvent args)
@@ -139,7 +139,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         args.Handled = true;
         _ui.OpenUi(xeno.Owner, XenoEvolutionUIKey.Key, xeno);
-        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno));
+        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno)); // Stories-Lottery
     }
 
     private void OnXenoEvolveBui(Entity<XenoEvolutionComponent> xeno, ref XenoEvolveBuiMsg args)
@@ -233,6 +233,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         RaiseLocalEvent(newXeno, ref afterEv);
     }
 
+    // Stories-Lottery-Start
     private void OnXenoLotteryRegisterBui(Entity<XenoEvolutionComponent> xeno, ref XenoLotteryRegisterBuiMsg args)
     {
         var actor = args.Actor;
@@ -258,11 +259,15 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
         else
         {
-            // Stories-start: a xeno must be able to afford the evolution to enter the lottery, matching
-            // the points gate on the normal evolve path.
+            // Same entry gate as a manual evolve - enough points and undamaged.
             if (xeno.Comp.Points < xeno.Comp.Max)
                 return;
-            // Stories-end
+
+            if (!DamagedCheckPopup(xeno, predicted: false, doPopup: false))
+            {
+                _popup.PopupEntity(Loc.GetString("rmc-xeno-lottery-damaged"), xeno, xeno, PopupType.MediumCaution);
+                return;
+            }
 
             registration = EnsureComp<XenoLotteryRegistrationComponent>(xeno);
             registration.Target = args.Choice;
@@ -274,6 +279,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno));
     }
+    // Stories-Lottery-End
 
     private void OnXenoDevolveBui(Entity<XenoDevolveComponent> xeno, ref XenoDevolveBuiMsg args)
     {
@@ -294,9 +300,10 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         args.Handled = true;
 
-        EvolveXeno(xeno, args.Choice, subtractPoints: true, endPopup: true);
+        EvolveXeno(xeno, args.Choice, subtractPoints: true, endPopup: true); // Stories-Lottery
     }
 
+    // Stories-Lottery-Start
     /// <summary>
     /// Completes an evolution: spawns the new caste, transfers the mind, logs it, deletes the old xeno
     /// and raises the evolved events. Shared by the normal do-after path and the tier lottery.
@@ -319,6 +326,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         return newXeno;
     }
+    // Stories-Lottery-End
 
     private void OnXenoEvolutionNewEvolved(Entity<XenoEvolutionComponent> xeno, ref NewXenoEvolvedEvent args)
     {
@@ -360,7 +368,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         var xenos = EntityQueryEnumerator<ActorComponent, XenoEvolutionComponent>();
         while (xenos.MoveNext(out var uid, out _, out var evo))
         {
-            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState((uid, evo)));
+            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState((uid, evo))); // Stories-Lottery
         }
     }
 
@@ -381,10 +389,15 @@ public sealed class XenoEvolutionSystem : EntitySystem
             damageable.TotalDamage <= 1)
             return true;
 
-        if (predicted)
-            _popup.PopupClient(Loc.GetString("rmc-xeno-evolution-cant-evolve-damaged"), xeno, xeno, PopupType.MediumCaution);
-        else
-            _popup.PopupEntity(Loc.GetString("rmc-xeno-evolution-cant-evolve-damaged"), xeno, xeno, PopupType.MediumCaution);
+        // Stories-Lottery-Start
+        if (doPopup)
+        {
+            if (predicted)
+                _popup.PopupClient(Loc.GetString("rmc-xeno-evolution-cant-evolve-damaged"), xeno, xeno, PopupType.MediumCaution);
+            else
+                _popup.PopupEntity(Loc.GetString("rmc-xeno-evolution-cant-evolve-damaged"), xeno, xeno, PopupType.MediumCaution);
+        }
+        // Stories-Lottery-End
 
         return false;
     }
@@ -438,12 +451,18 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
             if (!_xenoWeeds.IsOnWeeds((gridUid, grid), coordinates) && comp.RestrictTime > _gameTicker.RoundDuration())
             {
-                _popup.PopupEntity(
-                    Loc.GetString("rmc-xeno-evolution-failed-early-weeds"),
-                    xeno,
-                    xeno,
-                    PopupType.MediumCaution
-                );
+                // Stories-Lottery-Start
+                if (doPopup)
+                {
+                    _popup.PopupEntity(
+                        Loc.GetString("rmc-xeno-evolution-failed-early-weeds"),
+                        xeno,
+                        xeno,
+                        PopupType.MediumCaution
+                    );
+                }
+                // Stories-Lottery-End
+
                 return false;
             }
         }
@@ -465,6 +484,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
             return false;
         }
 
+        // Stories-Lottery-Start
         // While a tier's first opening is still being raffled, the lottery is the only way in: block
         // the normal evolve path so it can't be raced for at the unlock tick.
         if (_tierLotteryEnabled &&
@@ -485,13 +505,14 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
             return false;
         }
+        // Stories-Lottery-End
 
         if (newXenoComp != null &&
             !newXenoComp.BypassTierCount &&
             _xenoHive.GetHive(xeno.Owner) is { } oldHive &&
             _xenoHive.TryGetTierLimit((oldHive, oldHive.Comp), newXenoComp.Tier, out var limit))
         {
-            _xenoHive.GetTierOccupancy(oldHive, newXenoComp.Tier, out var total, out var existing, out var slotCount);
+            _xenoHive.GetTierOccupancy(oldHive, newXenoComp.Tier, out var total, out var existing, out var slotCount); // Stories-Lottery
 
             if (total != 0 && existing / (float) total >= limit && (!slotCount.ContainsKey(newXeno) || slotCount[newXeno] <= 0))
             {
@@ -746,8 +767,10 @@ public sealed class XenoEvolutionSystem : EntitySystem
         var time = _timing.CurTime;
         var roundDuration = _gameTicker.RoundDuration();
 
+        // Stories-Lottery-Start
         if (_tierLotteryEnabled)
             UpdateLotteries(roundDuration);
+        // Stories-Lottery-End
 
         var needsOvipositor = NeedsOvipositor();
         var hasGranter = needsOvipositor
@@ -825,6 +848,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
     }
 
+    // Stories-Lottery-Start
     private XenoEvolveBuiState BuildEvolveState(Entity<XenoEvolutionComponent> xeno)
     {
         var lotteryChoices = new List<EntProtoId>();
@@ -879,11 +903,10 @@ public sealed class XenoEvolutionSystem : EntitySystem
             var drew = false;
             while (_xenoHive.TryGetDueLotteryTier((hiveId, hive), roundDuration, out var tier))
             {
-                // Stories-start: mark the tier drawn before running so CanEvolvePopup (used per winner)
-                // no longer treats the lottery as pending and blocks the evolutions we're handing out.
+                // Mark the tier drawn before running so CanEvolvePopup (used per winner) no longer treats
+                // the lottery as pending and blocks the evolutions we're handing out.
                 _xenoHive.MarkLotteryDrawn((hiveId, hive), tier);
                 RunLottery((hiveId, hive), tier);
-                // Stories-end
                 drew = true;
             }
 
@@ -916,13 +939,21 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (registrants.Count == 0)
             return;
 
-        // Stories-start: hand out slots by running each shuffled registrant through the normal evolution
-        // checks instead of a precomputed slot count. As winners evolve the live tier cap fills, so the
-        // rest lose; this also enforces the target's own unlock time, caste caps and same-caste cooldown.
+        // Hand out slots by running each shuffled registrant through the normal evolution checks instead
+        // of a precomputed slot count. As winners evolve the live tier cap fills, so the rest lose; this
+        // also enforces the target's own unlock time, caste caps and same-caste cooldown.
         _random.Shuffle(registrants);
 
         foreach (var (registrant, target) in registrants)
         {
+            // Re-check damage: the wait after registering is long enough to get hit. Dead fall through below.
+            if (!_mobState.IsDead(registrant) && !DamagedCheckPopup(registrant, predicted: false, doPopup: false))
+            {
+                RemComp<XenoLotteryRegistrationComponent>(registrant);
+                _popup.PopupEntity(Loc.GetString("rmc-xeno-lottery-damaged"), registrant, registrant, PopupType.LargeCaution);
+                continue;
+            }
+
             if (!CanWinLottery(registrant, target))
             {
                 RemComp<XenoLotteryRegistrationComponent>(registrant);
@@ -936,12 +967,11 @@ public sealed class XenoEvolutionSystem : EntitySystem
             _popup.PopupEntity(Loc.GetString("rmc-xeno-lottery-won"), newXeno, newXeno, PopupType.Large);
             _adminLog.Add(LogType.RMCEvolve, $"Xenonid {prettyOld} won the tier {tier} evolution lottery into {target.Id}");
         }
-        // Stories-end
     }
 
     /// <summary>
     /// Whether a lottery registrant may currently win: alive, player-controlled, can afford the evolution
-    /// and passes the normal evolution checks for the target caste.
+    /// and passes the normal evolution checks for the target caste. Damage is gated separately by the caller.
     /// </summary>
     private bool CanWinLottery(Entity<XenoEvolutionComponent> xeno, EntProtoId target)
     {
@@ -968,4 +998,5 @@ public sealed class XenoEvolutionSystem : EntitySystem
             _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState((uid, evo)));
         }
     }
+    // Stories-Lottery-End
 }

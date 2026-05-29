@@ -61,6 +61,7 @@ rmc-xeno-lottery-registered = We offer ourselves to the hive's lottery to become
 rmc-xeno-lottery-cancelled = We withdraw from the hive's lottery.
 rmc-xeno-lottery-won = The hive has chosen us worthy! We rise to fight for the hive!
 rmc-xeno-lottery-lost = The hive did not deem us worthy to fight the enemy yet.
+rmc-xeno-lottery-damaged = We are too wounded to offer ourselves to the hive's lottery. We must heal first.
 
 # Fortify
 cm-xeno-fortify-cant-headbutt = We can't headbutt while fortifying!

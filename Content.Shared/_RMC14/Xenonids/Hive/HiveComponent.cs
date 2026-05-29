@@ -34,6 +34,7 @@ public sealed partial class HiveComponent : Component
     [DataField, AutoNetworkedField]
     public List<TimeSpan> AnnouncementsLeft = [];
 
+    // Stories-Lottery-Start
     /// <summary>
     /// Round time at which the one-time evolution lottery fires for each tier-limited combat tier,
     /// computed at map init from the earliest unlock of an eligible caste of that tier.
@@ -46,6 +47,7 @@ public sealed partial class HiveComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public List<int> LotteryTiersLeft = new();
+    // Stories-Lottery-End
 
     [DataField, AutoNetworkedField]
     public bool AnnouncedQueenDeathCooldownOver;

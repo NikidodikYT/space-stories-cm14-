@@ -24,7 +24,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
 
     private readonly Dictionary<EntProtoId, XenoChoiceControl> _evolutionControls = new();
     private readonly Dictionary<EntProtoId, XenoChoiceControl> _strainControls = new();
-    private readonly Dictionary<EntProtoId, XenoChoiceControl> _lotteryControls = new();
+    private readonly Dictionary<EntProtoId, XenoChoiceControl> _lotteryControls = new(); // Stories-Lottery
 
     public XenoEvolutionBui(EntityUid owner, Enum uiKey) : base(owner, uiKey)
     {
@@ -126,6 +126,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         control.Button.Disabled = false;
     }
 
+    // Stories-Lottery-Start
     private void AddLottery(EntProtoId lotteryId)
     {
         if (!_prototype.TryIndex(lotteryId, out var caste))
@@ -148,6 +149,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
 
         control.Visible = true;
     }
+    // Stories-Lottery-End
 
     public void Refresh()
     {
@@ -157,11 +159,11 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         if (!EntMan.TryGetComponent(Owner, out XenoEvolutionComponent? xeno))
             return;
 
+        // Stories-Lottery-Start
         var state = State as XenoEvolveBuiState;
-        // Stories-start: only offer the lottery once the xeno can afford the evolution, mirroring the
-        // normal evolve buttons which are gated on points below.
+        // Only offer the lottery once the xeno can afford the evolution, like the normal evolve buttons.
         var lotteryChoices = xeno.Points >= xeno.Max ? state?.LotteryChoices : null;
-        // Stories-end
+        // Stories-Lottery-End
 
         _window.PointsLabel.Visible = xeno.Max > FixedPoint2.Zero;
 
@@ -175,9 +177,11 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         {
             foreach (var evolutionId in xeno.EvolvesTo)
             {
+                // Stories-Lottery-Start
                 // Castes still being raffled appear only as lottery toggles below, not as normal buttons.
                 if (lotteryChoices != null && lotteryChoices.Contains(evolutionId))
                     continue;
+                // Stories-Lottery-End
 
                 AddEvolution(evolutionId);
             }
@@ -186,7 +190,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         _window.Separator.Visible = _window.EvolutionsContainer.Children.Any(child => child.Visible) &&
                                     _window.StrainsContainer.Children.Any(child => child.Visible);
 
-        var lackingOvipositor = state is { LackingOvipositor: true };
+        var lackingOvipositor = state is { LackingOvipositor: true }; // Stories-Lottery (state extracted above)
         var points = xeno.Points;
 
         _window.PointsLabel.Text = Loc.GetString("rmc-xeno-ui-evolution-points",
@@ -206,9 +210,10 @@ public sealed class XenoEvolutionBui : BoundUserInterface
             _window.OvipositorNeededLabel.Visible = false;
         }
 
-        RefreshLottery(lotteryChoices);
+        RefreshLottery(lotteryChoices); // Stories-Lottery
     }
 
+    // Stories-Lottery-Start
     private void RefreshLottery(List<EntProtoId>? lotteryChoices)
     {
         if (_window == null)
@@ -237,4 +242,5 @@ public sealed class XenoEvolutionBui : BoundUserInterface
                                            (_window.EvolutionsContainer.Children.Any(child => child.Visible) ||
                                             _window.StrainsContainer.Children.Any(child => child.Visible));
     }
+    // Stories-Lottery-End
 }
