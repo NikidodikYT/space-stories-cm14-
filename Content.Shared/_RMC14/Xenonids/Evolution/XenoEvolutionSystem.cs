@@ -1,5 +1,6 @@
 using System.Linq;
 using Content.Shared._RMC14.CCVar;
+using Content.Shared._RMC14.Dropship;
 using Content.Shared._RMC14.Xenonids.Announce;
 using Content.Shared._RMC14.Xenonids.Egg;
 using Content.Shared._RMC14.Xenonids.Hive;
@@ -67,6 +68,10 @@ public sealed class XenoEvolutionSystem : EntitySystem
     private TimeSpan _evolveSameCasteCooldown;
     private TimeSpan _earlyEvoBoostBefore;
 
+    // Server-authoritative. Whether the marines' first drop onto the planet has happened yet.
+    // While false, drones may evolve into any T2 caste via EvolvesToBeforeFirstDrop.
+    private bool _firstDropOccured;
+
     private readonly HashSet<EntityUid> _climbable = new();
     private readonly HashSet<EntityUid> _doors = new();
     private readonly HashSet<EntityUid> _intersecting = new();
@@ -90,6 +95,9 @@ public sealed class XenoEvolutionSystem : EntitySystem
         SubscribeLocalEvent<XenoEvolutionGranterComponent, NewXenoEvolvedEvent>(OnGranterEvolved);
 
         SubscribeLocalEvent<XenoOvipositorChangedEvent>(OnOvipositorChanged);
+
+        SubscribeLocalEvent<DropshipLandedOnPlanetEvent>(OnDropshipLandedOnPlanet);
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
 
         Subs.BuiEvents<XenoEvolutionComponent>(XenoEvolutionUIKey.Key,
             subs =>
@@ -135,8 +143,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         args.Handled = true;
         _ui.OpenUi(xeno.Owner, XenoEvolutionUIKey.Key, xeno);
 
-        var state = new XenoEvolveBuiState(LackingOvipositor());
-        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, state);
+        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, GetEvolveBuiState());
     }
 
     private void OnXenoEvolveBui(Entity<XenoEvolutionComponent> xeno, ref XenoEvolveBuiMsg args)
@@ -297,15 +304,50 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private void OnOvipositorChanged(ref XenoOvipositorChangedEvent ev)
     {
+        RefreshEvolveUiStates();
+    }
+
+    private void OnDropshipLandedOnPlanet(ref DropshipLandedOnPlanetEvent ev)
+    {
+        if (_firstDropOccured)
+            return;
+
+        _firstDropOccured = true;
+
+        // Refresh open evolution UIs so drones lose their early T2 caste options.
+        RefreshEvolveUiStates();
+    }
+
+    private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
+    {
+        _firstDropOccured = false;
+    }
+
+    private XenoEvolveBuiState GetEvolveBuiState()
+    {
+        return new XenoEvolveBuiState(LackingOvipositor(), _firstDropOccured);
+    }
+
+    private void RefreshEvolveUiStates()
+    {
         if (_net.IsClient)
             return;
 
+        var state = GetEvolveBuiState();
         var xenos = EntityQueryEnumerator<ActorComponent, XenoEvolutionComponent>();
-        var state = new XenoEvolveBuiState(LackingOvipositor());
         while (xenos.MoveNext(out var uid, out _, out _))
         {
             _ui.SetUiState(uid, XenoEvolutionUIKey.Key, state);
         }
+    }
+
+    // Before the first drop drones can evolve into any T2 caste, afterwards they are limited to EvolvesTo.
+    private List<EntProtoId> GetEvolvesTo(Entity<XenoEvolutionComponent> xeno)
+    {
+        if (!_firstDropOccured && xeno.Comp.EvolvesToBeforeFirstDrop.Count > 0)
+            return xeno.Comp.EvolvesToBeforeFirstDrop;
+
+        return xeno.Comp.EvolvesTo;
     }
 
     private bool ContainedCheckPopup(EntityUid xeno, bool doPopup = true)
@@ -335,7 +377,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private bool CanEvolvePopup(Entity<XenoEvolutionComponent> xeno, EntProtoId newXeno, bool doPopup = true)
     {
-        if (!xeno.Comp.EvolvesTo.Contains(newXeno) && !xeno.Comp.EvolvesToWithoutPoints.Contains(newXeno))
+        if (!GetEvolvesTo(xeno).Contains(newXeno) && !xeno.Comp.EvolvesToWithoutPoints.Contains(newXeno))
             return false;
 
         if (!_prototypes.TryIndex(newXeno, out var prototype))
@@ -475,7 +517,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private bool CanEvolveAny(Entity<XenoEvolutionComponent> xeno)
     {
-        if (xeno.Comp.Points >= xeno.Comp.Max && xeno.Comp.EvolvesTo.Count > 0)
+        if (xeno.Comp.Points >= xeno.Comp.Max && GetEvolvesTo(xeno).Count > 0)
             return true;
 
         foreach (var evolution in xeno.Comp.EvolvesToWithoutPoints)

@@ -94,6 +94,14 @@
     - CMXenoCarrier
     - CMXenoBurrower
     - CMXenoHivelord
+    # Before the marines' first drop, drones may evolve into any T2 caste.
+    evolvesToBeforeFirstDrop:
+    - CMXenoCarrier
+    - CMXenoBurrower
+    - CMXenoHivelord
+    - CMXenoSpitter
+    - CMXenoWarrior
+    - CMXenoLurker
     evolvesToWithoutPoints:
     - CMXenoQueen
   - type: Evasion

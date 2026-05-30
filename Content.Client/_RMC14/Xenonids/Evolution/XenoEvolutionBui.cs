@@ -141,9 +141,14 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         foreach (var evolutionId in xeno.EvolvesToWithoutPoints)
             AddEvolution(evolutionId);
 
+        var firstDropOccured = State is XenoEvolveBuiState { FirstDropOccured: true };
+        var evolvesTo = !firstDropOccured && xeno.EvolvesToBeforeFirstDrop.Count > 0
+            ? xeno.EvolvesToBeforeFirstDrop
+            : xeno.EvolvesTo;
+
         if (xeno.Points >= xeno.Max)
         {
-            foreach (var evolutionId in xeno.EvolvesTo)
+            foreach (var evolutionId in evolvesTo)
                 AddEvolution(evolutionId);
         }
 
