@@ -20,10 +20,7 @@ public sealed partial class XenoEvolutionComponent : Component
     [DataField, AutoNetworkedField]
     public List<EntProtoId> EvolvesTo = new();
 
-    /// <summary>
-    ///     Alternative evolution targets that replace <see cref="EvolvesTo"/> until the marines'
-    ///     first drop has occurred. Lets drones evolve into any T2 caste early on.
-    /// </summary>
+    // Stories-DroneEvolve
     [DataField, AutoNetworkedField]
     public List<EntProtoId> EvolvesToBeforeFirstDrop = new();
 

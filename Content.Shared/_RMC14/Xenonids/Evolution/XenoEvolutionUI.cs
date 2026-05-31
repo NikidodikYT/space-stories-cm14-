@@ -13,7 +13,7 @@ public enum XenoEvolutionUIKey : byte
 public sealed class XenoEvolveBuiState(bool lackingOvipositor, bool firstDropOccured) : BoundUserInterfaceState
 {
     public readonly bool LackingOvipositor = lackingOvipositor;
-    public readonly bool FirstDropOccured = firstDropOccured;
+    public readonly bool FirstDropOccured = firstDropOccured; // Stories-DroneEvolve
 }
 
 [Serializable, NetSerializable]

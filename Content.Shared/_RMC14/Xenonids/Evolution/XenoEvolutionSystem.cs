@@ -68,10 +68,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
     private TimeSpan _evolveSameCasteCooldown;
     private TimeSpan _earlyEvoBoostBefore;
 
-    // Server-authoritative. Whether the marines' first drop onto the planet has happened yet.
-    // While false, drones may evolve into any T2 caste via EvolvesToBeforeFirstDrop.
-    private bool _firstDropOccured;
-
     private readonly HashSet<EntityUid> _climbable = new();
     private readonly HashSet<EntityUid> _doors = new();
     private readonly HashSet<EntityUid> _intersecting = new();
@@ -96,8 +92,8 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         SubscribeLocalEvent<XenoOvipositorChangedEvent>(OnOvipositorChanged);
 
-        SubscribeLocalEvent<DropshipLandedOnPlanetEvent>(OnDropshipLandedOnPlanet);
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
+        // Stories-DroneEvolve: refresh open UIs after the hive latch is set by SharedXenoHiveSystem.
+        SubscribeLocalEvent<DropshipLandedOnPlanetEvent>(OnDropshipLandedOnPlanet, after: [typeof(SharedXenoHiveSystem)]);
 
         Subs.BuiEvents<XenoEvolutionComponent>(XenoEvolutionUIKey.Key,
             subs =>
@@ -143,7 +139,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         args.Handled = true;
         _ui.OpenUi(xeno.Owner, XenoEvolutionUIKey.Key, xeno);
 
-        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, GetEvolveBuiState());
+        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, GetEvolveBuiState(xeno.Owner)); // Stories-DroneEvolve
     }
 
     private void OnXenoEvolveBui(Entity<XenoEvolutionComponent> xeno, ref XenoEvolveBuiMsg args)
@@ -307,25 +303,15 @@ public sealed class XenoEvolutionSystem : EntitySystem
         RefreshEvolveUiStates();
     }
 
+    // Stories-DroneEvolve: the hive latch is already set by SharedXenoHiveSystem, just refresh open UIs.
     private void OnDropshipLandedOnPlanet(ref DropshipLandedOnPlanetEvent ev)
     {
-        if (_firstDropOccured)
-            return;
-
-        _firstDropOccured = true;
-
-        // Refresh open evolution UIs so drones lose their early T2 caste options.
         RefreshEvolveUiStates();
     }
 
-    private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
+    private XenoEvolveBuiState GetEvolveBuiState(EntityUid xeno)
     {
-        _firstDropOccured = false;
-    }
-
-    private XenoEvolveBuiState GetEvolveBuiState()
-    {
-        return new XenoEvolveBuiState(LackingOvipositor(), _firstDropOccured);
+        return new XenoEvolveBuiState(LackingOvipositor(), !BeforeFirstDrop(xeno)); // Stories-DroneEvolve
     }
 
     private void RefreshEvolveUiStates()
@@ -333,18 +319,22 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (_net.IsClient)
             return;
 
-        var state = GetEvolveBuiState();
         var xenos = EntityQueryEnumerator<ActorComponent, XenoEvolutionComponent>();
         while (xenos.MoveNext(out var uid, out _, out _))
         {
-            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, state);
+            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, GetEvolveBuiState(uid));
         }
     }
 
-    // Before the first drop drones can evolve into any T2 caste, afterwards they are limited to EvolvesTo.
+    // Stories-DroneEvolve: drones may evolve into any T2 caste until their hive's first drop.
+    private bool BeforeFirstDrop(EntityUid xeno)
+    {
+        return _xenoHive.GetHive(xeno) is { } hive && !hive.Comp.FirstDropOccured;
+    }
+
     private List<EntProtoId> GetEvolvesTo(Entity<XenoEvolutionComponent> xeno)
     {
-        if (!_firstDropOccured && xeno.Comp.EvolvesToBeforeFirstDrop.Count > 0)
+        if (BeforeFirstDrop(xeno.Owner) && xeno.Comp.EvolvesToBeforeFirstDrop.Count > 0) // Stories-DroneEvolve
             return xeno.Comp.EvolvesToBeforeFirstDrop;
 
         return xeno.Comp.EvolvesTo;

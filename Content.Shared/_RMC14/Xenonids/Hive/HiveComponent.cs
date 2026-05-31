@@ -76,6 +76,10 @@ public sealed partial class HiveComponent : Component
     [DataField, AutoNetworkedField]
     public bool HijackSurged;
 
+    // Stories-DroneEvolve
+    [DataField, AutoNetworkedField]
+    public bool FirstDropOccured;
+
     [DataField, AutoNetworkedField]
     public Dictionary<string, EntityUid> HiveTunnels = new();
 

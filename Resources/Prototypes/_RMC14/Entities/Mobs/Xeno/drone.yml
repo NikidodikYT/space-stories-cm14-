@@ -94,7 +94,7 @@
     - CMXenoCarrier
     - CMXenoBurrower
     - CMXenoHivelord
-    # Before the marines' first drop, drones may evolve into any T2 caste.
+    # Stories-DroneEvolve
     evolvesToBeforeFirstDrop:
     - CMXenoCarrier
     - CMXenoBurrower

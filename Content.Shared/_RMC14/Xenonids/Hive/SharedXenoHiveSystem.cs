@@ -56,6 +56,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         _memberQuery = GetEntityQuery<HiveMemberComponent>();
 
         SubscribeLocalEvent<DropshipHijackStartEvent>(OnDropshipHijackStart);
+        SubscribeLocalEvent<DropshipLandedOnPlanetEvent>(OnDropshipLandedOnPlanet); // Stories-DroneEvolve
 
         SubscribeLocalEvent<MarineComponent, StunnedEvent>(OnStunned);
         SubscribeLocalEvent<MarineComponent, KnockedDownEvent>(OnStunned);
@@ -91,6 +92,21 @@ public abstract class SharedXenoHiveSystem : EntitySystem
             break;
         }
     }
+
+    // Stories-DroneEvolve-Start
+    private void OnDropshipLandedOnPlanet(ref DropshipLandedOnPlanetEvent ev)
+    {
+        var hives = EntityQueryEnumerator<HiveComponent>();
+        while (hives.MoveNext(out var uid, out var hive))
+        {
+            if (hive.FirstDropOccured)
+                continue;
+
+            hive.FirstDropOccured = true;
+            Dirty(uid, hive);
+        }
+    }
+    // Stories-DroneEvolve-End
 
     private void OnStunned<T>(Entity<MarineComponent> marine, ref T ev)
     {
