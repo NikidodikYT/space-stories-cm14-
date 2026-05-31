@@ -92,8 +92,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         SubscribeLocalEvent<XenoOvipositorChangedEvent>(OnOvipositorChanged);
 
-        // Stories-DroneEvolve: refresh open UIs after the hive latch is set by SharedXenoHiveSystem.
-        SubscribeLocalEvent<DropshipLandedOnPlanetEvent>(OnDropshipLandedOnPlanet, after: [typeof(SharedXenoHiveSystem)]);
+        SubscribeLocalEvent<DropshipLandedOnPlanetEvent>(OnDropshipLandedOnPlanet, after: [typeof(SharedXenoHiveSystem)]); // Stories-DroneEvolve
 
         Subs.BuiEvents<XenoEvolutionComponent>(XenoEvolutionUIKey.Key,
             subs =>
@@ -303,7 +302,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         RefreshEvolveUiStates();
     }
 
-    // Stories-DroneEvolve: the hive latch is already set by SharedXenoHiveSystem, just refresh open UIs.
+    // Stories-DroneEvolve
     private void OnDropshipLandedOnPlanet(ref DropshipLandedOnPlanetEvent ev)
     {
         RefreshEvolveUiStates();
@@ -326,10 +325,20 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
     }
 
-    // Stories-DroneEvolve: drones may evolve into any T2 caste until their hive's first drop.
+    // Stories-DroneEvolve
     private bool BeforeFirstDrop(EntityUid xeno)
     {
-        return _xenoHive.GetHive(xeno) is { } hive && !hive.Comp.FirstDropOccured;
+        if (_xenoHive.GetHive(xeno) is { } hive)
+            return !hive.Comp.FirstDropOccured;
+
+        var hives = EntityQueryEnumerator<HiveComponent>();
+        while (hives.MoveNext(out var other))
+        {
+            if (other.FirstDropOccured)
+                return false;
+        }
+
+        return true;
     }
 
     private List<EntProtoId> GetEvolvesTo(Entity<XenoEvolutionComponent> xeno)
