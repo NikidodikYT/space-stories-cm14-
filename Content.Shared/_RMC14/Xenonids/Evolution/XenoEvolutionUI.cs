@@ -10,17 +10,12 @@ public enum XenoEvolutionUIKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class XenoEvolveBuiState(bool lackingOvipositor, List<EntProtoId> lotteryChoices) : BoundUserInterfaceState // Stories-Lottery
+public sealed class XenoEvolveBuiState(bool lackingOvipositor, List<EntProtoId> queueChoices) : BoundUserInterfaceState // Stories-EvoQueue
 {
     public readonly bool LackingOvipositor = lackingOvipositor;
 
-    // Stories-Lottery-Start
-    /// <summary>
-    /// This xeno's evolution targets that are decided by the pending tier lottery instead of a click race.
-    /// Empty when no lottery is currently open for this xeno.
-    /// </summary>
-    public readonly List<EntProtoId> LotteryChoices = lotteryChoices;
-    // Stories-Lottery-End
+    // Stories-EvoQueue: tier-limited castes this xeno enters the hive evolution queue for instead of evolving directly.
+    public readonly List<EntProtoId> QueueChoices = queueChoices;
 }
 
 [Serializable, NetSerializable]
@@ -29,13 +24,9 @@ public sealed class XenoEvolveBuiMsg(EntProtoId choice) : BoundUserInterfaceMess
     public readonly EntProtoId Choice = choice;
 }
 
-// Stories-Lottery-Start
+// Stories-EvoQueue
 [Serializable, NetSerializable]
-public sealed class XenoLotteryRegisterBuiMsg(EntProtoId choice) : BoundUserInterfaceMessage
-{
-    public readonly EntProtoId Choice = choice;
-}
-// Stories-Lottery-End
+public sealed class XenoEvolutionQueueCancelBuiMsg : BoundUserInterfaceMessage;
 
 [Serializable, NetSerializable]
 public sealed class XenoStrainBuiMsg(EntProtoId choice) : BoundUserInterfaceMessage

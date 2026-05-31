@@ -57,11 +57,10 @@ rmc-xeno-evolution-failed-early-weeds = The hive hasn't developed enough yet for
 rmc-xeno-evolution-failed-bad-location = We can't evolve here.
 rmc-xeno-evolution-start-self = We begin to twist and contort.
 rmc-xeno-evolution-start-others = {$xeno} begins to twist and contort.
-rmc-xeno-lottery-registered = We offer ourselves to the hive's lottery to become a {$caste}.
-rmc-xeno-lottery-cancelled = We withdraw from the hive's lottery.
-rmc-xeno-lottery-won = The hive has chosen us worthy! We rise to fight for the hive!
-rmc-xeno-lottery-lost = The hive did not deem us worthy to fight the enemy yet.
-rmc-xeno-lottery-damaged = We are too wounded to offer ourselves to the hive's lottery. We must heal first.
+rmc-xeno-queue-offered = A slot has opened! We may evolve to a higher caste within {$seconds} seconds.
+rmc-xeno-queue-expired = We were too slow. The slot passes to another in the hive.
+rmc-xeno-queue-declined = We decline the evolution for now.
+rmc-xeno-queue-wait = The hive cannot support this caste yet. We must wait to be called upon.
 
 # Fortify
 cm-xeno-fortify-cant-headbutt = We can't headbutt while fortifying!

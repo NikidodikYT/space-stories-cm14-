@@ -127,10 +127,6 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         ent.Comp.AnnouncedUnlocks.Clear();
         ent.Comp.Unlocks.Clear();
         ent.Comp.AnnouncementsLeft.Clear();
-        // Stories-Lottery-Start
-        ent.Comp.LotteryTierTimes.Clear();
-        ent.Comp.LotteryTiersLeft.Clear();
-        // Stories-Lottery-End
 
         foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
         {
@@ -144,17 +140,6 @@ public abstract class SharedXenoHiveSystem : EntitySystem
 
             if (!ent.Comp.AnnouncementsLeft.Contains(xeno.UnlockAt))
                 ent.Comp.AnnouncementsLeft.Add(xeno.UnlockAt);
-
-            // Stories-Lottery-Start
-            // Tier-limited combat castes without a guaranteed slot are handed out via a one-time
-            // lottery at their first unlock instead of a click race. The fire time per tier is the
-            // earliest unlock among such castes. See XenoEvolutionSystem for the draw.
-            if (IsLotteryCasteData(ent.Comp, prototype.ID, xeno) &&
-                (!ent.Comp.LotteryTierTimes.TryGetValue(xeno.Tier, out var lotteryAt) || xeno.UnlockAt < lotteryAt))
-            {
-                ent.Comp.LotteryTierTimes[xeno.Tier] = xeno.UnlockAt;
-            }
-            // Stories-Lottery-End
         }
 
         foreach (var unlock in ent.Comp.Unlocks)
@@ -163,19 +148,14 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         }
 
         ent.Comp.AnnouncementsLeft.Sort();
-
-        // Stories-Lottery-Start
-        ent.Comp.LotteryTiersLeft = new List<int>(ent.Comp.LotteryTierTimes.Keys);
-        ent.Comp.LotteryTiersLeft.Sort();
-        // Stories-Lottery-End
     }
 
-    // Stories-Lottery-Start
+    // Stories-EvoQueue-Start
     /// <summary>
-    /// Whether evolving into the given caste goes through the tier lottery for this hive: a
-    /// tier-limited caste that has no guaranteed free slot. Purely data-driven, no hardcoded castes.
+    /// Whether evolving into the given caste goes through the hive's evolution queue: a tier-limited
+    /// caste that has no guaranteed free slot. Purely data-driven, no hardcoded castes.
     /// </summary>
-    public bool IsLotteryCaste(Entity<HiveComponent> hive, EntProtoId caste)
+    public bool IsQueuedCaste(Entity<HiveComponent> hive, EntProtoId caste)
     {
         if (!_prototypes.TryIndex(caste, out var proto) ||
             !proto.TryGetComponent(out XenoComponent? xeno, _compFactory))
@@ -183,55 +163,31 @@ public abstract class SharedXenoHiveSystem : EntitySystem
             return false;
         }
 
-        return IsLotteryCasteData(hive.Comp, caste, xeno);
-    }
-
-    private static bool IsLotteryCasteData(HiveComponent hive, EntProtoId caste, XenoComponent xeno)
-    {
-        // A lottery caste is one whose tier is capped (TierLimits) yet has no guaranteed slot
-        // (FreeSlots) and isn't exempt from the tier count - purely data-driven, no caste list.
         return xeno.UnlockAt > TimeSpan.Zero &&
                !xeno.BypassTierCount &&
                xeno.CountedInSlots &&
-               hive.TierLimits.ContainsKey(xeno.Tier) &&
-               !hive.FreeSlots.ContainsKey(caste);
+               hive.Comp.TierLimits.ContainsKey(xeno.Tier) &&
+               !hive.Comp.FreeSlots.ContainsKey(caste);
     }
 
     /// <summary>
-    /// Whether the lottery for the given tier is still pending (not yet drawn) and outputs the round
-    /// time at which it fires.
+    /// How many more xenos of <paramref name="tier"/> or above the hive can currently support, mirroring
+    /// the tier-cap check in <see cref="XenoEvolutionSystem"/>. Used to size the evolution queue.
     /// </summary>
-    public bool IsLotteryPending(Entity<HiveComponent> hive, int tier, out TimeSpan at)
+    public int GetOpenTierSlots(Entity<HiveComponent> hive, int tier)
     {
-        at = default;
-        return hive.Comp.LotteryTiersLeft.Contains(tier) && hive.Comp.LotteryTierTimes.TryGetValue(tier, out at);
-    }
+        if (!TryGetTierLimit((hive.Owner, hive.Comp), tier, out var limit))
+            return 0;
 
-    /// <summary>
-    /// Returns the first pending lottery tier whose fire time has been reached, if any.
-    /// </summary>
-    public bool TryGetDueLotteryTier(Entity<HiveComponent> hive, TimeSpan roundTime, out int tier)
-    {
-        tier = 0;
-        foreach (var pending in hive.Comp.LotteryTiersLeft)
-        {
-            if (hive.Comp.LotteryTierTimes.TryGetValue(pending, out var at) && roundTime >= at)
-            {
-                tier = pending;
-                return true;
-            }
-        }
+        GetTierOccupancy(hive, tier, out var total, out var existing, out _);
 
-        return false;
-    }
+        // Largest count we can hand out while each new xeno's pre-add ratio stays under the cap,
+        // matching CanEvolvePopup which allows evolving while existing/total < limit.
+        var open = 0;
+        while (open < 64 && total + open > 0 && (existing + open) / (float)(total + open) < limit)
+            open++;
 
-    /// <summary>
-    /// Marks a tier's evolution lottery as drawn so it never fires again.
-    /// </summary>
-    public void MarkLotteryDrawn(Entity<HiveComponent> hive, int tier)
-    {
-        if (hive.Comp.LotteryTiersLeft.Remove(tier))
-            Dirty(hive);
+        return open;
     }
 
     /// <summary>
@@ -273,7 +229,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
                 existing++;
         }
     }
-    // Stories-Lottery-End
+    // Stories-EvoQueue-End
 
     /// <summary>
     /// Tries to get the hive from a member, returning null if it has no hive or it is invalid.

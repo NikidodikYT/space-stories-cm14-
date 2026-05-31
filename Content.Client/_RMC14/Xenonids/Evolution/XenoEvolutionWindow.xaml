@@ -16,13 +16,14 @@
             <Label Name="StrainsLabel" Access="Public" Text="Strains:"
                    StyleClasses="LabelBold" HorizontalExpand="True" HorizontalAlignment="Center" />
             <BoxContainer Orientation="Vertical" Name="StrainsContainer" Access="Public" />
-            <!-- Stories-Lottery-Start -->
-            <userInterface:BlueHorizontalSeparator Name="LotterySeparator" Access="Public"
+            <!-- Stories-EvoQueue-Start -->
+            <userInterface:BlueHorizontalSeparator Name="QueueSeparator" Access="Public"
                            Visible="false" Margin="4 8" />
-            <RichTextLabel Name="LotteryLabel" Access="Public" Visible="false"
+            <RichTextLabel Name="QueueLabel" Access="Public" Visible="false"
                            HorizontalExpand="True" HorizontalAlignment="Center" Margin="0 4" />
-            <BoxContainer Orientation="Vertical" Name="LotteryContainer" Access="Public" />
-            <!-- Stories-Lottery-End -->
+            <Button Name="CancelOfferButton" Access="Public" Visible="false"
+                           Text="{Loc rmc-xeno-ui-queue-cancel}" HorizontalAlignment="Center" />
+            <!-- Stories-EvoQueue-End -->
         </BoxContainer>
     </ScrollContainer>
 </cc:XenoEvolutionWindow>
