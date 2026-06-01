@@ -110,11 +110,19 @@ public sealed class XenoPylonSystem : SharedXenoPylonSystem
         var available = Math.Max(core.MinimumLesserDrones, living / core.XenosPerLesserDrone);
         core.MaxLesserDrones = available;
 
+        // Stories-HijackLesserDrones: hijack surges the core's lesser drone supply.
+        var hijack = _hive.GetHive(uid) is { } hive && hive.Comp.HijackSurged;
+        if (hijack)
+            core.MaxLesserDrones = Math.Max(core.MaxLesserDrones, core.HijackMaxLesserDrones);
+
         var time = _timing.CurTime;
         if (time > core.NextLesserDroneAt)
         {
             var hasOvipositor = _evolution.HasLiving<XenoAttachedOvipositorComponent>(1);
-            core.NextLesserDroneAt = time + (hasOvipositor ? core.NextLesserDroneOviCooldown : core.NextLesserDroneCooldown * 2);
+            var cooldown = hijack
+                ? core.HijackLesserDroneCooldown
+                : (hasOvipositor ? core.NextLesserDroneOviCooldown : core.NextLesserDroneCooldown * 2);
+            core.NextLesserDroneAt = time + cooldown;
             core.CurrentLesserDrones = Math.Min(core.MaxLesserDrones, core.CurrentLesserDrones + 1);
         }
 
