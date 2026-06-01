@@ -1,6 +1,6 @@
 using System.Linq;
 using Content.Shared._RMC14.CCVar;
-using Content.Shared._RMC14.Dropship;
+using Content.Shared._RMC14.Dropship; // Stories-DroneEvolve
 using Content.Shared._RMC14.Xenonids.Announce;
 using Content.Shared._RMC14.Xenonids.Egg;
 using Content.Shared._RMC14.Xenonids.Hive;
@@ -299,10 +299,10 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private void OnOvipositorChanged(ref XenoOvipositorChangedEvent ev)
     {
-        RefreshEvolveUiStates();
+        RefreshEvolveUiStates(); // Stories-DroneEvolve
     }
 
-    // Stories-DroneEvolve
+    // Stories-DroneEvolve-Start
     private void OnDropshipLandedOnPlanet(ref DropshipLandedOnPlanetEvent ev)
     {
         RefreshEvolveUiStates();
@@ -310,7 +310,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private XenoEvolveBuiState GetEvolveBuiState(EntityUid xeno)
     {
-        return new XenoEvolveBuiState(LackingOvipositor(), !BeforeFirstDrop(xeno)); // Stories-DroneEvolve
+        return new XenoEvolveBuiState(LackingOvipositor(), !BeforeFirstDrop(xeno));
     }
 
     private void RefreshEvolveUiStates()
@@ -325,7 +325,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
     }
 
-    // Stories-DroneEvolve
     private bool BeforeFirstDrop(EntityUid xeno)
     {
         if (_xenoHive.GetHive(xeno) is { } hive)
@@ -343,11 +342,12 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private List<EntProtoId> GetEvolvesTo(Entity<XenoEvolutionComponent> xeno)
     {
-        if (BeforeFirstDrop(xeno.Owner) && xeno.Comp.EvolvesToBeforeFirstDrop.Count > 0) // Stories-DroneEvolve
+        if (BeforeFirstDrop(xeno.Owner) && xeno.Comp.EvolvesToBeforeFirstDrop.Count > 0)
             return xeno.Comp.EvolvesToBeforeFirstDrop;
 
         return xeno.Comp.EvolvesTo;
     }
+    // Stories-DroneEvolve-End
 
     private bool ContainedCheckPopup(EntityUid xeno, bool doPopup = true)
     {
@@ -376,7 +376,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private bool CanEvolvePopup(Entity<XenoEvolutionComponent> xeno, EntProtoId newXeno, bool doPopup = true)
     {
-        if (!GetEvolvesTo(xeno).Contains(newXeno) && !xeno.Comp.EvolvesToWithoutPoints.Contains(newXeno))
+        if (!GetEvolvesTo(xeno).Contains(newXeno) && !xeno.Comp.EvolvesToWithoutPoints.Contains(newXeno)) // Stories-DroneEvolve: GetEvolvesTo
             return false;
 
         if (!_prototypes.TryIndex(newXeno, out var prototype))
@@ -516,7 +516,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private bool CanEvolveAny(Entity<XenoEvolutionComponent> xeno)
     {
-        if (xeno.Comp.Points >= xeno.Comp.Max && GetEvolvesTo(xeno).Count > 0)
+        if (xeno.Comp.Points >= xeno.Comp.Max && GetEvolvesTo(xeno).Count > 0) // Stories-DroneEvolve: GetEvolvesTo
             return true;
 
         foreach (var evolution in xeno.Comp.EvolvesToWithoutPoints)
