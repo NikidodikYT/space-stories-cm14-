@@ -203,8 +203,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         if (_doAfter.TryStartDoAfter(doAfter))
         {
-            // Stories-EvoQueue: committing to the evolve holds the reserved slot through the do-after,
-            // so a near-deadline click can't be stolen by the offer timeout.
+            // Stories-EvoQueue: hold the reserved slot through the do-after so a near-deadline click isn't stolen.
             if (_evolutionQueueEnabled &&
                 TryComp(xeno, out XenoEvolutionQueueComponent? offerQueue) &&
                 offerQueue.OfferedUntil != null)
@@ -276,8 +275,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
             UpdateEvolutionQueue(_gameTicker.RoundDuration());
     }
 
-    // Drops the active offer, resets the priority time (penalty -> back of queue) and sits the xeno
-    // out so the slot passes down to the next candidate.
+    // Drops the offer, resets priority (back of queue) and sits the xeno out so the slot passes on.
     private void DeclineOffer(Entity<XenoEvolutionQueueComponent> xeno, string? popup)
     {
         var now = _gameTicker.RoundDuration();
@@ -881,8 +879,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return true;
     }
 
-    // Whether the xeno can actually take a queued slot of the given tier right now: a queued caste of
-    // that tier it could evolve into (unlocked, hive can support it, ...) — only the slot is assumed free.
+    // Can this xeno take a queued slot of the given tier right now (only the slot is assumed free).
     private bool CanTakeQueuedSlot(Entity<XenoEvolutionComponent> xeno, Entity<HiveComponent> hive, int tier)
     {
         foreach (var caste in xeno.Comp.EvolvesTo)
@@ -898,8 +895,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return false;
     }
 
-    // List 1, built on demand: living, player-attached, ready xenos eligible for a tier slot,
-    // excluding those already offered (List 2) and those sitting out after a decline.
+    // List 1: living, player-attached, ready xenos eligible for a tier slot (excludes List 2 offers and decline sit-outs).
     private List<Entity<XenoEvolutionQueueComponent>> GetQueueCandidates(Entity<HiveComponent> hive, int tier, TimeSpan roundDuration)
     {
         var result = new List<Entity<XenoEvolutionQueueComponent>>();
@@ -946,8 +942,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
                 continue;
             }
 
-            // Died or lost its player (disconnect/ghost) while holding a slot: decline so the slot
-            // passes to the next candidate and the abandoner loses its place.
+            // Died or lost its player while holding a slot: decline so it passes on and the abandoner loses its place.
             if (_mobState.IsDead(uid) || !HasComp<ActorComponent>(uid))
             {
                 DeclineOffer((uid, queue), null);
@@ -981,8 +976,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
                 if (candidates.Count == 0)
                     continue;
 
-                // Oldest in tier first. Tie-break: shuffle, then a STABLE sort, so equal-time
-                // (round-start) xenos get a fair random order without a younger one jumping ahead.
+                // Oldest in tier first; shuffle + stable sort gives equal-time xenos a fair random order.
                 _random.Shuffle(candidates);
                 var ordered = candidates.OrderBy(c => c.Comp.TierEnteredAt);
 
