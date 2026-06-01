@@ -34,7 +34,6 @@ public sealed partial class HiveLesserSpawnerComponent : Component
     public TimeSpan NextLesserDroneCooldown = TimeSpan.FromSeconds(125);
 
     // Stories-HijackLesserDrones-Start
-    // During hijack the core surges lesser drones: a large pool that refills fast.
     [DataField]
     public int HijackMaxLesserDrones = 20;
 
