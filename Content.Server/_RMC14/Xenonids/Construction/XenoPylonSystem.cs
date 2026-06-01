@@ -119,6 +119,7 @@ public sealed class XenoPylonSystem : SharedXenoPylonSystem
         if (time > core.NextLesserDroneAt)
         {
             var hasOvipositor = _evolution.HasLiving<XenoAttachedOvipositorComponent>(1);
+            // Stories-HijackLesserDrones: surge shortens the refill cooldown.
             var cooldown = hijack
                 ? core.HijackLesserDroneCooldown
                 : (hasOvipositor ? core.NextLesserDroneOviCooldown : core.NextLesserDroneCooldown * 2);
