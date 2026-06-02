@@ -61,6 +61,7 @@ rmc-xeno-queue-offered = A slot has opened! We may evolve to a higher caste with
 rmc-xeno-queue-expired = We were too slow. The slot passes to another in the hive.
 rmc-xeno-queue-declined = We decline the evolution for now.
 rmc-xeno-queue-wait = The hive cannot support this caste yet. We must wait to be called upon.
+rmc-xeno-queue-no-offer = The hive cannot support this caste yet, or it is not our turn in line.
 
 # Fortify
 cm-xeno-fortify-cant-headbutt = We can't headbutt while fortifying!

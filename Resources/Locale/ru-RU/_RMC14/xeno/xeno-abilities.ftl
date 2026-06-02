@@ -61,6 +61,7 @@ rmc-xeno-queue-offered = Освободился слот! Мы можем раз
 rmc-xeno-queue-expired = Мы не успели — слот переходит к другому в улье.
 rmc-xeno-queue-declined = Мы пока отказываемся от эволюции.
 rmc-xeno-queue-wait = Улей пока не может содержать эту касту. Нужно дождаться зова улья.
+rmc-xeno-queue-no-offer = Улей пока не может поддерживать касту или до вас не дошла очередь.
 
 # Fortify
 cm-xeno-fortify-cant-headbutt = Вы не можете ударить головой во время укрепления!

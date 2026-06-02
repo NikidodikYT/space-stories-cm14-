@@ -151,10 +151,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
     }
 
     // Stories-EvoQueue-Start
-    /// <summary>
-    /// Whether evolving into the given caste goes through the hive's evolution queue: a tier-limited
-    /// caste that has no guaranteed free slot. Purely data-driven, no hardcoded castes.
-    /// </summary>
+    // True if the caste is reached through the evolution queue: tier-limited with no guaranteed free slot.
     public bool IsQueuedCaste(Entity<HiveComponent> hive, EntProtoId caste)
     {
         if (!_prototypes.TryIndex(caste, out var proto) ||
@@ -170,10 +167,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
                !hive.Comp.FreeSlots.ContainsKey(caste);
     }
 
-    /// <summary>
-    /// How many more xenos of <paramref name="tier"/> or above the hive can currently support, mirroring
-    /// the tier-cap check in <see cref="XenoEvolutionSystem"/>. Used to size the evolution queue.
-    /// </summary>
+    // How many more xenos at or above this tier the hive can support right now (mirrors the cap check; sizes the queue).
     public int GetOpenTierSlots(Entity<HiveComponent> hive, int tier)
     {
         if (!TryGetTierLimit((hive.Owner, hive.Comp), tier, out var limit))
@@ -190,12 +184,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         return open;
     }
 
-    /// <summary>
-    /// Computes how the hive's tier slots are occupied, mirroring the tier-cap check in
-    /// <see cref="XenoEvolutionSystem"/>. <paramref name="total"/> is the effective hive size,
-    /// <paramref name="existing"/> the number of slot-counted xenos at or above <paramref name="tier"/>
-    /// not covered by a free slot, and <paramref name="freeSlotCount"/> the remaining per-caste free slots.
-    /// </summary>
+    // Tier-slot occupancy (mirrors the cap check): total hive size, existing count at/above tier minus free slots, and leftover per-caste free slots.
     public void GetTierOccupancy(
         Entity<HiveComponent> hive,
         int tier,

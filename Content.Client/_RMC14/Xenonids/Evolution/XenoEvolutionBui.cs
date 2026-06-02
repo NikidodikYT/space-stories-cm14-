@@ -4,6 +4,7 @@ using Content.Client.Message;
 using Content.Shared._RMC14.Xenonids.Evolution;
 using Content.Shared._RMC14.Xenonids.Strain;
 using Content.Shared.FixedPoint;
+using Content.Shared.GameTicking;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
@@ -36,6 +37,13 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         _window = this.CreateWindow<XenoEvolutionWindow>();
         _window.OvipositorNeededLabel.Visible = false;
         _window.CancelOfferButton.OnPressed += _ => SendPredictedMessage(new XenoEvolutionQueueCancelBuiMsg()); // Stories-EvoQueue
+
+        // Stories-EvoQueue: feed the countdown from the server-set deadline (OfferedUntil) minus the current round time.
+        var gameTicker = EntMan.System<SharedGameTicker>();
+        _window.GetOfferRemaining = () =>
+            EntMan.TryGetComponent(Owner, out XenoEvolutionQueueComponent? queue) && queue.OfferedUntil is { } until
+                ? until - gameTicker.RoundDuration()
+                : null;
 
         if (EntMan.TryGetComponent(Owner, out XenoEvolutionComponent? xeno))
         {
@@ -134,11 +142,9 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         if (!EntMan.TryGetComponent(Owner, out XenoEvolutionComponent? xeno))
             return;
 
-        // Stories-EvoQueue-Start
+        // Stories-EvoQueue: an active offer only drives the banner/timer/decline button below; it no longer gates button visibility.
         var state = State as XenoEvolveBuiState;
         var offered = EntMan.TryGetComponent(Owner, out XenoEvolutionQueueComponent? queue) && queue.OfferedUntil != null;
-        var queueChoices = state?.QueueChoices;
-        // Stories-EvoQueue-End
 
         _window.PointsLabel.Visible = xeno.Max > FixedPoint2.Zero;
 
@@ -150,14 +156,9 @@ public sealed class XenoEvolutionBui : BoundUserInterface
 
         if (xeno.Points >= xeno.Max)
         {
+            // Stories-EvoQueue: tier-limited castes show whenever points suffice (vanilla behaviour); the server gate rejects clicks made without a live offer.
             foreach (var evolutionId in xeno.EvolvesTo)
-            {
-                // Stories-EvoQueue: tier-limited castes appear only once the hive has offered us a slot.
-                if (queueChoices != null && queueChoices.Contains(evolutionId) && !offered)
-                    continue;
-
                 AddEvolution(evolutionId);
-            }
         }
 
         _window.Separator.Visible = _window.EvolutionsContainer.Children.Any(child => child.Visible) &&

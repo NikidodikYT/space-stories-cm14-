@@ -29,4 +29,5 @@ rmc-xeno-ui-evolution-points = Evolution points: { $points } / { $maxPoints }
 rmc-xeno-ui-queue-label = [bold][color=#88aaff]A slot has opened![/color][/bold]
     Evolve into a higher caste now, or decline to pass it to the next in line.
 rmc-xeno-ui-queue-cancel = Decline evolution
+rmc-xeno-ui-queue-timer = Time left: {$seconds} sec
 rmc-ui-xeno-strain-confirm = Confirm

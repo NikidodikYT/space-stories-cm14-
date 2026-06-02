@@ -29,4 +29,5 @@ rmc-xeno-ui-evolution-points = Очки эволюции: { $points } / { $maxPo
 rmc-xeno-ui-queue-label = [bold][color=#88aaff]Освободился слот![/color][/bold]
     Разовьитесь в высшую касту сейчас или откажитесь, чтобы передать слот следующему.
 rmc-xeno-ui-queue-cancel = Отказаться от эволюции
+rmc-xeno-ui-queue-timer = Осталось: {$seconds} сек
 rmc-ui-xeno-strain-confirm = Подтвердить

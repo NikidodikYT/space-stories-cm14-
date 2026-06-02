@@ -10,12 +10,9 @@ public enum XenoEvolutionUIKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class XenoEvolveBuiState(bool lackingOvipositor, List<EntProtoId> queueChoices) : BoundUserInterfaceState // Stories-EvoQueue
+public sealed class XenoEvolveBuiState(bool lackingOvipositor) : BoundUserInterfaceState
 {
     public readonly bool LackingOvipositor = lackingOvipositor;
-
-    // Stories-EvoQueue: tier-limited castes this xeno enters the hive evolution queue for instead of evolving directly.
-    public readonly List<EntProtoId> QueueChoices = queueChoices;
 }
 
 [Serializable, NetSerializable]

@@ -151,7 +151,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         args.Handled = true;
         _ui.OpenUi(xeno.Owner, XenoEvolutionUIKey.Key, xeno);
-        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno)); // Stories-EvoQueue
+        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState()); // Stories-EvoQueue
     }
 
     private void OnXenoEvolveBui(Entity<XenoEvolutionComponent> xeno, ref XenoEvolveBuiMsg args)
@@ -161,6 +161,13 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         if (_net.IsClient)
             return;
+
+        // Stories-EvoQueue: hard-gate tier-limited castes behind a live offer (no offer / expired / tier still locked is rejected with feedback).
+        if (!HasValidQueueOffer(xeno, args.Choice))
+        {
+            _popup.PopupEntity(Loc.GetString("rmc-xeno-queue-no-offer"), xeno, xeno, PopupType.MediumCaution);
+            return;
+        }
 
         if (!CanEvolvePopup(xeno, args.Choice))
         {
@@ -203,17 +210,14 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         if (_doAfter.TryStartDoAfter(doAfter))
         {
-            // Stories-EvoQueue: hold the reserved slot through the do-after so a near-deadline click isn't stolen.
+            // Stories-EvoQueue: consume the offer instantly (closes the slot to further clicks) but keep it reserved through the channel.
             if (_evolutionQueueEnabled &&
                 TryComp(xeno, out XenoEvolutionQueueComponent? offerQueue) &&
                 offerQueue.OfferedUntil != null)
             {
-                var hold = _gameTicker.RoundDuration() + xeno.Comp.EvolutionDelay + TimeSpan.FromSeconds(1);
-                if (hold > offerQueue.OfferedUntil)
-                {
-                    offerQueue.OfferedUntil = hold;
-                    Dirty(xeno.Owner, offerQueue);
-                }
+                offerQueue.EvolvingUntil = _gameTicker.RoundDuration() + xeno.Comp.EvolutionDelay + TimeSpan.FromSeconds(1);
+                offerQueue.OfferedUntil = null;
+                Dirty(xeno.Owner, offerQueue);
             }
 
             _jitter.DoJitter(xeno, xeno.Comp.EvolutionDelay, true, 80, 8, true);
@@ -268,7 +272,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
             return;
 
         DeclineOffer((xeno.Owner, queue), Loc.GetString("rmc-xeno-queue-declined"));
-        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno));
+        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState());
 
         // Hand the freed slot to the next candidate this tick instead of waiting for the periodic update.
         if (_evolutionQueueEnabled)
@@ -288,6 +292,44 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (popup != null)
             _popup.PopupEntity(popup, xeno, xeno, PopupType.MediumCaution);
     }
+
+    // A tier-limited caste may only be evolved into with a live offer for its exact tier and the tier already unlocked.
+    private bool HasValidQueueOffer(Entity<XenoEvolutionComponent> xeno, EntProtoId choice)
+    {
+        if (!_evolutionQueueEnabled)
+            return true;
+
+        if (_xenoHive.GetHive(xeno.Owner) is not { } hive ||
+            !_xenoHive.IsQueuedCaste(hive, choice))
+        {
+            return true;
+        }
+
+        if (!_prototypes.TryIndex(choice, out var proto) ||
+            !proto.TryGetComponent(out XenoComponent? xenoComp, _compFactory))
+        {
+            return false;
+        }
+
+        var roundDuration = _gameTicker.RoundDuration();
+        if (xenoComp.UnlockAt > roundDuration)
+            return false;
+
+        return TryComp(xeno, out XenoEvolutionQueueComponent? queue) &&
+               queue.OfferedTier == xenoComp.Tier &&
+               queue.OfferedUntil is { } until &&
+               until > roundDuration;
+    }
+
+    private void ReleaseEvolvingReservation(EntityUid xeno)
+    {
+        if (!TryComp(xeno, out XenoEvolutionQueueComponent? queue) || queue.EvolvingUntil == null)
+            return;
+
+        queue.EvolvingUntil = null;
+        queue.OfferedTier = 0;
+        Dirty(xeno, queue);
+    }
     // Stories-EvoQueue-End
 
     private void OnXenoDevolveBui(Entity<XenoDevolveComponent> xeno, ref XenoDevolveBuiMsg args)
@@ -298,12 +340,16 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private void OnXenoEvolveDoAfter(Entity<XenoEvolutionComponent> xeno, ref XenoEvolutionDoAfterEvent args)
     {
-        if (_net.IsClient ||
-            args.Handled ||
+        if (_net.IsClient)
+            return;
+
+        if (args.Handled ||
             args.Cancelled ||
             !_mind.TryGetMind(xeno, out _, out _) ||
             !CanEvolvePopup(xeno, args.Choice))
         {
+            // Stories-EvoQueue: the channel broke -> drop the slot reservation so the queue can hand it on.
+            ReleaseEvolvingReservation(xeno.Owner);
             return;
         }
 
@@ -361,9 +407,9 @@ public sealed class XenoEvolutionSystem : EntitySystem
             return;
 
         var xenos = EntityQueryEnumerator<ActorComponent, XenoEvolutionComponent>();
-        while (xenos.MoveNext(out var uid, out _, out var evo))
+        while (xenos.MoveNext(out var uid, out _, out _))
         {
-            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState((uid, evo))); // Stories-EvoQueue
+            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState()); // Stories-EvoQueue
         }
     }
 
@@ -489,9 +535,11 @@ public sealed class XenoEvolutionSystem : EntitySystem
             _xenoHive.GetHive(xeno.Owner) is { } queueHive &&
             _xenoHive.IsQueuedCaste(queueHive, newXeno))
         {
+            var queueNow = _gameTicker.RoundDuration();
             hasQueueOffer = TryComp(xeno, out XenoEvolutionQueueComponent? queue) &&
-                            queue.OfferedUntil != null &&
-                            queue.OfferedTier == newXenoComp.Tier;
+                            queue.OfferedTier == newXenoComp.Tier &&
+                            ((queue.OfferedUntil is { } offeredUntil && offeredUntil > queueNow) ||
+                             (queue.EvolvingUntil is { } evolvingUntil && evolvingUntil > queueNow));
 
             if (!hasQueueOffer)
             {
@@ -850,20 +898,9 @@ public sealed class XenoEvolutionSystem : EntitySystem
     }
 
     // Stories-EvoQueue-Start
-    private XenoEvolveBuiState BuildEvolveState(Entity<XenoEvolutionComponent> xeno)
+    private XenoEvolveBuiState BuildEvolveState()
     {
-        var queueChoices = new List<EntProtoId>();
-
-        if (_evolutionQueueEnabled && _xenoHive.GetHive(xeno.Owner) is { } hive)
-        {
-            foreach (var choice in xeno.Comp.EvolvesTo)
-            {
-                if (_xenoHive.IsQueuedCaste(hive, choice))
-                    queueChoices.Add(choice);
-            }
-        }
-
-        return new XenoEvolveBuiState(LackingOvipositor(), queueChoices);
+        return new XenoEvolveBuiState(LackingOvipositor());
     }
 
     private bool TryGetCasteTier(EntProtoId caste, out int tier)
@@ -905,6 +942,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         {
             if (member.Hive != hive.Owner ||
                 queue.OfferedUntil != null ||
+                queue.EvolvingUntil != null || // Stories-EvoQueue: already channelling into a reserved slot
                 (queue.PassedUntil is { } passed && passed > roundDuration) ||
                 _mobState.IsDead(uid) ||
                 evo.Points < evo.Max ||
@@ -919,10 +957,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return result;
     }
 
-    /// <summary>
-    /// Continuously offers open tier slots to the longest-waiting living candidates (no opt-in, no lottery):
-    /// expired or declined offers sit out and the slot passes down to the next candidate.
-    /// </summary>
+    // Offers open tier slots to the longest-waiting living candidates; expired/declined offers sit out and the slot passes on.
     private void UpdateEvolutionQueue(TimeSpan roundDuration)
     {
         var refresh = new HashSet<EntityUid>();
@@ -932,6 +967,24 @@ public sealed class XenoEvolutionSystem : EntitySystem
         var offers = EntityQueryEnumerator<XenoEvolutionQueueComponent>();
         while (offers.MoveNext(out var uid, out var queue))
         {
+            // An in-progress (clicked) evolution still reserves its slot even though its offer was consumed.
+            if (queue.EvolvingUntil is { } evolving)
+            {
+                if (evolving > roundDuration &&
+                    !_mobState.IsDead(uid) &&
+                    HasComp<ActorComponent>(uid) &&
+                    _xenoHive.GetHive(uid) is { } evolvingHive)
+                {
+                    var evolvingKey = (evolvingHive.Owner, queue.OfferedTier);
+                    pending[evolvingKey] = pending.GetValueOrDefault(evolvingKey) + 1;
+                    continue;
+                }
+
+                // Channel lapsed without landing (disconnect/interrupt): release the reservation.
+                queue.EvolvingUntil = null;
+                Dirty(uid, queue);
+            }
+
             if (queue.OfferedUntil is not { } until)
                 continue;
 
@@ -1004,12 +1057,12 @@ public sealed class XenoEvolutionSystem : EntitySystem
     private void RefreshHiveEvolutionUis(EntityUid hiveId)
     {
         var xenos = EntityQueryEnumerator<ActorComponent, XenoEvolutionComponent, HiveMemberComponent>();
-        while (xenos.MoveNext(out var uid, out _, out var evo, out var member))
+        while (xenos.MoveNext(out var uid, out _, out _, out var member))
         {
             if (member.Hive != hiveId)
                 continue;
 
-            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState((uid, evo)));
+            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState());
         }
     }
     // Stories-EvoQueue-End
