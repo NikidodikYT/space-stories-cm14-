@@ -3,6 +3,7 @@ using Content.Client._RMC14.Xenonids.UI;
 using Content.Client.Message;
 using Content.Shared._RMC14.Xenonids.Evolution;
 using Content.Shared._RMC14.Xenonids.Strain;
+using Content.Shared._Stories.Xenonids.Evolution;
 using Content.Shared.FixedPoint;
 using Content.Shared.GameTicking;
 using JetBrains.Annotations;
@@ -186,7 +187,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
 
         // Stories-EvoQueue
         if (offered)
-            _window.QueueLabel.SetMarkupPermissive(Loc.GetString("rmc-xeno-ui-queue-label"));
+            _window.QueueLabel.SetMarkupPermissive(Loc.GetString("stories-xeno-ui-queue-label"));
 
         _window.QueueLabel.Visible = offered;
         _window.CancelOfferButton.Visible = offered;

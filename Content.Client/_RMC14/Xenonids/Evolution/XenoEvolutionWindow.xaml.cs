@@ -24,7 +24,7 @@ public sealed partial class XenoEvolutionWindow : DefaultWindow
         if (GetOfferRemaining?.Invoke() is { } remaining && remaining > TimeSpan.Zero)
         {
             QueueTimerLabel.Visible = true;
-            QueueTimerLabel.Text = Loc.GetString("rmc-xeno-ui-queue-timer", ("seconds", (int) Math.Ceiling(remaining.TotalSeconds)));
+            QueueTimerLabel.Text = Loc.GetString("stories-xeno-ui-queue-timer", ("seconds", (int) Math.Ceiling(remaining.TotalSeconds)));
         }
         else
         {

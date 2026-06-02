@@ -24,7 +24,7 @@
             <Label Name="QueueTimerLabel" Access="Public" Visible="false"
                            StyleClasses="LabelBold" HorizontalExpand="True" HorizontalAlignment="Center" Margin="0 2" />
             <Button Name="CancelOfferButton" Access="Public" Visible="false"
-                           Text="{Loc rmc-xeno-ui-queue-cancel}" HorizontalAlignment="Center" />
+                           Text="{Loc stories-xeno-ui-queue-cancel}" HorizontalAlignment="Center" />
             <!-- Stories-EvoQueue-End -->
         </BoxContainer>
     </ScrollContainer>

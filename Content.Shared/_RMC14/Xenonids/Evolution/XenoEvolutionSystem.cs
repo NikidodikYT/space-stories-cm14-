@@ -11,6 +11,7 @@ using Content.Shared._RMC14.Xenonids.Invisibility;
 using Content.Shared._RMC14.Xenonids.ManageHive.Boons;
 using Content.Shared._RMC14.Xenonids.Strain;
 using Content.Shared._RMC14.Xenonids.Weeds;
+using Content.Shared._Stories.Xenonids.Evolution;
 using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Climbing.Components;
@@ -176,7 +177,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         // Stories-EvoQueue
         if (!HasValidQueueOffer(xeno, args.Choice))
         {
-            _popup.PopupEntity(Loc.GetString("rmc-xeno-queue-no-offer"), xeno, xeno, PopupType.MediumCaution);
+            _popup.PopupEntity(Loc.GetString("stories-xeno-queue-no-offer"), xeno, xeno, PopupType.MediumCaution);
             return;
         }
 
@@ -282,7 +283,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (!TryComp(xeno, out XenoEvolutionQueueComponent? queue) || queue.OfferedUntil == null)
             return;
 
-        DeclineOffer((xeno.Owner, queue), Loc.GetString("rmc-xeno-queue-declined"));
+        DeclineOffer((xeno.Owner, queue), Loc.GetString("stories-xeno-queue-declined"));
         _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno.Owner));
 
         if (_evolutionQueueEnabled)
@@ -680,7 +681,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
             if (!hasQueueOffer)
             {
                 if (doPopup)
-                    _popup.PopupEntity(Loc.GetString("rmc-xeno-queue-wait"), xeno, xeno, PopupType.MediumCaution);
+                    _popup.PopupEntity(Loc.GetString("stories-xeno-queue-wait"), xeno, xeno, PopupType.MediumCaution);
 
                 return false;
             }
@@ -1212,7 +1213,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
             if (until <= roundDuration)
             {
-                DeclineOffer((uid, queue), Loc.GetString("rmc-xeno-queue-expired"));
+                DeclineOffer((uid, queue), Loc.GetString("stories-xeno-queue-expired"));
                 refresh.Add(offerHive.Owner);
                 continue;
             }
@@ -1247,7 +1248,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
                     candidate.Comp.OfferedTier = tier;
                     Dirty(candidate);
                     _popup.PopupEntity(
-                        Loc.GetString("rmc-xeno-queue-offered", ("seconds", (int)_evolutionQueueGrace.TotalSeconds)),
+                        Loc.GetString("stories-xeno-queue-offered", ("seconds", (int)_evolutionQueueGrace.TotalSeconds)),
                         candidate, candidate, PopupType.Large);
                     refresh.Add(hiveId);
                     need--;

@@ -57,11 +57,6 @@ rmc-xeno-evolution-failed-early-weeds = Улей еще не настолько 
 rmc-xeno-evolution-failed-bad-location = Мы не можем развиваться здесь.
 rmc-xeno-evolution-start-self = Мы начинаем скручиваться и деформироваться.
 rmc-xeno-evolution-start-others = { $xeno } начинает крутиться и извиваться.
-rmc-xeno-queue-offered = Освободился слот! Мы можем развиться в высшую касту в течение { $seconds } сек.
-rmc-xeno-queue-expired = Мы не успели — слот переходит к другому в улье.
-rmc-xeno-queue-declined = Мы пока отказываемся от эволюции.
-rmc-xeno-queue-wait = Улей пока не может содержать эту касту. Нужно дождаться зова улья.
-rmc-xeno-queue-no-offer = Улей пока не может поддерживать касту или до вас не дошла очередь.
 
 # Fortify
 cm-xeno-fortify-cant-headbutt = Вы не можете ударить головой во время укрепления!

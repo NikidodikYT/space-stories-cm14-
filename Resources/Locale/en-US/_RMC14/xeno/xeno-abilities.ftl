@@ -57,11 +57,6 @@ rmc-xeno-evolution-failed-early-weeds = The hive hasn't developed enough yet for
 rmc-xeno-evolution-failed-bad-location = We can't evolve here.
 rmc-xeno-evolution-start-self = We begin to twist and contort.
 rmc-xeno-evolution-start-others = {$xeno} begins to twist and contort.
-rmc-xeno-queue-offered = A slot has opened! We may evolve to a higher caste within {$seconds} seconds.
-rmc-xeno-queue-expired = We were too slow. The slot passes to another in the hive.
-rmc-xeno-queue-declined = We decline the evolution for now.
-rmc-xeno-queue-wait = The hive cannot support this caste yet. We must wait to be called upon.
-rmc-xeno-queue-no-offer = The hive cannot support this caste yet, or it is not our turn in line.
 
 # Fortify
 cm-xeno-fortify-cant-headbutt = We can't headbutt while fortifying!

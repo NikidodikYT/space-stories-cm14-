@@ -1,10 +1,8 @@
 using Robust.Shared.GameStates;
 
-namespace Content.Shared._RMC14.Xenonids.Evolution;
+namespace Content.Shared._Stories.Xenonids.Evolution;
 
-// Stories-EvoQueue
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-[Access(typeof(XenoEvolutionSystem))]
 public sealed partial class XenoEvolutionQueueComponent : Component
 {
     [DataField]

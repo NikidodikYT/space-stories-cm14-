@@ -26,8 +26,4 @@ rmc-xeno-tracker-target-HiveCore = Ядро Улья
 
 rmc-xeno-ui-ovi-needed-label = [bold][color=red]Для получения очков Королева должна находиться в своем\n яйцекладе![/color][/bold]
 rmc-xeno-ui-evolution-points = Очки эволюции: { $points } / { $maxPoints }
-rmc-xeno-ui-queue-label = [bold][color=#88aaff]Освободился слот![/color][/bold]
-    Разовьитесь в высшую касту сейчас или откажитесь, чтобы передать слот следующему.
-rmc-xeno-ui-queue-cancel = Отказаться от эволюции
-rmc-xeno-ui-queue-timer = Осталось: {$seconds} сек
 rmc-ui-xeno-strain-confirm = Подтвердить
