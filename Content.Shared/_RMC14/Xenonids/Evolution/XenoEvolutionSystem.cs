@@ -339,12 +339,12 @@ public sealed class XenoEvolutionSystem : EntitySystem
     private bool BeforeFirstDrop(EntityUid xeno)
     {
         if (_xenoHive.GetHive(xeno) is { } hive)
-            return !hive.Comp.FirstDropOccured;
+            return !hive.Comp.FirstDropOccurred;
 
         var hives = EntityQueryEnumerator<HiveComponent>();
         while (hives.MoveNext(out var other))
         {
-            if (other.FirstDropOccured)
+            if (other.FirstDropOccurred)
                 return false;
         }
 

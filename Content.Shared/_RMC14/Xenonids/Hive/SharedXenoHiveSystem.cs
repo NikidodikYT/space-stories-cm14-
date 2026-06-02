@@ -99,10 +99,10 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         var hives = EntityQueryEnumerator<HiveComponent>();
         while (hives.MoveNext(out var uid, out var hive))
         {
-            if (hive.FirstDropOccured)
+            if (hive.FirstDropOccurred)
                 continue;
 
-            hive.FirstDropOccured = true;
+            hive.FirstDropOccurred = true;
             Dirty(uid, hive);
         }
     }

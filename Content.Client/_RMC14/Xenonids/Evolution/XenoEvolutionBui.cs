@@ -142,8 +142,8 @@ public sealed class XenoEvolutionBui : BoundUserInterface
             AddEvolution(evolutionId);
 
         // Stories-DroneEvolve-Start
-        var firstDropOccured = State is XenoEvolveBuiState { FirstDropOccured: true };
-        var evolvesTo = !firstDropOccured && xeno.EvolvesToBeforeFirstDrop.Count > 0
+        var firstDropOccurred = State is XenoEvolveBuiState { FirstDropOccurred: true };
+        var evolvesTo = !firstDropOccurred && xeno.EvolvesToBeforeFirstDrop.Count > 0
             ? xeno.EvolvesToBeforeFirstDrop
             : xeno.EvolvesTo;
         // Stories-DroneEvolve-End

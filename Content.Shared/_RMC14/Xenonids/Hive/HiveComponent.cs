@@ -78,7 +78,7 @@ public sealed partial class HiveComponent : Component
 
     // Stories-DroneEvolve
     [DataField, AutoNetworkedField]
-    public bool FirstDropOccured;
+    public bool FirstDropOccurred;
 
     [DataField, AutoNetworkedField]
     public Dictionary<string, EntityUid> HiveTunnels = new();

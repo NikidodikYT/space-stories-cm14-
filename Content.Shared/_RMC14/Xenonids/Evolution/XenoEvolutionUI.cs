@@ -10,10 +10,10 @@ public enum XenoEvolutionUIKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class XenoEvolveBuiState(bool lackingOvipositor, bool firstDropOccured) : BoundUserInterfaceState // Stories-DroneEvolve: firstDropOccured
+public sealed class XenoEvolveBuiState(bool lackingOvipositor, bool firstDropOccurred) : BoundUserInterfaceState // Stories-DroneEvolve: firstDropOccurred
 {
     public readonly bool LackingOvipositor = lackingOvipositor;
-    public readonly bool FirstDropOccured = firstDropOccured; // Stories-DroneEvolve
+    public readonly bool FirstDropOccurred = firstDropOccurred; // Stories-DroneEvolve
 }
 
 [Serializable, NetSerializable]
