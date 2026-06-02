@@ -174,7 +174,7 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         GetTierOccupancy(hive, tier, out var total, out var existing, out _);
 
         var open = 0;
-        while (open < 64 && total + open > 0 && (existing + open) / (float)(total + open) < limit)
+        while (open < 64 && total > 0 && (existing + open) / (float)total < limit)
             open++;
 
         return open;
