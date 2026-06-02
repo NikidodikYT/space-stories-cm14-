@@ -3,9 +3,9 @@ using Content.Client._RMC14.Xenonids.UI;
 using Content.Client.Message;
 using Content.Shared._RMC14.Xenonids.Evolution;
 using Content.Shared._RMC14.Xenonids.Strain;
-using Content.Shared._Stories.Xenonids.Evolution;
+using Content.Shared._Stories.Xenonids.Evolution; // Stories-EvoQueue
 using Content.Shared.FixedPoint;
-using Content.Shared.GameTicking;
+using Content.Shared.GameTicking; // Stories-EvoQueue
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
@@ -157,7 +157,6 @@ public sealed class XenoEvolutionBui : BoundUserInterface
 
         if (xeno.Points >= xeno.Max)
         {
-            // Stories-EvoQueue
             foreach (var evolutionId in xeno.EvolvesTo)
                 AddEvolution(evolutionId);
         }
