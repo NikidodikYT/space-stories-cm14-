@@ -1,8 +1,15 @@
 using System.Linq;
 using Content.Shared._RMC14.CCVar;
+using Content.Shared._RMC14.Dialog;
+using Content.Shared._RMC14.Xenonids.Burrow;
+using Content.Shared._RMC14.Xenonids.Crest;
 using Content.Shared._RMC14.Xenonids.Announce;
 using Content.Shared._RMC14.Xenonids.Egg;
+using Content.Shared._RMC14.Xenonids.Fortify;
 using Content.Shared._RMC14.Xenonids.Hive;
+using Content.Shared._RMC14.Xenonids.Invisibility;
+using Content.Shared._RMC14.Xenonids.ManageHive.Boons;
+using Content.Shared._RMC14.Xenonids.Strain;
 using Content.Shared._RMC14.Xenonids.Weeds;
 using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
@@ -44,6 +51,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
     [Dependency] private readonly ClimbSystem _climb = default!;
     [Dependency] private readonly IConfigurationManager _config = default!;
     [Dependency] private readonly IComponentFactory _compFactory = default!;
+    [Dependency] private readonly DialogSystem _dialog = default!;
     [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
     [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
     [Dependency] private readonly SharedGameTicker _gameTicker = default!;
@@ -58,6 +66,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
     [Dependency] private readonly SharedXenoAnnounceSystem _xenoAnnounce = default!;
+    [Dependency] private readonly HiveBoonSystem _xenoBoon = default!;
     [Dependency] private readonly SharedXenoHiveSystem _xenoHive = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
@@ -98,6 +107,8 @@ public sealed class XenoEvolutionSystem : EntitySystem
         SubscribeLocalEvent<XenoEvolutionGranterComponent, NewXenoEvolvedEvent>(OnGranterEvolved);
 
         SubscribeLocalEvent<XenoOvipositorChangedEvent>(OnOvipositorChanged);
+        SubscribeLocalEvent<XenoComponent, XenoTransmuteActionEvent>(OnXenoTransmuteAction);
+        SubscribeLocalEvent<XenoComponent, XenoTransmuteChosenEvent>(OnXenoTransmuteChosen);
 
         Subs.BuiEvents<XenoEvolutionComponent>(XenoEvolutionUIKey.Key,
             subs =>
@@ -139,7 +150,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
     {
         _action.AddAction(ent, ref ent.Comp.Action, ent.Comp.ActionId);
 
-        // Stories-EvoQueue: record tier-entry time for evolution-queue priority.
+        // Stories-EvoQueue
         if (_net.IsServer)
             EnsureComp<XenoEvolutionQueueComponent>(ent).TierEnteredAt = _gameTicker.RoundDuration();
     }
@@ -151,7 +162,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         args.Handled = true;
         _ui.OpenUi(xeno.Owner, XenoEvolutionUIKey.Key, xeno);
-        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState()); // Stories-EvoQueue
+        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno.Owner)); // Stories-EvoQueue
     }
 
     private void OnXenoEvolveBui(Entity<XenoEvolutionComponent> xeno, ref XenoEvolveBuiMsg args)
@@ -162,7 +173,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (_net.IsClient)
             return;
 
-        // Stories-EvoQueue: hard-gate tier-limited castes behind a live offer (no offer / expired / tier still locked is rejected with feedback).
+        // Stories-EvoQueue
         if (!HasValidQueueOffer(xeno, args.Choice))
         {
             _popup.PopupEntity(Loc.GetString("rmc-xeno-queue-no-offer"), xeno, xeno, PopupType.MediumCaution);
@@ -210,7 +221,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         if (_doAfter.TryStartDoAfter(doAfter))
         {
-            // Stories-EvoQueue: consume the offer instantly (closes the slot to further clicks) but keep it reserved through the channel.
+            // Stories-EvoQueue
             if (_evolutionQueueEnabled &&
                 TryComp(xeno, out XenoEvolutionQueueComponent? offerQueue) &&
                 offerQueue.OfferedUntil != null)
@@ -272,9 +283,8 @@ public sealed class XenoEvolutionSystem : EntitySystem
             return;
 
         DeclineOffer((xeno.Owner, queue), Loc.GetString("rmc-xeno-queue-declined"));
-        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState());
+        _ui.SetUiState(xeno.Owner, XenoEvolutionUIKey.Key, BuildEvolveState(xeno.Owner));
 
-        // Hand the freed slot to the next candidate this tick instead of waiting for the periodic update.
         if (_evolutionQueueEnabled)
             UpdateEvolutionQueue(_gameTicker.RoundDuration());
     }
@@ -293,7 +303,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
             _popup.PopupEntity(popup, xeno, xeno, PopupType.MediumCaution);
     }
 
-    // A tier-limited caste may only be evolved into with a live offer for its exact tier and the tier already unlocked.
     private bool HasValidQueueOffer(Entity<XenoEvolutionComponent> xeno, EntProtoId choice)
     {
         if (!_evolutionQueueEnabled)
@@ -348,7 +357,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
             !_mind.TryGetMind(xeno, out _, out _) ||
             !CanEvolvePopup(xeno, args.Choice))
         {
-            // Stories-EvoQueue: the channel broke -> drop the slot reservation so the queue can hand it on.
+            // Stories-EvoQueue
             ReleaseEvolvingReservation(xeno.Owner);
             return;
         }
@@ -409,8 +418,45 @@ public sealed class XenoEvolutionSystem : EntitySystem
         var xenos = EntityQueryEnumerator<ActorComponent, XenoEvolutionComponent>();
         while (xenos.MoveNext(out var uid, out _, out _))
         {
-            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState()); // Stories-EvoQueue
+            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState(uid)); // Stories-EvoQueue
         }
+    }
+
+    private void OnXenoTransmuteAction(Entity<XenoComponent> xeno, ref XenoTransmuteActionEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        args.Handled = true;
+
+        if (!CanTransmutePopup(xeno))
+            return;
+
+        var current = Prototype(xeno.Owner)?.ID;
+        var choices = new List<DialogOption>();
+        foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
+        {
+            if (prototype.ID == current ||
+                !IsBaseTransmuteCaste(prototype) ||
+                !prototype.TryGetComponent(out XenoComponent? xenoComp, _compFactory) ||
+                xenoComp.Tier != xeno.Comp.Tier)
+            {
+                continue;
+            }
+
+            choices.Add(new DialogOption(prototype.Name, new XenoTransmuteChosenEvent(prototype.ID)));
+        }
+
+        choices.Sort((a, b) => string.Compare(a.Text, b.Text, StringComparison.InvariantCultureIgnoreCase));
+        _dialog.OpenOptions(xeno.Owner,
+            Loc.GetString("rmc-xeno-transmute-title"),
+            choices,
+            Loc.GetString("rmc-xeno-transmute-prompt"));
+    }
+
+    private void OnXenoTransmuteChosen(Entity<XenoComponent> xeno, ref XenoTransmuteChosenEvent args)
+    {
+        Transmute(xeno, args.Choice);
     }
 
     private bool ContainedCheckPopup(EntityUid xeno, bool doPopup = true)
@@ -443,7 +489,99 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return false;
     }
 
-    private bool CanEvolvePopup(Entity<XenoEvolutionComponent> xeno, EntProtoId newXeno, bool doPopup = true, bool ignoreSlotLimit = false) // Stories-EvoQueue: ignoreSlotLimit
+    private bool CanTransmutePopup(Entity<XenoComponent> xeno, bool doPopup = true)
+    {
+        if (xeno.Comp.Tier is <= 0 or > 3)
+        {
+            if (doPopup)
+                _popup.PopupEntity(Loc.GetString("rmc-xeno-transmute-failed-tier"), xeno, xeno, PopupType.MediumCaution);
+
+            return false;
+        }
+
+        if (_mobState.IsDead(xeno.Owner))
+            return false;
+
+        if (!ContainedCheckPopup(xeno.Owner, doPopup))
+            return false;
+
+        if (!DamagedCheckPopup(xeno.Owner, false, doPopup))
+            return false;
+
+        if (TryComp(xeno.Owner, out TransformComponent? xform) &&
+            xform.MapID == MapId.Nullspace)
+        {
+            return false;
+        }
+
+        if (IsInTransmuteBlockingStance(xeno.Owner))
+        {
+            if (doPopup)
+                _popup.PopupEntity(Loc.GetString("rmc-xeno-transmute-failed-stance"), xeno, xeno, PopupType.MediumCaution);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsInTransmuteBlockingStance(EntityUid xeno)
+    {
+        return TryComp(xeno, out XenoFortifyComponent? fortify) && fortify.Fortified ||
+               TryComp(xeno, out XenoCrestComponent? crest) && crest.Lowered ||
+               TryComp(xeno, out XenoBurrowComponent? burrow) && (burrow.Active || burrow.Tunneling) ||
+               HasComp<XenoActiveInvisibleComponent>(xeno);
+    }
+
+    public EntityUid? Transmute(Entity<XenoComponent> xeno, EntProtoId to)
+    {
+        if (_net.IsClient ||
+            !CanTransmutePopup(xeno) ||
+            !TryComp(xeno.Owner, out XenoEvolutionComponent? evolution))
+        {
+            return null;
+        }
+
+        if (!_prototypes.TryIndex(to, out var prototype) ||
+            !IsBaseTransmuteCaste(prototype) ||
+            !prototype.TryGetComponent(out XenoComponent? newXenoComp, _compFactory) ||
+            newXenoComp.Tier != xeno.Comp.Tier ||
+            prototype.ID == Prototype(xeno.Owner)?.ID)
+        {
+            return null;
+        }
+
+        var newXeno = TransferXeno(xeno.Owner, to);
+        var ev = new NewXenoEvolvedEvent((xeno.Owner, evolution), newXeno, false);
+        RaiseLocalEvent(newXeno, ref ev, true);
+
+        _adminLog.Add(LogType.RMCEvolve, $"Xenonid {ToPrettyString(xeno)} transmuted into {ToPrettyString(newXeno)}");
+
+        Del(xeno.Owner);
+
+        _popup.PopupEntity(Loc.GetString("rmc-xeno-transmute-end"), newXeno, newXeno);
+
+        var afterEv = new AfterNewXenoEvolvedEvent();
+        RaiseLocalEvent(newXeno, ref afterEv);
+
+        return newXeno;
+    }
+
+    private bool IsBaseTransmuteCaste(EntityPrototype prototype)
+    {
+        if (prototype.Abstract ||
+            !prototype.TryGetComponent(out XenoBaseCasteComponent? baseCaste, _compFactory) ||
+            !baseCaste.Enabled ||
+            prototype.HasComponent<XenoStrainComponent>(_compFactory) ||
+            prototype.HasComponent<XenoHiddenComponent>(_compFactory))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool CanEvolvePopup(Entity<XenoEvolutionComponent> xeno, EntProtoId newXeno, bool doPopup = true, bool ignoreSlotLimit = false) // Stories-EvoQueue
     {
         if (!xeno.Comp.EvolvesTo.Contains(newXeno) && !xeno.Comp.EvolvesToWithoutPoints.Contains(newXeno))
             return false;
@@ -465,7 +603,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
 
         // TODO RMC14 only allow evolving towards Queen if none is alive
-        if (!xeno.Comp.CanEvolveWithoutGranter && !HasLiving<XenoEvolutionGranterComponent>(1))
+        if (!xeno.Comp.CanEvolveWithoutGranter && !HasLivingGranterForEvolution(xeno.Owner))
         {
             if (doPopup)
             {
@@ -526,11 +664,9 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
 
         // Stories-EvoQueue-Start
-        // Tier-limited castes are only reachable through the hive's evolution queue. An active offer
-        // for this exact caste reserves a slot and lets the evolution through, skipping the cap below.
         var hasQueueOffer = false;
         if (_evolutionQueueEnabled &&
-            !ignoreSlotLimit && // candidate validation passes this gate as if a slot were free
+            !ignoreSlotLimit &&
             newXenoComp != null &&
             _xenoHive.GetHive(xeno.Owner) is { } queueHive &&
             _xenoHive.IsQueuedCaste(queueHive, newXeno))
@@ -553,8 +689,8 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         if (newXenoComp != null &&
             !newXenoComp.BypassTierCount &&
-            !hasQueueOffer && // Stories-EvoQueue: a queued offer reserves the slot, skip the live cap
-            !ignoreSlotLimit && // Stories-EvoQueue: candidate validation assumes a free slot
+            !hasQueueOffer && // Stories-EvoQueue
+            !ignoreSlotLimit && // Stories-EvoQueue
             _xenoHive.GetHive(xeno.Owner) is { } oldHive &&
             _xenoHive.TryGetTierLimit((oldHive, oldHive.Comp), newXenoComp.Tier, out var limit))
         {
@@ -660,6 +796,36 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return false;
     }
 
+    private bool HasLivingInHive<T>(EntityUid hiveMember, int count, Predicate<Entity<T>>? predicate = null) where T : IComponent
+    {
+        if (count <= 0)
+            return true;
+
+        var total = 0;
+        var query = EntityQueryEnumerator<T>();
+        while (query.MoveNext(out var uid, out var comp))
+        {
+            if (!_xenoHive.FromSameHive(uid, hiveMember))
+                continue;
+
+            if (_mobStateQuery.TryComp(uid, out var mobState) &&
+                _mobState.IsDead(uid, mobState))
+            {
+                continue;
+            }
+
+            if (predicate != null && !predicate((uid, comp)))
+                continue;
+
+            total++;
+
+            if (total >= count)
+                return true;
+        }
+
+        return false;
+    }
+
     public FixedPoint2 AddPointsCapped(Entity<XenoEvolutionComponent?> evolution, FixedPoint2 points)
     {
         if (!Resolve(evolution, ref evolution.Comp, false))
@@ -688,9 +854,39 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return HasLiving<XenoEvolutionGranterComponent>(1, e => HasComp<XenoAttachedOvipositorComponent>(e));
     }
 
+    public bool HasOvipositor(EntityUid hiveMember)
+    {
+        return HasLivingInHive<XenoEvolutionGranterComponent>(hiveMember,
+            1,
+            e => HasComp<XenoAttachedOvipositorComponent>(e));
+    }
+
     public bool LackingOvipositor()
     {
         return NeedsOvipositor() && !HasOvipositor();
+    }
+
+    public bool LackingOvipositor(EntityUid hiveMember)
+    {
+        return NeedsOvipositor() &&
+               !HasOvipositor(hiveMember) &&
+               !HasEvolutionBypass(hiveMember);
+    }
+
+    private bool HasLivingGranterForEvolution(EntityUid hiveMember)
+    {
+        if (HasEvolutionBypass(hiveMember))
+            return true;
+
+        return NeedsOvipositor()
+            ? HasOvipositor(hiveMember)
+            : HasLivingInHive<XenoEvolutionGranterComponent>(hiveMember, 1);
+    }
+
+    private bool HasEvolutionBypass(EntityUid hiveMember)
+    {
+        return _xenoBoon.TryGetActiveBoon<HiveBoonEvolutionComponent>(hiveMember, out var boon) &&
+               boon.Comp.BypassOvipositor;
     }
 
     private EntityUid TransferXeno(EntityUid xeno, EntProtoId proto)
@@ -822,9 +1018,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
         // Stories-EvoQueue-End
 
         var needsOvipositor = NeedsOvipositor();
-        var hasGranter = needsOvipositor
-            ? HasOvipositor()
-            : HasLiving<XenoEvolutionGranterComponent>(1);
         if (needsOvipositor)
         {
             var granters = EntityQueryEnumerator<XenoEvolutionGranterComponent>();
@@ -836,7 +1029,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
                 granter.GotOvipositorPopup = true;
                 Dirty(uid, granter);
 
-                _popup.PopupEntity("It is time to settle down and let your children grow.",
+                _popup.PopupEntity(Loc.GetString("rmc-xeno-evolution-ovipositor-needed"),
                     uid,
                     uid,
                     PopupType.LargeCaution
@@ -883,12 +1076,22 @@ public sealed class XenoEvolutionSystem : EntitySystem
             }
             var points = (_earlyEvoBoostBefore > _gameTicker.RoundDuration()) ? comp.EarlyPointsPerSecond : comp.PointsPerSecond;
             var gain = evoOverride ?? points + evoBonus;
+            var hasEvolutionBoon = _xenoBoon.TryGetActiveBoon<HiveBoonEvolutionComponent>(uid, out var evolutionBoon);
+
             if (comp.Points < comp.Max || roundDuration < _evolutionAccumulatePointsBefore)
             {
-                if (needsOvipositor && comp.RequiresGranter && !hasGranter)
+                var hasGranter = needsOvipositor
+                    ? HasOvipositor(uid)
+                    : HasLivingInHive<XenoEvolutionGranterComponent>(uid, 1);
+
+                var bypassesGranter = hasEvolutionBoon && evolutionBoon.Comp.BypassOvipositor;
+                if (comp.RequiresGranter && !hasGranter && !bypassesGranter)
                     continue;
 
-                SetPoints((uid, comp), comp.Points + gain);
+                var gainToApply = hasEvolutionBoon
+                    ? GetFrozenEvolutionBoonGain((uid, comp), evolutionBoon) * evolutionBoon.Comp.Multiplier
+                    : gain;
+                SetPoints((uid, comp), comp.Points + gainToApply);
             }
             else if (comp.Points > comp.Max)
             {
@@ -897,10 +1100,21 @@ public sealed class XenoEvolutionSystem : EntitySystem
         }
     }
 
-    // Stories-EvoQueue-Start
-    private XenoEvolveBuiState BuildEvolveState()
+    private FixedPoint2 GetFrozenEvolutionBoonGain(Entity<XenoEvolutionComponent> xeno, Entity<HiveBoonEvolutionComponent> boon)
     {
-        return new XenoEvolveBuiState(LackingOvipositor());
+        var points = boon.Comp.FrozenEarlyEvolutionBoost
+            ? xeno.Comp.EarlyPointsPerSecond
+            : xeno.Comp.PointsPerSecond;
+
+        return boon.Comp.HasFrozenOverride
+            ? boon.Comp.FrozenOverride
+            : points + boon.Comp.FrozenBonus;
+    }
+
+    // Stories-EvoQueue-Start
+    private XenoEvolveBuiState BuildEvolveState(EntityUid xeno)
+    {
+        return new XenoEvolveBuiState(LackingOvipositor(xeno));
     }
 
     private bool TryGetCasteTier(EntProtoId caste, out int tier)
@@ -916,7 +1130,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return true;
     }
 
-    // Can this xeno take a queued slot of the given tier right now (only the slot is assumed free).
     private bool CanTakeQueuedSlot(Entity<XenoEvolutionComponent> xeno, Entity<HiveComponent> hive, int tier)
     {
         foreach (var caste in xeno.Comp.EvolvesTo)
@@ -932,7 +1145,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return false;
     }
 
-    // List 1: living, player-attached, ready xenos eligible for a tier slot (excludes List 2 offers and decline sit-outs).
     private List<Entity<XenoEvolutionQueueComponent>> GetQueueCandidates(Entity<HiveComponent> hive, int tier, TimeSpan roundDuration)
     {
         var result = new List<Entity<XenoEvolutionQueueComponent>>();
@@ -942,7 +1154,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         {
             if (member.Hive != hive.Owner ||
                 queue.OfferedUntil != null ||
-                queue.EvolvingUntil != null || // Stories-EvoQueue: already channelling into a reserved slot
+                queue.EvolvingUntil != null || // Stories-EvoQueue
                 (queue.PassedUntil is { } passed && passed > roundDuration) ||
                 _mobState.IsDead(uid) ||
                 evo.Points < evo.Max ||
@@ -957,17 +1169,14 @@ public sealed class XenoEvolutionSystem : EntitySystem
         return result;
     }
 
-    // Offers open tier slots to the longest-waiting living candidates; expired/declined offers sit out and the slot passes on.
     private void UpdateEvolutionQueue(TimeSpan roundDuration)
     {
         var refresh = new HashSet<EntityUid>();
 
-        // List 2 bookkeeping: drop invalid/expired offers, count those still reserving a slot per (hive, tier).
         var pending = new Dictionary<(EntityUid Hive, int Tier), int>();
         var offers = EntityQueryEnumerator<XenoEvolutionQueueComponent>();
         while (offers.MoveNext(out var uid, out var queue))
         {
-            // An in-progress (clicked) evolution still reserves its slot even though its offer was consumed.
             if (queue.EvolvingUntil is { } evolving)
             {
                 if (evolving > roundDuration &&
@@ -980,7 +1189,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
                     continue;
                 }
 
-                // Channel lapsed without landing (disconnect/interrupt): release the reservation.
                 queue.EvolvingUntil = null;
                 Dirty(uid, queue);
             }
@@ -995,7 +1203,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
                 continue;
             }
 
-            // Died or lost its player while holding a slot: decline so it passes on and the abandoner loses its place.
             if (_mobState.IsDead(uid) || !HasComp<ActorComponent>(uid))
             {
                 DeclineOffer((uid, queue), null);
@@ -1014,7 +1221,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
             pending[key] = pending.GetValueOrDefault(key) + 1;
         }
 
-        // List 1: fill remaining open slots from the longest-waiting candidates.
         var hives = EntityQueryEnumerator<HiveComponent>();
         while (hives.MoveNext(out var hiveId, out var hiveComp))
         {
@@ -1029,7 +1235,6 @@ public sealed class XenoEvolutionSystem : EntitySystem
                 if (candidates.Count == 0)
                     continue;
 
-                // Oldest in tier first; shuffle + stable sort gives equal-time xenos a fair random order.
                 _random.Shuffle(candidates);
                 var ordered = candidates.OrderBy(c => c.Comp.TierEnteredAt);
 
@@ -1062,7 +1267,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
             if (member.Hive != hiveId)
                 continue;
 
-            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState());
+            _ui.SetUiState(uid, XenoEvolutionUIKey.Key, BuildEvolveState(uid));
         }
     }
     // Stories-EvoQueue-End

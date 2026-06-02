@@ -151,7 +151,6 @@ public abstract class SharedXenoHiveSystem : EntitySystem
     }
 
     // Stories-EvoQueue-Start
-    // True if the caste is reached through the evolution queue: tier-limited with no guaranteed free slot.
     public bool IsQueuedCaste(Entity<HiveComponent> hive, EntProtoId caste)
     {
         if (!_prototypes.TryIndex(caste, out var proto) ||
@@ -167,7 +166,6 @@ public abstract class SharedXenoHiveSystem : EntitySystem
                !hive.Comp.FreeSlots.ContainsKey(caste);
     }
 
-    // How many more xenos at or above this tier the hive can support right now (mirrors the cap check; sizes the queue).
     public int GetOpenTierSlots(Entity<HiveComponent> hive, int tier)
     {
         if (!TryGetTierLimit((hive.Owner, hive.Comp), tier, out var limit))
@@ -175,8 +173,6 @@ public abstract class SharedXenoHiveSystem : EntitySystem
 
         GetTierOccupancy(hive, tier, out var total, out var existing, out _);
 
-        // Largest count we can hand out while each new xeno's pre-add ratio stays under the cap,
-        // matching CanEvolvePopup which allows evolving while existing/total < limit.
         var open = 0;
         while (open < 64 && total + open > 0 && (existing + open) / (float)(total + open) < limit)
             open++;
@@ -184,7 +180,6 @@ public abstract class SharedXenoHiveSystem : EntitySystem
         return open;
     }
 
-    // Tier-slot occupancy (mirrors the cap check): total hive size, existing count at/above tier minus free slots, and leftover per-caste free slots.
     public void GetTierOccupancy(
         Entity<HiveComponent> hive,
         int tier,

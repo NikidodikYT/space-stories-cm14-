@@ -8,7 +8,7 @@ namespace Content.Client._RMC14.Xenonids.Evolution;
 [GenerateTypedNameReferences]
 public sealed partial class XenoEvolutionWindow : DefaultWindow
 {
-    // Stories-EvoQueue: returns the time left on the active offer, or null when there is none.
+    // Stories-EvoQueue
     public Func<TimeSpan?>? GetOfferRemaining;
 
     public XenoEvolutionWindow()
@@ -16,7 +16,7 @@ public sealed partial class XenoEvolutionWindow : DefaultWindow
         RobustXamlLoader.Load(this);
     }
 
-    // Stories-EvoQueue: live countdown for the queue offer.
+    // Stories-EvoQueue
     protected override void FrameUpdate(FrameEventArgs args)
     {
         base.FrameUpdate(args);

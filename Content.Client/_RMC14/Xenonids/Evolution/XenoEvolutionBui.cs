@@ -38,7 +38,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         _window.OvipositorNeededLabel.Visible = false;
         _window.CancelOfferButton.OnPressed += _ => SendPredictedMessage(new XenoEvolutionQueueCancelBuiMsg()); // Stories-EvoQueue
 
-        // Stories-EvoQueue: feed the countdown from the server-set deadline (OfferedUntil) minus the current round time.
+        // Stories-EvoQueue
         var gameTicker = EntMan.System<SharedGameTicker>();
         _window.GetOfferRemaining = () =>
             EntMan.TryGetComponent(Owner, out XenoEvolutionQueueComponent? queue) && queue.OfferedUntil is { } until
@@ -142,7 +142,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         if (!EntMan.TryGetComponent(Owner, out XenoEvolutionComponent? xeno))
             return;
 
-        // Stories-EvoQueue: an active offer only drives the banner/timer/decline button below; it no longer gates button visibility.
+        // Stories-EvoQueue
         var state = State as XenoEvolveBuiState;
         var offered = EntMan.TryGetComponent(Owner, out XenoEvolutionQueueComponent? queue) && queue.OfferedUntil != null;
 
@@ -156,7 +156,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
 
         if (xeno.Points >= xeno.Max)
         {
-            // Stories-EvoQueue: tier-limited castes show whenever points suffice (vanilla behaviour); the server gate rejects clicks made without a live offer.
+            // Stories-EvoQueue
             foreach (var evolutionId in xeno.EvolvesTo)
                 AddEvolution(evolutionId);
         }
@@ -164,7 +164,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
         _window.Separator.Visible = _window.EvolutionsContainer.Children.Any(child => child.Visible) &&
                                     _window.StrainsContainer.Children.Any(child => child.Visible);
 
-        var lackingOvipositor = state is { LackingOvipositor: true }; // Stories-EvoQueue (state extracted above)
+        var lackingOvipositor = state is { LackingOvipositor: true }; // Stories-EvoQueue
         var points = xeno.Points;
 
         _window.PointsLabel.Text = Loc.GetString("rmc-xeno-ui-evolution-points",
@@ -184,7 +184,7 @@ public sealed class XenoEvolutionBui : BoundUserInterface
             _window.OvipositorNeededLabel.Visible = false;
         }
 
-        // Stories-EvoQueue: when a slot is offered, show the prompt and a decline button.
+        // Stories-EvoQueue
         if (offered)
             _window.QueueLabel.SetMarkupPermissive(Loc.GetString("rmc-xeno-ui-queue-label"));
 
