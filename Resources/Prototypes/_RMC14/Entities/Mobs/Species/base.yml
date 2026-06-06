@@ -242,7 +242,12 @@
       Dead:
       - CMActionGhost
   - type: Destructible
-    thresholds: [ ]
+    thresholds: #Stories-start
+    - trigger:
+        !type:DamageTrigger
+        damage: 500
+      behaviors:
+      - !type:GibBehavior { } #Stories-end
   - type: NpcFactionMember
     factions:
     - UNMC
