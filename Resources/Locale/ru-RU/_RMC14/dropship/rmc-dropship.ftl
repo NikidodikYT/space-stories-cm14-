@@ -156,6 +156,7 @@ rmc-dropship-equipment-operational = В СТРОЮ
 rmc-dropship-equipment-damaged = ПОВРЕЖДЕНО
 rmc-dropship-equipment-destroyed = УНИЧТОЖЕНО
 
+rmc-dropship-launch-bay-fire-not-flying = Вы можете запускать оборудование только во время полёта.
 rmc-dropship-launch-bay-screen-text = Внутренняя пусковая установка сторожевого корабля LAG-14
 rmc-dropship-launch-bay-screen-text-loaded = Внутренняя пусковая установка сторожевого корабля LAG-14
 

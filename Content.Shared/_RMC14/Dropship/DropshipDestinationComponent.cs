@@ -1,11 +1,10 @@
-﻿using Content.Shared._RMC14.Spawning;
-using Robust.Shared.GameStates;
+﻿using Robust.Shared.GameStates;
 using Robust.Shared.Utility;
 
 namespace Content.Shared._RMC14.Dropship;
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-[Access(typeof(SharedDropshipSystem), typeof(SharedGridSpawnerSystem))]
+[Access(typeof(SharedDropshipSystem))]
 public sealed partial class DropshipDestinationComponent : Component
 {
     [DataField]

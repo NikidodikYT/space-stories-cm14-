@@ -41,7 +41,7 @@
   parent: WallXenoResinThick
   id: WallXenoResinImpenetrable
   name: impenetrable resin wall
-  suffix: Invincible, 30 minutes
+  suffix: Invincible, 25 minutes
   components:
   - type: InvincibleHiveStructure
     replace: WallXenoResinThick
@@ -50,7 +50,7 @@
   parent: DoorXenoResinThick
   id: DoorXenoResinImpenetrable
   name: impenetrable resin door
-  suffix: Invincible, 30 minutes
+  suffix: Invincible, 25 minutes
   components:
   - type: InvincibleHiveStructure
     replace: DoorXenoResinThick

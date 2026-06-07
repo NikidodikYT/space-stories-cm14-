@@ -184,10 +184,10 @@ public sealed class XenoPylonSystem : SharedXenoPylonSystem
                 if (other.AttachedEntity is not { } otherEnt)
                     continue;
 
-                _popup.PopupEntity(Loc.GetString("rmc-xeno-larva-recovered", ("larva", Identity.Name(tripper, EntityManager, otherEnt))),
-                core, othersFilter, true, PopupType.Medium);
-            }
-            _hive.IncreaseBurrowedLarva(1);
+                    _popup.PopupEntity(Loc.GetString("rmc-xeno-larva-recovered", ("larva", Identity.Name(tripper, EntityManager, otherEnt))),
+                    core, othersFilter, true, PopupType.Medium);
+                }
+            _hive.ChangeBurrowedLarva(1);
             QueueDel(tripper);
         }
     }

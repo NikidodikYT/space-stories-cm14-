@@ -125,3 +125,6 @@
   - type: RMCActionOrder
     id: CMXenoLesserDrone
   - type: ExcludedFromKingVote
+  - type: RemoveComponents
+    components:
+    - type: CanBeLarvaQueued

@@ -700,6 +700,30 @@
   - CivilianOnlyRMC
 
 - type: roleLoadout
+  id: JobCMCombatCorrespondent
+  points: 7
+  groups:
+  - MarineBackpack
+  - HeadwearRMC
+  - EyewearRMC
+  - MasksRMC
+  - HelmetGarbsRMC
+  - AccessoriesRMC
+  - WatchesBasicRMC
+  - PaperworkRMC
+  - RecreationalRMC
+  - WeaponsRMC
+  - CannedDrinksRMC
+  - FlasksRMC
+  - FoodSweetsRMC
+  - FoodPackagedRMC
+  - FoodHealthyRMC
+  - RMCLoadoutGroupPins
+  - SmokablesRMC
+  - MiscellaneousRMC
+  - MeleeWeaponsRMC
+
+- type: roleLoadout
   id: JobCMLiaison
   points: 7
   groups:
@@ -719,6 +743,29 @@
   - FoodSweetsRMC
   - FoodPackagedRMC
   - FoodHealthyRMC
+  - SmokablesRMC
+  - MiscellaneousRMC
+  - CivilianOnlyRMC
+
+- type: roleLoadout
+  id: JobRMCWeYaExecutiveBodyguard
+  points: 7
+  groups:
+  - MarineLeatherBackpack
+  - HeadwearRMC
+  - EyewearRMC
+  - MasksRMC
+  - HelmetGarbsRMC
+  - AccessoriesRMC
+  - PaperworkRMC
+  - RecreationalRMC
+  - WeaponsRMC
+  - CannedDrinksRMC
+  - FlasksRMC
+  - FoodSweetsRMC
+  - FoodPackagedRMC
+  - FoodHealthyRMC
+  - RMCLoadoutGroupPins
   - SmokablesRMC
   - MiscellaneousRMC
   - CivilianOnlyRMC

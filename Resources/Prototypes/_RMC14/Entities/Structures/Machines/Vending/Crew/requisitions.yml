@@ -256,8 +256,8 @@
         amount: 1
       - id: RMCSentryLaptop
         amount: 4
-      #- id: Spare PDT/L Battle Buddy Kit
-      #  amount: 4
+      - id: CMSparePDTLBattleBuddyKit
+        amount: 4
     - name: Освещение
       entries:
       - id: RMCFlashlight # Combat Flashlight
@@ -345,6 +345,9 @@
         box: RMCBatonSlugHIRR
         boxAmount: 3
         boxSlots: 3
+  - type: GuideHelp
+    guides:
+    - RMCRequisitions
 
 #AMMUNITION VENDOR
 - type: entity
@@ -398,14 +401,14 @@
         amount: 2
     - name: Увеличенные магазины
       entries:
-      - id: RMCMagazinePistolM13Ext
-        amount: 10
       - id: CMMagazineSMGM63Ext
         amount: 10
       - id: CMMagazineRifleM4SPRExt
         amount: 10
       - id: CMMagazineRifleM54CExt
         amount: 8
+      - id: RMCMagazinePistolM13Ext
+        amount: 5
     - name: Специальные боеприпасы
       entries:
       - id: RMCPowerCellSmartgun
@@ -585,6 +588,9 @@
         name: Коробка бронебойных винтовочных патронов (10x24мм ББ) (M41A)
         box: CMMagazineRifleM54CAP
         boxSlots: 15 # 600 / 40
+  - type: GuideHelp
+    guides:
+    - RMCRequisitions
 
 #ATTACHMENTS VENDOR
 - type: entity
@@ -669,9 +675,9 @@
     - name: Приклад
       entries:
       - id: RMCAttachmentM13StockSolid
-        amount: 5
+        amount: 3
       - id: RMCAttachmentM13StockCollapsible
-        amount: 5
+        amount: 2
       - id: RMCAttachmentM42A2CollapsibleStock
         amount: 5
       - id: RMCAttachmentM63ArmBrace
@@ -686,6 +692,9 @@
         amount: 5
       - id: RMCAttachmentM44MagnumSharpshooterStock
         amount: 5
+  - type: GuideHelp
+    guides:
+    - RMCRequisitions
 
 #UNIFORM VENDOR
 - type: entity
@@ -845,3 +854,6 @@
         amount: 10
       - id: RMCGuidebookSOP
         amount: 10
+  - type: GuideHelp
+    guides:
+    - RMCRequisitions

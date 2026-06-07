@@ -81,7 +81,7 @@ public sealed class GunPredictionSystem : SharedGunPredictionSystem
             return;
         // Stories-Vehicle-End
 
-        ShootRequested(ev.Gun, ev.Coordinates, ev.Target, ev.Shot, args.SenderSession);
+        ShootRequested(ev.Gun, ev.Coordinates, ev.Target, null, args.SenderSession, ev.Continuous);
     }
 
     private void OnClientProjectileUpdateIsPredicted(Entity<PredictedProjectileClientComponent> ent, ref UpdateIsPredictedEvent args)

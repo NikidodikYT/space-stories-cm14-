@@ -149,6 +149,7 @@
   - type: RemoveComponents
     components:
     - type: ComplexInteraction
+    - type: CanBeLarvaQueued
 
 - type: entity
   parent: CMXenoParasiteBase

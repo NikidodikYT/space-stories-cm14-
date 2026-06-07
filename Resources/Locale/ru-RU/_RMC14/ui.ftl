@@ -38,6 +38,7 @@ rmc-ui-audio-emotes-feroxi = Проигрывать эмоции для феро
 rmc-ui-audio-emotes-skrell = Проигрывать эмоции для скреллов
 
 cm-ui-roadmap = Дорожная карта
+rmc-ui-roadmap-orbital-bombardment = Орбитальная бомбардировка
 
 rmc-ui-link-discord-account = Ссылка на аккаунт Discord
 rmc-ui-link-discord-account-text = Нажмите на кнопку ниже, чтобы скопировать код.
