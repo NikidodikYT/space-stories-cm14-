@@ -1,3 +1,4 @@
+using Content.Shared._RMC14.Evacuation;
 using Content.Shared.Doors.Components;
 using Content.Shared.Shuttles.Systems;
 using Robust.Shared.Audio;
@@ -8,7 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 namespace Content.Shared._RMC14.Dropship;
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
-[Access(typeof(SharedDropshipSystem))]
+[Access(typeof(SharedDropshipSystem), typeof(SharedEvacuationSystem))]
 public sealed partial class DropshipComponent : Component
 {
     [DataField, AutoNetworkedField]

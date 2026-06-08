@@ -182,6 +182,7 @@ public sealed partial class CMDistressSignalRuleSystem : GameRuleSystem<CMDistre
     private float _queenBoostRemoteRange;
 
     private bool _spawnedDropships;
+    private TimeSpan _dropshipPreflight;
 
     private readonly List<MapId> _almayerMaps = [];
     private readonly List<EntityUid> _marineList = [];
@@ -280,6 +281,7 @@ public sealed partial class CMDistressSignalRuleSystem : GameRuleSystem<CMDistre
         Subs.CVar(_config, RMCCVars.RMCPlanetMapVoteExcludeLast, v => _mapVoteExcludeLast = v, true);
         Subs.CVar(_config, RMCCVars.RMCUseCarryoverVoting, v => _useCarryoverVoting = v, true);
         Subs.CVar(_config, RMCCVars.RMCLandingZoneMiasmaEnabled, v => _landingZoneMiasmaEnabled = v, true);
+        Subs.CVar(_config, RMCCVars.RMCDropshipInitialDelayMinutes, v => _dropshipPreflight = TimeSpan.FromMinutes(v), true);
         Subs.CVar(_config, RMCCVars.RMCSunsetDuration, v => _sunsetDuration = TimeSpan.FromSeconds(v), true);
         Subs.CVar(_config, RMCCVars.RMCSunriseDuration, v => _sunriseDuration = TimeSpan.FromSeconds(v), true);
         Subs.CVar(_config, RMCCVars.RMCForceEndHijackTimeMinutes, v => _forceEndHijackTime = TimeSpan.FromMinutes(v), true);
@@ -355,6 +357,18 @@ public sealed partial class CMDistressSignalRuleSystem : GameRuleSystem<CMDistre
                 SelectedPlanetMap.Value.Comp.Announcement is { } announcement)
             {
                 _marineAnnounce.AnnounceARESStaging(default, announcement, announcement: "rmc-announcement-ares-map");
+            }
+        }
+
+        if (!component.AresPreflightDone && announcementTime >= _dropshipPreflight)
+        {
+            component.AresPreflightDone = true;
+
+            if (_aresCore.TryGetARES(component.MarineFaction, out var ares))
+            {
+                _marineAnnounce.AnnounceRadio(ares.Value,
+                    Loc.GetString("rmc-distress-signal-preflight-complete"),
+                    component.AllClearChannel);
             }
         }
 
