@@ -47,7 +47,6 @@ public abstract partial class SharedCrashLandSystem : EntitySystem
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly TurfSystem _turf = default!;
-    [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
 
     protected static readonly ProtoId<DamageTypePrototype> CrashLandDamageType = "Blunt";
     protected const int CrashLandDamageAmount = 10000;

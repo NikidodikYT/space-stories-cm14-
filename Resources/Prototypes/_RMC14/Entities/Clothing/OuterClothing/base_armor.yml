@@ -31,6 +31,8 @@
       params:
         volume: -4
   - type: Clothing
+    equipDelay: 2
+    unequipDelay: 2
     equipSound:
       path: /Audio/_RMC14/Machines/armor_equip.ogg
   - type: MoveOrderArmor
