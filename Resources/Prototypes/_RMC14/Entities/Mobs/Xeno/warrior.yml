@@ -10,11 +10,10 @@
   name: Warrior
   description: A beefy alien with an armored carapace.
   components:
+  - type: XenoBaseCaste
   - type: GuideHelp
     guides:
     - RMCGuideRoleWarrior
-  - type: GhostRole
-    name: cm-job-name-xeno-warrior
   - type: Sprite
     sprite: _Stories/Mobs/Xenos/Warrior/warrior.rsi
   - type: MobState
@@ -64,7 +63,7 @@
     - RMCXenoCrusher
     - CMXenoPraetorian
     strains:
-    - CMXenoWarriorBoxer
+    - STXenoWarriorBoxer # Stories-XenoBoxer
   - type: CMArmor
     xenoArmor: 20
     explosionArmor: 40

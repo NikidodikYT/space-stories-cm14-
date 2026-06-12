@@ -14,8 +14,6 @@
   - type: GuideHelp
     guides:
     - RMCGuideRoleCrusher
-  - type: GhostRole
-    name: cm-job-name-xeno-crusher
   - type: Sprite
     sprite: _Stories/Mobs/Xenos/Crusher/crusher.rsi
   - type: MobState
@@ -117,6 +115,7 @@
   parent: CMXenoCrusherBase
   id: RMCXenoCrusher
   components:
+  - type: XenoBaseCaste
   - type: Xeno
     actionIds:
     - ActionXenoRest

@@ -35,6 +35,9 @@
   id: CMOintment
 
 - type: Tag
+  id: CMSplint
+
+- type: Tag
   id: CMFirstAidKit
 
 - type: Tag
@@ -95,6 +98,9 @@
   id: RMCGlass
 
 - type: Tag
+  id: RMCFoldingBarricade
+
+- type: Tag
   id: RMCHelmet
 
 - type: Tag
@@ -140,6 +146,11 @@
   id: Bacon
 
 - type: Tag
+
+  id: Watch
+
+- type: Tag
+
   id: RMCPinpointer
 
 - type: Tag
@@ -180,3 +191,6 @@
 
 - type: Tag
   id: RMCSentryLaptop
+
+- type: Tag
+  id: RMCDataDisk
