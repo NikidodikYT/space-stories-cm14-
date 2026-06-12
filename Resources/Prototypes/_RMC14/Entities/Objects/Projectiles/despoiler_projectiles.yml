@@ -14,8 +14,9 @@
     damage:
       types:
         Heat: 20
-        Piercing: 0
     deleteOnCollide: true
+  - type: XenoProjectile
+    deleteOnFriendlyXeno: true
   - type: XenoDespoilerAcidBarrageProjectile
     lingeringAcidProto: RMCEffectDespoilerLingeringAcid
   - type: PointLight

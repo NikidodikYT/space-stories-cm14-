@@ -70,7 +70,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (args.SenderSession.AttachedEntity is not { } uid)
             return;
 
-        if (!_despoilerQuery.HasComp(uid) || !_armedQuery.HasComp(uid) || _chargingQuery.HasComp(uid))
+        if (!_despoilerQuery.TryComp(uid, out var comp) || !_armedQuery.HasComp(uid) || _chargingQuery.HasComp(uid))
             return;
 
         if (!_actionBlocker.CanConsciouslyPerformAction(uid))
@@ -82,7 +82,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         var charging = EnsureComp<XenoDespoilerChargingBarrageComponent>(uid);
         charging.StartedAt = _timing.CurTime;
         charging.ExpiresAt = _timing.CurTime + TimeSpan.FromSeconds(action.MaxChargeSeconds);
-        charging.Empowered = _catalyze.IsEmpowered(uid, Comp<XenoDespoilerComponent>(uid));
+        charging.Empowered = _catalyze.IsEmpowered(uid, comp);
         charging.Target = msg.Target;
         charging.SpeedMultiplier = action.ChargingSpeedMultiplier;
         Dirty(uid, charging);
@@ -135,11 +135,11 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
                 continue;
             }
 
-            if (!TryGetBarrageAction(uid, out _, out var action))
-                continue;
-
-            if (now >= charge.ExpiresAt + action.ChargeGracePeriod)
+            if (!TryGetBarrageAction(uid, out _, out var action) ||
+                now >= charge.ExpiresAt + action.ChargeGracePeriod)
+            {
                 ResetBarrage(uid);
+            }
         }
     }
 
@@ -189,23 +189,19 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         var casterMap = _xform.ToMapCoordinates(casterCoords);
         var targetMap = _xform.ToMapCoordinates(target);
 
-        Vector2 aimDir;
         float baseAngle;
         if (casterMap.MapId == targetMap.MapId &&
             (targetMap.Position - casterMap.Position).LengthSquared() >= 0.0001f)
         {
             var mapAim = targetMap.Position - casterMap.Position;
             baseAngle = MathF.Atan2(mapAim.Y, mapAim.X);
-            aimDir = Vector2.Normalize(mapAim);
         }
         else
         {
             var fallback = Transform(uid).LocalRotation.ToWorldVec();
             baseAngle = MathF.Atan2(fallback.Y, fallback.X);
-            aimDir = Vector2.Normalize(fallback);
         }
 
-        var spawnCoords = casterCoords.Offset(aimDir);
         var scatterRad = MathHelper.DegreesToRadians(action.ScatterDegrees);
         var scaleSpan = action.MaxProjectileScale - action.MinProjectileScale;
 
@@ -215,13 +211,12 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
             var unit = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
             var rangeTiles = _random.Next(action.MinRangeTiles, action.MaxRangeTiles + 1);
 
-            var proj = Spawn(action.ProjectileId, spawnCoords);
+            var proj = Spawn(action.ProjectileId, casterCoords);
             _hive.SetSameHive(uid, proj);
 
             if (_projectileQuery.TryComp(proj, out var projComp))
             {
                 projComp.Shooter = uid;
-                projComp.LingeringAcidChance = action.LingeringAcidChance;
                 var scaleFactor = action.MinProjectileScale + (float)_random.NextDouble() * scaleSpan;
                 projComp.Scale = new Vector2(scaleFactor, scaleFactor);
                 Dirty(proj, projComp);

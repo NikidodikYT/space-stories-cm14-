@@ -1,3 +1,4 @@
+using Content.Shared._RMC14.Slow;
 using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Damage;
@@ -14,6 +15,7 @@ public sealed class XenoDespoilerLingeringAcidSystem : EntitySystem
 {
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private readonly RMCSlowSystem _slow = default!;
 
     private EntityQuery<MobStateComponent> _mobStateQuery;
     private EntityQuery<XenoComponent> _xenoQuery;
@@ -49,5 +51,6 @@ public sealed class XenoDespoilerLingeringAcidSystem : EntitySystem
         var dmg = new DamageSpecifier();
         dmg.DamageDict["Heat"] = FixedPoint2.New(comp.CrossBurnDamage);
         _damageable.TryChangeDamage(target, dmg, ignoreResistances: false, origin: comp.Caster);
+        _slow.TrySlowdown(target, comp.CrossSlow);
     }
 }

@@ -4,6 +4,7 @@ using Content.Shared._RMC14.Xenonids.Hive;
 using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Coordinates.Helpers;
 using Content.Shared.Damage;
+using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Robust.Server.Audio;
@@ -19,6 +20,7 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly AudioSystem _audio = default!;
     [Dependency] private readonly MobThresholdSystem _mobThresholds = default!;
+    [Dependency] private readonly SharedInteractionSystem _interaction = default!;
     [Dependency] private readonly SharedRMCActionsSystem _rmcActions = default!;
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
@@ -68,6 +70,10 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 
                 var cheby = Math.Max(Math.Abs(dx), Math.Abs(dy));
                 var tile = origin.Offset(new Vector2(dx, dy)).SnapToGrid(EntityManager);
+
+                if (!_interaction.InRangeUnobstructed(uid, tile, radius + 0.5f))
+                    continue;
+
                 var spawnDelay = action.DistanceDelayPerTile * cheby;
 
                 var telegraph = Spawn(action.TelegraphProto, tile);

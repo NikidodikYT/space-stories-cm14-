@@ -32,7 +32,7 @@ public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
         if (!TryComp<XenoDespoilerCatalyzeActionComponent>(args.Action, out var action))
             return;
 
-        if (!_hyper.TrySpendStacks(uid, hyper, action.HypertensionCost))
+        if (hyper.Stacks < action.HypertensionCost)
         {
             _popup.PopupEntity(Loc.GetString("rmc-despoiler-no-hypertension"), uid, uid);
             return;
@@ -40,6 +40,8 @@ public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
 
         if (!_rmcActions.TryUseAction(args))
             return;
+
+        _hyper.TrySpendStacks(uid, hyper, action.HypertensionCost);
 
         comp.NextAbilityEmpowered = true;
         comp.EmpowerExpiresAt = _timing.CurTime + action.BuffDuration;

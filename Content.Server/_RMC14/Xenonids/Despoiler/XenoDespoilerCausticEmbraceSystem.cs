@@ -20,6 +20,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 {
     private const float TileHalfExtent = 0.5f;
     private const float UnobstructedRangeBuffer = 1f;
+    private const float SplashUnobstructedRange = 2f;
 
     [Dependency] private readonly AudioSystem _audio = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
@@ -120,6 +121,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         var centerMap = _xform.ToMapCoordinates(center);
         var hits = _lookup.GetEntitiesIntersecting(centerMap.MapId,
             Box2.CenteredAround(centerMap.Position, new Vector2(action.SplashScanSize, action.SplashScanSize)));
+        var damaged = new HashSet<EntityUid>();
 
         for (var dx = -1; dx <= 1; dx++)
         {
@@ -133,18 +135,22 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
                 var tile = center.Offset(new Vector2(dx, dy));
                 var tileMap = _xform.ToMapCoordinates(tile);
 
+                if (!_interaction.InRangeUnobstructed(caster, tile, SplashUnobstructedRange))
+                    continue;
+
                 var telegraph = Spawn(action.TelegraphProto, tile);
                 _hive.SetSameHive(caster, telegraph);
 
                 foreach (var ent in hits)
                 {
-                    if (!_xeno.CanAbilityAttackTarget(caster, ent))
+                    if (damaged.Contains(ent) || !_xeno.CanAbilityAttackTarget(caster, ent))
                         continue;
 
                     var entPos = _xform.ToMapCoordinates(Transform(ent).Coordinates).Position;
                     if (Math.Abs(entPos.X - tileMap.Position.X) > TileHalfExtent) continue;
                     if (Math.Abs(entPos.Y - tileMap.Position.Y) > TileHalfExtent) continue;
 
+                    damaged.Add(ent);
                     _damageable.TryChangeDamage(ent, action.SplashDamage, ignoreResistances: false, origin: caster);
                 }
 

@@ -162,10 +162,6 @@
     icon:
       sprite: /Textures/_RMC14/Interface/map_blips.rsi
       state: boiler
-  - type: Flammable
-    damage:
-      types:
-        Heat: 3
   - type: FixedIdentity
     name: rmc-xeno-despoiler-name
   - type: RMCActionOrder

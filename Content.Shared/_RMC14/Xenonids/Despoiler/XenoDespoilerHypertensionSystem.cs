@@ -1,3 +1,4 @@
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
@@ -5,6 +6,7 @@ namespace Content.Shared._RMC14.Xenonids.Despoiler;
 public sealed class XenoDespoilerHypertensionSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly INetManager _net = default!;
 
     public void AddSlashPoints(EntityUid uid, XenoDespoilerHypertensionComponent comp)
     {
@@ -43,6 +45,9 @@ public sealed class XenoDespoilerHypertensionSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
+        if (_net.IsClient)
+            return;
+
         var now = _timing.CurTime;
         var query = EntityQueryEnumerator<XenoDespoilerHypertensionComponent>();
         while (query.MoveNext(out var uid, out var comp))
@@ -53,6 +58,7 @@ public sealed class XenoDespoilerHypertensionSystem : EntitySystem
             if (now - comp.LastActivityAt < comp.DecayDelay)
                 continue;
 
+            var stacks = comp.Stacks;
             comp.Points -= comp.DecayPerSecond * frameTime;
             while (comp.Points < 0 && comp.Stacks > 0)
             {
@@ -63,7 +69,8 @@ public sealed class XenoDespoilerHypertensionSystem : EntitySystem
             if (comp.Stacks <= 0 && comp.Points < 0)
                 comp.Points = 0;
 
-            Dirty(uid, comp);
+            if (comp.Stacks != stacks)
+                Dirty(uid, comp);
         }
     }
 }

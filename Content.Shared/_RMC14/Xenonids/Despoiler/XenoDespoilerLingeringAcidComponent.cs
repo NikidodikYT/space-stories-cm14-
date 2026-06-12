@@ -14,6 +14,9 @@ public sealed partial class XenoDespoilerLingeringAcidComponent : Component
     [DataField]
     public float CrossBurnDamage = 20f;
 
+    [DataField]
+    public TimeSpan CrossSlow = TimeSpan.FromSeconds(0.4);
+
     [DataField, AutoNetworkedField]
     public EntityUid? Caster;
 }

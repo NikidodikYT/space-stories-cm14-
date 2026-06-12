@@ -20,7 +20,6 @@
     scatterDegrees: 30
     chargingSpeedMultiplier: 0.5
     projectileId: RMCProjectileDespoilerAcidShot
-    lingeringAcidChance: 0.25
     projectileSpeed: 12
     minRangeTiles: 1
     maxRangeTiles: 6
