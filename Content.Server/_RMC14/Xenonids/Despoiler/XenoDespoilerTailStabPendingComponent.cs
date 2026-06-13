@@ -1,4 +1,4 @@
-namespace Content.Shared._RMC14.Xenonids.Despoiler;
+namespace Content.Server._RMC14.Xenonids.Despoiler;
 
 /// <summary>
 ///     One-shot marker set during RMCGetTailStabBonusDamageEvent and consumed by the

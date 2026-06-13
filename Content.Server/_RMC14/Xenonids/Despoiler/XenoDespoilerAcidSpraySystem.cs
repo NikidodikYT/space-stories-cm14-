@@ -1,16 +1,15 @@
 using Content.Shared._RMC14.Xenonids;
+using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Damage;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Stunnable;
-using Robust.Shared.Network;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Timing;
 
-namespace Content.Shared._RMC14.Xenonids.Despoiler;
+namespace Content.Server._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerAcidSpraySystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly SharedStunSystem _stun = default!;
     [Dependency] private readonly SharedXenoDespoilerAcidSystem _acid = default!;
@@ -31,9 +30,6 @@ public sealed class XenoDespoilerAcidSpraySystem : EntitySystem
 
     private void OnCollide(EntityUid uid, XenoDespoilerAcidSprayComponent comp, ref StartCollideEvent args)
     {
-        if (_net.IsClient)
-            return;
-
         var target = args.OtherEntity;
         if (!_mobStateQuery.HasComp(target) || _xenoQuery.HasComp(target) || _immunityQuery.HasComp(target))
             return;
@@ -57,9 +53,6 @@ public sealed class XenoDespoilerAcidSpraySystem : EntitySystem
 
     public override void Update(float frameTime)
     {
-        if (_net.IsClient)
-            return;
-
         var now = _timing.CurTime;
         var query = EntityQueryEnumerator<XenoDespoilerAcidImmunityComponent>();
         while (query.MoveNext(out var uid, out var immunity))

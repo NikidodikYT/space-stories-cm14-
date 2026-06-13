@@ -74,7 +74,6 @@ public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
         return false;
     }
 
-    // ПКМ-отмена взвода/заряда; не армлены — пропускаем клик дальше (контекстное меню)
     private bool OnCancel(in PointerInputCmdHandler.PointerInputCmdArgs args)
     {
         if (args.State != BoundKeyState.Down)

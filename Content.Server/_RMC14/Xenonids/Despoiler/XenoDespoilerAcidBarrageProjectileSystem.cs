@@ -1,14 +1,13 @@
 using Content.Shared._RMC14.Marines;
 using Content.Shared._RMC14.Xenonids;
+using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Projectiles;
-using Robust.Shared.Network;
 
-namespace Content.Shared._RMC14.Xenonids.Despoiler;
+namespace Content.Server._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerAcidBarrageProjectileSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedXenoDespoilerAcidSystem _acid = default!;
@@ -26,9 +25,6 @@ public sealed class XenoDespoilerAcidBarrageProjectileSystem : EntitySystem
 
     private void OnHit(EntityUid uid, XenoDespoilerAcidBarrageProjectileComponent comp, ref ProjectileHitEvent args)
     {
-        if (_net.IsClient)
-            return;
-
         if (args.Handled || comp.Shooter is not { } shooter)
             return;
 

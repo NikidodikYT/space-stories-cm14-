@@ -2,26 +2,25 @@ using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Projectiles;
 using Content.Shared._RMC14.Xenonids.Hive;
+using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Ranged.Systems;
-using Robust.Shared.Audio.Systems;
+using Robust.Server.Audio;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
-namespace Content.Shared._RMC14.Xenonids.Despoiler;
+namespace Content.Server._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private readonly AudioSystem _audio = default!;
     [Dependency] private readonly RMCProjectileSystem _rmcProjectile = default!;
     [Dependency] private readonly SharedActionsSystem _actions = default!;
     [Dependency] private readonly SharedGunSystem _gun = default!;
@@ -61,9 +60,6 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
     private void OnAction(EntityUid uid, XenoDespoilerComponent comp, XenoDespoilerAcidBarrageActionEvent args)
     {
         if (args.Handled || !HasComp<XenoDespoilerAcidBarrageActionComponent>(args.Action))
-            return;
-
-        if (_net.IsClient)
             return;
 
         if (_armedQuery.HasComp(uid))
@@ -139,9 +135,6 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
-        if (_net.IsClient)
-            return;
-
         var now = _timing.CurTime;
         var query = EntityQueryEnumerator<XenoDespoilerChargingBarrageComponent>();
         while (query.MoveNext(out var uid, out var charge))
@@ -210,11 +203,11 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (casterMap.MapId == targetMap.MapId &&
             (targetMap.Position - casterMap.Position).LengthSquared() >= 0.0001f)
         {
-            baseAngle = (targetMap.Position - casterMap.Position).ToWorldAngle();
+            baseAngle = new Angle(targetMap.Position - casterMap.Position);
         }
         else
         {
-            baseAngle = Transform(uid).LocalRotation.ToWorldVec().ToWorldAngle();
+            baseAngle = new Angle(Transform(uid).LocalRotation.ToWorldVec());
         }
 
         var scatter = Angle.FromDegrees(action.ScatterDegrees);
