@@ -226,6 +226,20 @@ public sealed partial class CombatMechSystem
         ApplyPilotVisuals(ent);
     }
 
+    // Children (held weapons included) are deleted before component shutdowns when the pilot is
+    // deleted outright; rescue the mounted weapons while they still exist.
+    private void OnInsideVehicleTerminating(Entity<InsideCombatVehicleComponent> ent, ref EntityTerminatingEvent args)
+    {
+        if (_net.IsClient)
+            return;
+
+        if (!TryComp(ent.Comp.Vehicle, out CombatMechComponent? mech) || TerminatingOrDeleted(ent.Comp.Vehicle))
+            return;
+
+        TransferWeaponToMech((ent.Comp.Vehicle, mech), ent.Owner, WeaponSlot.Primary);
+        TransferWeaponToMech((ent.Comp.Vehicle, mech), ent.Owner, WeaponSlot.Secondary);
+    }
+
     private void OnInsideVehicleShutdown(Entity<InsideCombatVehicleComponent> ent, ref ComponentShutdown args)
     {
         RestorePilotProtection(ent);
@@ -293,7 +307,8 @@ public sealed partial class CombatMechSystem
 
     private void UpdatePilotVisualOffset(EntityUid pilot, Entity<CombatMechComponent> mech)
     {
-        var direction = Transform(pilot).LocalRotation.GetCardinalDir();
+        // The pilot is parented to the mech with zero local rotation; facing lives on the mech.
+        var direction = Transform(mech.Owner).LocalRotation.GetCardinalDir();
         var offset = direction switch
         {
             Direction.North => mech.Comp.PilotVisualOffsetNorth,
@@ -323,13 +338,21 @@ public sealed partial class CombatMechSystem
         _rmcSprite.UpdateDrawDepth(pilot);
     }
 
+    // Equality guards: these run per mech MoveEvent, an unconditional SetOffset/SetRenderOrder
+    // would Dirty the component every movement tick.
     private void SetPilotVisualOffset(EntityUid pilot, Vector2 offset)
     {
+        if (TryComp(pilot, out SpriteSetRenderOrderComponent? sprite) && sprite.Offset == offset)
+            return;
+
         _rmcSprite.SetOffset(pilot, offset);
     }
 
     private void SetPilotRenderOrder(EntityUid pilot, int renderOrder)
     {
+        if (TryComp(pilot, out SpriteSetRenderOrderComponent? sprite) && sprite.RenderOrder == renderOrder)
+            return;
+
         _rmcSprite.SetRenderOrder(pilot, renderOrder);
     }
 }

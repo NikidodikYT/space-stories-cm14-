@@ -196,9 +196,10 @@ public sealed partial class CombatMechSystem
 
         var slotName = GetSlotName(slot);
 
+        // Server-only path (doafter completion): PopupClient is a no-op on the server.
         if (GetWeapon(mech, slot) != null)
         {
-            _popup.PopupClient(Loc.GetString("stories-rx47-weapon-slot-occupied", ("slot", slotName)),
+            _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-slot-occupied", ("slot", slotName)),
                 mech, user, PopupType.MediumCaution);
             return false;
         }
@@ -208,7 +209,7 @@ public sealed partial class CombatMechSystem
             if (TryComp(linkedMech, out CombatMechComponent? linkedComp) &&
                 IsMountedWeapon((linkedMech, linkedComp), weapon))
             {
-                _popup.PopupClient(Loc.GetString("stories-rx47-weapon-already-linked"), mech, user, PopupType.MediumCaution);
+                _popup.PopupEntity(Loc.GetString("stories-rx47-weapon-already-linked"), mech, user, PopupType.MediumCaution);
                 return false;
             }
 

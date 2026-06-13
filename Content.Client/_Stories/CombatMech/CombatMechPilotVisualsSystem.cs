@@ -12,7 +12,6 @@ public sealed class CombatMechPilotVisualsSystem : EntitySystem
         SubscribeLocalEvent<InsideCombatVehicleComponent, GetDrawDepthEvent>(
             OnInsideVehicleGetDrawDepth,
             after: [typeof(RMCBuckleVisualsSystem)]);
-        SubscribeLocalEvent<InsideCombatVehicleComponent, ComponentStartup>(OnPilotStartup);
     }
 
     private void OnInsideVehicleGetDrawDepth(Entity<InsideCombatVehicleComponent> ent, ref GetDrawDepthEvent args)
@@ -21,14 +20,5 @@ public sealed class CombatMechPilotVisualsSystem : EntitySystem
             return;
 
         args.DrawDepth = DrawDepthType.Mobs;
-    }
-
-    private void OnPilotStartup(Entity<InsideCombatVehicleComponent> ent, ref ComponentStartup args)
-    {
-        if (!HasComp<CombatMechComponent>(ent.Comp.Vehicle))
-            return;
-
-        var ev = new GetDrawDepthEvent();
-        RaiseLocalEvent(ent.Owner, ref ev);
     }
 }

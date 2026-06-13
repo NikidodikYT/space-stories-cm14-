@@ -173,6 +173,7 @@ public sealed partial class CombatMechSystem : EntitySystem
         SubscribeLocalEvent<InsideCombatVehicleComponent, DropAttemptEvent>(OnInsideVehicleDropAttempt);
         SubscribeLocalEvent<InsideCombatVehicleComponent, PickupAttemptEvent>(OnInsideVehiclePickupAttempt);
         SubscribeLocalEvent<InsideCombatVehicleComponent, AfterAutoHandleStateEvent>(OnInsideVehicleState);
+        SubscribeLocalEvent<InsideCombatVehicleComponent, EntityTerminatingEvent>(OnInsideVehicleTerminating);
         SubscribeLocalEvent<InsideCombatVehicleComponent, ComponentShutdown>(OnInsideVehicleShutdown);
         SubscribeLocalEvent<InsideCombatVehicleComponent, MoveEvent>(OnInsideVehicleMove);
         SubscribeLocalEvent<InsideCombatVehicleComponent, GetEyeOffsetAttemptEvent>(OnInsideVehicleGetEyeOffsetAttempt);

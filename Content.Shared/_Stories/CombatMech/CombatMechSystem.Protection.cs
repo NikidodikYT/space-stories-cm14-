@@ -412,9 +412,11 @@ public sealed partial class CombatMechSystem
             if (amount == FixedPoint2.Zero)
                 continue;
 
-            var canForward = hasContainer
-                ? DamageContainerSupportsType(container!, type)
-                : mech.ForwardedDamageTypes.Contains(type);
+            // Healing (negative amounts) stays on the pilot — meds must not repair the mech instead.
+            var canForward = amount > FixedPoint2.Zero &&
+                             (hasContainer
+                                 ? DamageContainerSupportsType(container!, type)
+                                 : mech.ForwardedDamageTypes.Contains(type));
 
             if (canForward)
                 forwarded.DamageDict[type] = amount;

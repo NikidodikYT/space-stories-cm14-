@@ -86,7 +86,8 @@ public sealed partial class CombatMechSystem
             ent.Comp.CriticalAlertTriggered = true;
             ent.Comp.DamagedAlertTriggered = true;
             _audio.PlayEntity(ent.Comp.DamageAlertSound, pilot.Value, ent);
-            _popup.PopupClient(Loc.GetString("stories-rx47-alert-critical"), ent, pilot.Value, PopupType.LargeCaution);
+            // Server-only path: PopupClient is a no-op on the server.
+            _popup.PopupEntity(Loc.GetString("stories-rx47-alert-critical"), ent, pilot.Value, PopupType.LargeCaution);
             return;
         }
 
@@ -94,7 +95,7 @@ public sealed partial class CombatMechSystem
         {
             ent.Comp.DamagedAlertTriggered = true;
             _audio.PlayEntity(ent.Comp.DamageAlertSound, pilot.Value, ent);
-            _popup.PopupClient(Loc.GetString("stories-rx47-alert-damaged"), ent, pilot.Value, PopupType.MediumCaution);
+            _popup.PopupEntity(Loc.GetString("stories-rx47-alert-damaged"), ent, pilot.Value, PopupType.MediumCaution);
         }
     }
 
@@ -175,7 +176,13 @@ public sealed partial class CombatMechSystem
 
     private void OnMechMove(Entity<CombatMechComponent> ent, ref MoveEvent args)
     {
-        if (_net.IsClient || GetPilot(ent) == null)
+        if (GetPilot(ent) is not { } pilot)
+            return;
+
+        // The buckled pilot gets no MoveEvent of its own when the mech moves or turns.
+        UpdatePilotVisualOffset(pilot, ent);
+
+        if (_net.IsClient)
             return;
 
         if (args.ParentChanged)
