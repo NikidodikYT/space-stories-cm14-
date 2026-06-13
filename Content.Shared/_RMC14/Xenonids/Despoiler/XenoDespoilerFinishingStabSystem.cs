@@ -1,15 +1,16 @@
-using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared._RMC14.Xenonids.Stab;
 using Content.Shared._RMC14.Xenonids.Projectile.Spit.Charge;
 using Content.Shared.Damage;
 using Content.Shared.Weapons.Melee.Events;
+using Robust.Shared.Network;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerFinishingStabSystem : EntitySystem
 {
+    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly XenoDespoilerAcidSystem _acid = default!;
+    [Dependency] private readonly SharedXenoDespoilerAcidSystem _acid = default!;
 
     private EntityQuery<UserAcidedComponent> _acidQuery;
 
@@ -23,11 +24,17 @@ public sealed class XenoDespoilerFinishingStabSystem : EntitySystem
 
     private void OnGetTailStabBonus(EntityUid uid, XenoDespoilerComponent comp, ref RMCGetTailStabBonusDamageEvent args)
     {
+        if (_net.IsClient)
+            return;
+
         EnsureComp<XenoDespoilerTailStabPendingComponent>(uid);
     }
 
     private void OnMeleeHit(EntityUid uid, XenoDespoilerComponent comp, MeleeHitEvent args)
     {
+        if (_net.IsClient)
+            return;
+
         if (!RemComp<XenoDespoilerTailStabPendingComponent>(uid))
             return;
 

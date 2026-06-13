@@ -18,7 +18,8 @@
   - type: XenoProjectile
     deleteOnFriendlyXeno: true
   - type: XenoDespoilerAcidBarrageProjectile
-    lingeringAcidProto: RMCEffectDespoilerLingeringAcid
+  - type: SpawnOnTerminate
+    spawn: RMCEffectDespoilerLingeringAcid
   - type: PointLight
     enabled: true
     radius: 1.2

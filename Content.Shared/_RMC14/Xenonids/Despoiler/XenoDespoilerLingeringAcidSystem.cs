@@ -1,18 +1,19 @@
 using Content.Shared._RMC14.Slow;
 using Content.Shared._RMC14.Xenonids;
-using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Movement.Pulling.Components;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Random;
 using Robust.Shared.Spawners;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerLingeringAcidSystem : EntitySystem
 {
+    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly RMCSlowSystem _slow = default!;
@@ -33,6 +34,9 @@ public sealed class XenoDespoilerLingeringAcidSystem : EntitySystem
 
     private void OnInit(EntityUid uid, XenoDespoilerLingeringAcidComponent comp, ComponentInit args)
     {
+        if (_net.IsClient)
+            return;
+
         var min = (float)comp.MinLifetime.TotalSeconds;
         var max = (float)comp.MaxLifetime.TotalSeconds;
         var despawn = EnsureComp<TimedDespawnComponent>(uid);
@@ -41,6 +45,9 @@ public sealed class XenoDespoilerLingeringAcidSystem : EntitySystem
 
     private void OnCollide(EntityUid uid, XenoDespoilerLingeringAcidComponent comp, ref StartCollideEvent args)
     {
+        if (_net.IsClient)
+            return;
+
         var target = args.OtherEntity;
         if (!_mobStateQuery.HasComp(target) || _xenoQuery.HasComp(target))
             return;

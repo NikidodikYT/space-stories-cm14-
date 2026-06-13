@@ -1,13 +1,14 @@
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Xenonids.Hive;
-using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Popups;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
 {
+    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedRMCActionsSystem _rmcActions = default!;
@@ -34,11 +35,15 @@ public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
 
         if (hyper.Stacks < action.HypertensionCost)
         {
-            _popup.PopupEntity(Loc.GetString("rmc-despoiler-no-hypertension"), uid, uid);
+            _popup.PopupClient(Loc.GetString("rmc-despoiler-no-hypertension"), uid, uid);
             return;
         }
 
         if (!_rmcActions.TryUseAction(args))
+            return;
+
+        args.Handled = true;
+        if (_net.IsClient)
             return;
 
         _hyper.TrySpendStacks(uid, hyper, action.HypertensionCost);
@@ -47,29 +52,31 @@ public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
         comp.EmpowerExpiresAt = _timing.CurTime + action.BuffDuration;
         Dirty(uid, comp);
 
-        var server = EnsureComp<XenoDespoilerServerComponent>(uid);
-        DespawnVisual(server);
+        var visual = EnsureComp<XenoDespoilerCatalyzeVisualComponent>(uid);
+        DespawnVisual(visual);
 
         var burst = Spawn(action.VisualProto, Transform(uid).Coordinates);
         _xform.SetParent(burst, uid);
         _hive.SetSameHive(uid, burst);
-        server.CatalyzeVisual = burst;
+        visual.CatalyzeVisual = burst;
 
         _popup.PopupEntity(Loc.GetString("rmc-despoiler-catalyze-active"), uid, uid);
-        args.Handled = true;
     }
 
     private void OnShutdown(EntityUid uid, XenoDespoilerComponent comp, ComponentShutdown args)
     {
-        if (TryComp<XenoDespoilerServerComponent>(uid, out var server))
-            DespawnVisual(server);
+        if (TryComp<XenoDespoilerCatalyzeVisualComponent>(uid, out var visual))
+            DespawnVisual(visual);
     }
 
     public override void Update(float frameTime)
     {
+        if (_net.IsClient)
+            return;
+
         var now = _timing.CurTime;
-        var query = EntityQueryEnumerator<XenoDespoilerComponent, XenoDespoilerServerComponent>();
-        while (query.MoveNext(out var uid, out var comp, out var server))
+        var query = EntityQueryEnumerator<XenoDespoilerComponent, XenoDespoilerCatalyzeVisualComponent>();
+        while (query.MoveNext(out var uid, out var comp, out var visual))
         {
             if (comp.NextAbilityEmpowered && now > comp.EmpowerExpiresAt)
             {
@@ -77,19 +84,19 @@ public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
                 Dirty(uid, comp);
             }
 
-            if (!comp.NextAbilityEmpowered && server.CatalyzeVisual is not null)
-                DespawnVisual(server);
+            if (!comp.NextAbilityEmpowered && visual.CatalyzeVisual is not null)
+                DespawnVisual(visual);
         }
     }
 
-    private void DespawnVisual(XenoDespoilerServerComponent server)
+    private void DespawnVisual(XenoDespoilerCatalyzeVisualComponent visual)
     {
-        if (server.CatalyzeVisual is not { } visual)
+        if (visual.CatalyzeVisual is not { } burst)
             return;
 
-        if (Exists(visual) && !TerminatingOrDeleted(visual))
-            QueueDel(visual);
+        if (Exists(burst) && !TerminatingOrDeleted(burst))
+            QueueDel(burst);
 
-        server.CatalyzeVisual = null;
+        visual.CatalyzeVisual = null;
     }
 }

@@ -1,24 +1,25 @@
 using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Xenonids.Hive;
-using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.Coordinates.Helpers;
 using Content.Shared.Damage;
 using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
-using Robust.Server.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 {
+    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly AudioSystem _audio = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly MobThresholdSystem _mobThresholds = default!;
     [Dependency] private readonly SharedInteractionSystem _interaction = default!;
     [Dependency] private readonly SharedRMCActionsSystem _rmcActions = default!;
@@ -45,6 +46,14 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
             return;
 
         if (!_rmcActions.TryUseAction(args))
+            return;
+
+        args.Handled = true;
+
+        if (action.CastSound is { } sound)
+            _audio.PlayPredicted(sound, uid, uid);
+
+        if (_net.IsClient)
             return;
 
         var empowered = _catalyze.TakeEmpowerment(uid, comp);
@@ -92,15 +101,13 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 });
             }
         }
-
-        if (action.CastSound is { } sound)
-            _audio.PlayPvs(sound, uid);
-
-        args.Handled = true;
     }
 
     public override void Update(float frameTime)
     {
+        if (_net.IsClient)
+            return;
+
         var now = _timing.CurTime;
         var query = EntityQueryEnumerator<XenoDespoilerOozingWoundsPendingComponent>();
         while (query.MoveNext(out var caster, out var pending))

@@ -1,7 +1,7 @@
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 [RegisterComponent]
 public sealed partial class XenoDespoilerOozingWoundsPendingComponent : Component

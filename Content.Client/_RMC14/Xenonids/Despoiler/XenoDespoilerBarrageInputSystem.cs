@@ -30,6 +30,7 @@ public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
 
         CommandBinds.Builder
             .Bind(EngineKeyFunctions.Use, new PointerInputCmdHandler(OnUse, ignoreUp: false, outsidePrediction: true))
+            .Bind(EngineKeyFunctions.UseSecondary, new PointerInputCmdHandler(OnCancel, outsidePrediction: true))
             .Register<XenoDespoilerBarrageInputSystem>();
     }
 
@@ -71,6 +72,22 @@ public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
         }
 
         return false;
+    }
+
+    // ПКМ-отмена взвода/заряда; не армлены — пропускаем клик дальше (контекстное меню)
+    private bool OnCancel(in PointerInputCmdHandler.PointerInputCmdArgs args)
+    {
+        if (args.State != BoundKeyState.Down)
+            return false;
+
+        if (_player.LocalEntity is not { } ent)
+            return false;
+
+        if (!_armedQuery.HasComp(ent) && !_chargingQuery.HasComp(ent))
+            return false;
+
+        RaiseNetworkEvent(new XenoDespoilerBarrageCancelRequest());
+        return true;
     }
 
     private bool TryGetCursorCoords(out EntityCoordinates coords)

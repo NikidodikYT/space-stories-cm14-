@@ -27,3 +27,6 @@ public sealed class XenoDespoilerBarrageFireRequest : EntityEventArgs
 
     public XenoDespoilerBarrageFireRequest(NetCoordinates target) => Target = target;
 }
+
+[Serializable, NetSerializable]
+public sealed class XenoDespoilerBarrageCancelRequest : EntityEventArgs;

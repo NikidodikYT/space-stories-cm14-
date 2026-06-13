@@ -4,17 +4,16 @@ using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Map;
 using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Hive;
-using Content.Shared._RMC14.Xenonids.Despoiler;
-using Content.Shared.Actions;
 using Content.Shared.Damage;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
 using Content.Shared.Stunnable;
-using Robust.Server.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Random;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
 {
@@ -22,7 +21,8 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
     private const float UnobstructedRangeBuffer = 1f;
     private const float SplashUnobstructedRange = 2f;
 
-    [Dependency] private readonly AudioSystem _audio = default!;
+    [Dependency] private readonly INetManager _net = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
@@ -34,7 +34,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _xform = default!;
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
-    [Dependency] private readonly XenoDespoilerAcidSystem _acid = default!;
+    [Dependency] private readonly SharedXenoDespoilerAcidSystem _acid = default!;
     [Dependency] private readonly XenoSystem _xeno = default!;
 
     private EntityQuery<XenoDespoilerLingeringAcidComponent> _lingeringQuery;
@@ -77,9 +77,12 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             if (!_rmcActions.TryUseAction(args))
                 return;
 
+            args.Handled = true;
+            if (_net.IsClient)
+                return;
+
             ExecuteEmpoweredLunge(uid, action, victim.Value);
             _catalyze.TakeEmpowerment(uid, comp);
-            args.Handled = true;
             return;
         }
 
@@ -88,21 +91,23 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         if (_rmcMap.IsTileBlocked(landing) ||
             !_interaction.InRangeUnobstructed(uid, landing, range: action.NormalRange + UnobstructedRangeBuffer))
         {
-            _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
+            _popup.PopupClient(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
             return;
         }
 
         if (!_rmcActions.TryUseAction(args))
             return;
 
+        args.Handled = true;
+        if (_net.IsClient)
+            return;
+
         _xform.SetCoordinates(uid, landing);
 
         if (action.PounceSound is { } sound)
-            _audio.PlayPvs(sound, uid);
+            _audio.PlayPredicted(sound, uid, uid);
 
         SpawnSplashAroundExceptBack(uid, action, landing, step);
-
-        args.Handled = true;
     }
 
     private static Vector2 SnapDirectionToTile(Vector2 dir)
@@ -177,20 +182,20 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         victim = null;
         if (dist > action.EmpoweredRange)
         {
-            _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-out-of-range"), uid, uid);
+            _popup.PopupClient(Loc.GetString("rmc-despoiler-pounce-out-of-range"), uid, uid);
             return false;
         }
 
         victim = FindEmpoweredVictim(uid, args);
         if (victim is null)
         {
-            _popup.PopupEntity(Loc.GetString("rmc-despoiler-caustic-no-target"), uid, uid);
+            _popup.PopupClient(Loc.GetString("rmc-despoiler-caustic-no-target"), uid, uid);
             return false;
         }
 
         if (!_interaction.InRangeUnobstructed(uid, victim.Value, range: action.EmpoweredRange + UnobstructedRangeBuffer))
         {
-            _popup.PopupEntity(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
+            _popup.PopupClient(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
             victim = null;
             return false;
         }
@@ -205,7 +210,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         _xform.SetCoordinates(uid, Transform(victim).Coordinates);
 
         if (action.PounceSound is { } sound)
-            _audio.PlayPvs(sound, uid);
+            _audio.PlayPredicted(sound, uid, uid);
 
         _damageable.TryChangeDamage(victim, action.EmpoweredDamage, ignoreResistances: false, origin: uid);
         _acid.ApplyAcid(victim, uid, enhance: true);

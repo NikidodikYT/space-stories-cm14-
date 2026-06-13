@@ -2,25 +2,26 @@ using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Projectiles;
 using Content.Shared._RMC14.Xenonids.Hive;
-using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Ranged.Systems;
-using Robust.Server.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 {
+    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private readonly AudioSystem _audio = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly RMCProjectileSystem _rmcProjectile = default!;
     [Dependency] private readonly SharedActionsSystem _actions = default!;
     [Dependency] private readonly SharedGunSystem _gun = default!;
@@ -45,11 +46,24 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         SubscribeLocalEvent<XenoDespoilerComponent, XenoDespoilerAcidBarrageActionEvent>(OnAction);
         SubscribeNetworkEvent<XenoDespoilerBarrageStartChargeRequest>(OnStartChargeRequest);
         SubscribeNetworkEvent<XenoDespoilerBarrageFireRequest>(OnFireRequest);
+        SubscribeNetworkEvent<XenoDespoilerBarrageCancelRequest>(OnCancelRequest);
+    }
+
+    private void OnCancelRequest(XenoDespoilerBarrageCancelRequest msg, EntitySessionEventArgs args)
+    {
+        if (args.SenderSession.AttachedEntity is { } uid &&
+            (_armedQuery.HasComp(uid) || _chargingQuery.HasComp(uid)))
+        {
+            ResetBarrage(uid);
+        }
     }
 
     private void OnAction(EntityUid uid, XenoDespoilerComponent comp, XenoDespoilerAcidBarrageActionEvent args)
     {
         if (args.Handled || !HasComp<XenoDespoilerAcidBarrageActionComponent>(args.Action))
+            return;
+
+        if (_net.IsClient)
             return;
 
         if (_armedQuery.HasComp(uid))
@@ -125,6 +139,9 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
+        if (_net.IsClient)
+            return;
+
         var now = _timing.CurTime;
         var query = EntityQueryEnumerator<XenoDespoilerChargingBarrageComponent>();
         while (query.MoveNext(out var uid, out var charge))
@@ -189,26 +206,24 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         var casterMap = _xform.ToMapCoordinates(casterCoords);
         var targetMap = _xform.ToMapCoordinates(target);
 
-        float baseAngle;
+        Angle baseAngle;
         if (casterMap.MapId == targetMap.MapId &&
             (targetMap.Position - casterMap.Position).LengthSquared() >= 0.0001f)
         {
-            var mapAim = targetMap.Position - casterMap.Position;
-            baseAngle = MathF.Atan2(mapAim.Y, mapAim.X);
+            baseAngle = (targetMap.Position - casterMap.Position).ToWorldAngle();
         }
         else
         {
-            var fallback = Transform(uid).LocalRotation.ToWorldVec();
-            baseAngle = MathF.Atan2(fallback.Y, fallback.X);
+            baseAngle = Transform(uid).LocalRotation.ToWorldVec().ToWorldAngle();
         }
 
-        var scatterRad = MathHelper.DegreesToRadians(action.ScatterDegrees);
+        var scatter = Angle.FromDegrees(action.ScatterDegrees);
         var scaleSpan = action.MaxProjectileScale - action.MinProjectileScale;
 
         for (var i = 0; i < count; i++)
         {
-            var angle = baseAngle + ((float)_random.NextDouble() * 2f - 1f) * scatterRad;
-            var unit = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            var angle = baseAngle + ((_random.NextDouble() * 2d - 1d) * scatter);
+            var unit = angle.ToVec();
             var rangeTiles = _random.Next(action.MinRangeTiles, action.MaxRangeTiles + 1);
 
             var proj = Spawn(action.ProjectileId, casterCoords);
