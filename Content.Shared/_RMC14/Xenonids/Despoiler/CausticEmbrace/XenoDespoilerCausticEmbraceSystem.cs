@@ -4,6 +4,7 @@ using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Map;
 using Content.Shared._RMC14.Xenonids;
 using Content.Shared._RMC14.Xenonids.Hive;
+using Content.Shared.Coordinates.Helpers;
 using Content.Shared.Damage;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -86,7 +87,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             return;
         }
 
-        var landing = ownerXform.Coordinates.Offset(step);
+        var landing = ownerXform.Coordinates.Offset(step).SnapToGrid(EntityManager);
 
         if (_rmcMap.IsTileBlocked(landing) ||
             !_interaction.InRangeUnobstructed(uid, landing, range: action.NormalRange + UnobstructedRangeBuffer))
@@ -99,13 +100,14 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             return;
 
         args.Handled = true;
-        if (_net.IsClient)
-            return;
 
         _xform.SetCoordinates(uid, landing);
 
         if (action.PounceSound is { } sound)
             _audio.PlayPredicted(sound, uid, uid);
+
+        if (_net.IsClient)
+            return;
 
         SpawnSplashAroundExceptBack(uid, action, landing, step);
     }
