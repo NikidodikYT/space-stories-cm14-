@@ -1,5 +1,7 @@
+using System.Numerics;
 using Content.Shared._RMC14.Areas;
 using Content.Shared._RMC14.Armor;
+using Content.Shared._RMC14.Barricade;
 using Content.Shared._RMC14.CCVar;
 using Content.Shared._RMC14.Communications;
 using Content.Shared._RMC14.Entrenching;
@@ -32,6 +34,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
@@ -44,11 +47,14 @@ namespace Content.Shared._RMC14.Xenonids.Weeds;
 
 public abstract class SharedXenoWeedsSystem : EntitySystem
 {
+    private const float MinimumSpreadBlockRayLength = 0.6f;
+
     [Dependency] private readonly AreaSystem _area = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly IConfigurationManager _config = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private readonly SharedDirectionalAttackBlockSystem _directionBlocker = default!;
     [Dependency] private readonly EntityWhitelistSystem _entityWhitelist = default!;
     [Dependency] private readonly SharedGameTicker _gameTicker = default!;
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
@@ -443,6 +449,33 @@ public abstract class SharedXenoWeedsSystem : EntitySystem
         return GetWeedsOnFloor((gridId, grid), coordinates, sourceOnly);
     }
 
+    public bool CanSpreadWeedsBetween(EntityCoordinates source, EntityCoordinates target)
+    {
+        var sourceMap = _transform.ToMapCoordinates(_transform.GetMoverCoordinates(source));
+        var targetMap = _transform.ToMapCoordinates(_transform.GetMoverCoordinates(target));
+        if (sourceMap.MapId != targetMap.MapId)
+            return false;
+
+        var direction = targetMap.Position - sourceMap.Position;
+        if (direction == Vector2.Zero)
+            return true;
+
+        var distance = direction.Length();
+        var ray = new CollisionRay(sourceMap.Position, direction.Normalized(), (int) CollisionGroup.BarricadeImpassable);
+        var intersect = _physics.IntersectRayWithPredicate(
+            sourceMap.MapId,
+            ray,
+            MathF.Max(MinimumSpreadBlockRayLength, distance),
+            ent => !Transform(ent).Anchored);
+
+        foreach (var _ in intersect)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public bool IsOnWeeds(Entity<TransformComponent?> entity)
     {
         if (!Resolve(entity, ref entity.Comp))
@@ -515,9 +548,10 @@ public abstract class SharedXenoWeedsSystem : EntitySystem
         Dirty(ent);
     }
 
-    public bool CanSpreadWeedsPopup(Entity<MapGridComponent> grid, Vector2i tile, EntityUid? user, bool semiWeedable = false, bool source = false)
+    public bool CanSpreadWeedsPopup(Entity<MapGridComponent> grid, Vector2 tile, EntityUid? user, EntityUid? spreadFrom, bool semiWeedable = false, bool source = false)
     {
-        if (!_mapSystem.TryGetTileRef(grid, grid, tile, out var tileRef) ||
+        var tileIndex = (Vector2i)tile;
+        if (!_mapSystem.TryGetTileRef(grid, grid, tileIndex, out var tileRef) ||
             !_tile.TryGetDefinition(tileRef.Tile.TypeId, out var tileDef) ||
             tileDef.ID == ContentTileDefinition.SpaceID ||
             tileDef is ContentTileDefinition { WeedsSpreadable: false } &&
@@ -528,10 +562,18 @@ public abstract class SharedXenoWeedsSystem : EntitySystem
             return false;
         }
 
-        if (!_area.CanResinPopup((grid, grid, null), tile, user))
+        if (!_area.CanResinPopup((grid, grid, null), tileIndex, user))
             return false;
 
-        var targetTileAnchored = _mapSystem.GetAnchoredEntitiesEnumerator(grid, grid, tile);
+        if (spreadFrom is { } spreadOrigin && !TerminatingOrDeleted(spreadOrigin))
+        {
+            var originPos = _transform.GetMoverCoordinates(spreadOrigin).Position;
+            var direction = (tile - originPos).Normalized();
+            if (_directionBlocker.IsDirectionBlocked(spreadOrigin, direction))
+                return false;
+        }
+
+        var targetTileAnchored = _mapSystem.GetAnchoredEntitiesEnumerator(grid, grid, tileIndex);
         while (targetTileAnchored.MoveNext(out var uid))
         {
             if (_blockWeedsQuery.HasComp(uid))
@@ -556,7 +598,8 @@ public abstract class SharedXenoWeedsSystem : EntitySystem
     public bool CanPlaceWeedsPopup(EntityUid xeno,
         Entity<MapGridComponent> grid,
         EntityCoordinates coordinates,
-        bool limitDistance)
+        bool limitDistance,
+        EntityCoordinates? popupAt = null)
     {
         if (_rmcMap.HasAnchoredEntityEnumerator<XenoWeedsComponent>(coordinates, out var oldWeeds))
         {
@@ -579,7 +622,7 @@ public abstract class SharedXenoWeedsSystem : EntitySystem
         if (limitDistance && !HasWeedsNearby(grid, coordinates))
         {
             _popup.PopupClient("We can only plant weed nodes near other weed nodes our hive owns!",
-                xeno,
+                popupAt ?? xeno.ToCoordinates(),
                 xeno,
                 PopupType.SmallCaution);
             return false;
@@ -593,7 +636,7 @@ public abstract class SharedXenoWeedsSystem : EntitySystem
                     HasComp<BarricadeComponent>(entity))
                     continue;
 
-                _popup.PopupClient(Loc.GetString("rmc-xeno-weeds-blocked"), xeno, xeno, PopupType.SmallCaution);
+                _popup.PopupClient(Loc.GetString("rmc-xeno-weeds-blocked"), popupAt ?? xeno.ToCoordinates(), xeno, PopupType.SmallCaution);
                 return false;
             }
         }

@@ -14,7 +14,7 @@
   - CMPilotGunship
   - CMDropshipCrewChief
   - CMIntelOfficer
+  - CMVehicleCrewman
   - CMSeniorEnlistedAdvisor
-  - STTankCrew # Stories-Vehicle
   departmentRadio: MarineJTAC
   headOfDepartment: CMAuxiliarySupportOfficer

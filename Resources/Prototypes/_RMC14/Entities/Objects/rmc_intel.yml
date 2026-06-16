@@ -20,6 +20,9 @@
   - type: Tag
     tags:
     - RMCIntelItem
+  - type: GuideHelp
+    guides:
+    - RMCIntel
 
 - type: entity
   parent: RMCIntelReadableBase
@@ -116,6 +119,9 @@
   - type: IntelClues
     clues: 8
   - type: IntelSerial
+  - type: GuideHelp
+    guides:
+    - RMCIntel
 
 - type: entity
   parent: [CMHealthAnalyzer, RMCIntelRetrieveDeviceBase]
@@ -133,7 +139,11 @@
   components:
   - type: Sprite
     sprite: _RMC14/Structures/Machines/computer.rsi
-    state: techweb
+    layers:
+    - map: ["base"]
+      state: "techweb0"
+    - map: ["enum.PowerDeviceVisualLayers.Powered"]
+      state: "techweb"
   - type: InteractionOutline
   - type: ActivatableUI
     key: enum.TechControlConsoleUI.Key
@@ -156,8 +166,12 @@
   - type: Sprite
     sprite: _RMC14/Structures/Machines/computer.rsi
     state: terminal1_old
+    layers: []
   - type: InteractionOutline
   - type: IntelConsole
+  - type: GuideHelp
+    guides:
+    - RMCIntel
 
 - type: entity
   id: RMCIntelTechTree
@@ -178,18 +192,6 @@
             sprite: _RMC14/Interface/tech_tree.rsi
             state: upgrade
       -
-        - name: Хамви ARC
-          description: Разблокирует Хамви в конфигурации ARC для снабжения транспортными средствами.
-          cost: 5
-          events:
-          - !type:TechUnlockVehicleEvent
-            unlock: VehicleHumveeARC
-          - !type:TechAnnounceEvent
-            author: АВТОРИЗАЦИЯ СПЕЦСРЕДСТВ АЛМАЙЕРА
-            message: Для проведения этой операции разрешено развертывание системы ARC.
-          icon:
-            sprite: _RMC14/Interface/tech_tree.rsi
-            state: humvee
         - name: Увеличение бюджета снабжения
           description: Выделяет ресурсы отделу снабжения для расходов.
           cost: 7
@@ -288,6 +290,18 @@
             sprite: _RMC14/Interface/tech_tree.rsi
             state: upgrade
       -
+        - name: Хамви ARC
+          description: Разблокирует Хамви в конфигурации ARC для снабжения транспортными средствами.
+          cost: 5
+          events:
+          - !type:TechUnlockVehicleEvent
+            unlock: VehicleHumveeARC
+          - !type:TechAnnounceEvent
+            author: АВТОРИЗАЦИЯ СПЕЦСРЕДСТВ АЛМАЙЕРА
+            message: Транспортное средство Разведывательный Хамви M2423 СТММ-Р было подготовлено и добавлено в хранилище лифта.
+          icon:
+            sprite: _RMC14/Interface/tech_tree.rsi
+            state: humvee
         - name: Разбудить дополнительные войска
           description: Пробуждает дополнительных солдат для борьбы с любыми угрозами.
           cost: 6
