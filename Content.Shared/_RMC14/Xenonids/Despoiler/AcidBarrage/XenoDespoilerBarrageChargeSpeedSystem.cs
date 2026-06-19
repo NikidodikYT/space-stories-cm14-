@@ -13,7 +13,6 @@ public sealed class XenoDespoilerBarrageChargeSpeedSystem : EntitySystem
         SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentShutdown>(OnShutdown);
 
-        // While the volley is armed, left click charges it instead of swinging.
         SubscribeLocalEvent<XenoDespoilerArmedBarrageComponent, AttackAttemptEvent>(OnAttackAttempt);
     }
 

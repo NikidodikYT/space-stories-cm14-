@@ -52,12 +52,10 @@ public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
         var useDown = _inputSystem.CmdStates.GetState(EngineKeyFunctions.Use) == BoundKeyState.Down;
         var secondaryDown = _inputSystem.CmdStates.GetState(EngineKeyFunctions.UseSecondary) == BoundKeyState.Down;
 
-        // Right click cancels the armed/charging volley.
         if (secondaryDown && !_secondaryHeld)
         {
             RaiseNetworkEvent(new XenoDespoilerBarrageCancelRequest());
         }
-        // Hold left click to start charging, release to fire at the cursor.
         else if (useDown && !_useHeld && !_chargingQuery.HasComp(ent))
         {
             if (_actionBlocker.CanConsciouslyPerformAction(ent) && TryGetCursorCoords(out var coords))

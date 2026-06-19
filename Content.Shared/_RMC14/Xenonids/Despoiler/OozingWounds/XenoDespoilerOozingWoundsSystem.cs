@@ -80,7 +80,6 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 var cheby = Math.Max(Math.Abs(dx), Math.Abs(dy));
                 var tile = origin.Offset(new Vector2(dx, dy)).SnapToGrid(EntityManager);
 
-                // Slack for the caster standing off-centre / on a tile edge.
                 if (!_interaction.InRangeUnobstructed(uid, tile, radius + 1f))
                     continue;
 
