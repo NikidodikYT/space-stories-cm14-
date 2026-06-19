@@ -5,8 +5,8 @@ using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Shared.Input;
-using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Content.Client._RMC14.Xenonids.Despoiler;
 
@@ -18,75 +18,59 @@ public sealed class XenoDespoilerBarrageInputSystem : EntitySystem
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly MapSystem _map = default!;
     [Dependency] private readonly IPlayerManager _player = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly InputSystem _inputSystem = default!;
     [Dependency] private readonly TransformSystem _transform = default!;
 
     private EntityQuery<XenoDespoilerArmedBarrageComponent> _armedQuery;
     private EntityQuery<XenoDespoilerChargingBarrageComponent> _chargingQuery;
+
+    private bool _useHeld;
+    private bool _secondaryHeld;
 
     public override void Initialize()
     {
         _armedQuery = GetEntityQuery<XenoDespoilerArmedBarrageComponent>();
         _chargingQuery = GetEntityQuery<XenoDespoilerChargingBarrageComponent>();
 
-        CommandBinds.Builder
-            .Bind(EngineKeyFunctions.Use, new PointerInputCmdHandler(OnUse, ignoreUp: false, outsidePrediction: true))
-            .Bind(EngineKeyFunctions.UseSecondary, new PointerInputCmdHandler(OnCancel, outsidePrediction: true))
-            .Register<XenoDespoilerBarrageInputSystem>();
+        UpdatesOutsidePrediction = true;
     }
 
-    public override void Shutdown()
+    public override void Update(float frameTime)
     {
-        CommandBinds.Unregister<XenoDespoilerBarrageInputSystem>();
-    }
+        if (!_timing.IsFirstTimePredicted)
+            return;
 
-    private bool OnUse(in PointerInputCmdHandler.PointerInputCmdArgs args)
-    {
-        if (_player.LocalEntity is not { } ent)
-            return false;
-
-        if (args.State == BoundKeyState.Down)
+        if (_player.LocalEntity is not { } ent ||
+            !(_armedQuery.HasComp(ent) || _chargingQuery.HasComp(ent)))
         {
-            if (!_armedQuery.HasComp(ent) || _chargingQuery.HasComp(ent))
-                return false;
-
-            if (!_actionBlocker.CanConsciouslyPerformAction(ent))
-                return false;
-
-            if (!TryGetCursorCoords(out var coords))
-                return false;
-
-            RaiseNetworkEvent(new XenoDespoilerBarrageStartChargeRequest(GetNetCoordinates(coords)));
-            return true;
+            _useHeld = false;
+            _secondaryHeld = false;
+            return;
         }
 
-        if (args.State == BoundKeyState.Up)
+        var useDown = _inputSystem.CmdStates.GetState(EngineKeyFunctions.Use) == BoundKeyState.Down;
+        var secondaryDown = _inputSystem.CmdStates.GetState(EngineKeyFunctions.UseSecondary) == BoundKeyState.Down;
+
+        // Right click cancels the armed/charging volley.
+        if (secondaryDown && !_secondaryHeld)
         {
-            if (!_chargingQuery.HasComp(ent))
-                return false;
-
-            if (!TryGetCursorCoords(out var coords))
-                return false;
-
-            RaiseNetworkEvent(new XenoDespoilerBarrageFireRequest(GetNetCoordinates(coords)));
-            return true;
+            RaiseNetworkEvent(new XenoDespoilerBarrageCancelRequest());
+        }
+        // Hold left click to start charging, release to fire at the cursor.
+        else if (useDown && !_useHeld && !_chargingQuery.HasComp(ent))
+        {
+            if (_actionBlocker.CanConsciouslyPerformAction(ent) && TryGetCursorCoords(out var coords))
+                RaiseNetworkEvent(new XenoDespoilerBarrageStartChargeRequest(GetNetCoordinates(coords)));
+        }
+        else if (!useDown && _useHeld && _chargingQuery.HasComp(ent))
+        {
+            if (TryGetCursorCoords(out var coords))
+                RaiseNetworkEvent(new XenoDespoilerBarrageFireRequest(GetNetCoordinates(coords)));
         }
 
-        return false;
-    }
-
-    private bool OnCancel(in PointerInputCmdHandler.PointerInputCmdArgs args)
-    {
-        if (args.State != BoundKeyState.Down)
-            return false;
-
-        if (_player.LocalEntity is not { } ent)
-            return false;
-
-        if (!_armedQuery.HasComp(ent) && !_chargingQuery.HasComp(ent))
-            return false;
-
-        RaiseNetworkEvent(new XenoDespoilerBarrageCancelRequest());
-        return true;
+        _useHeld = useDown;
+        _secondaryHeld = secondaryDown;
     }
 
     private bool TryGetCursorCoords(out EntityCoordinates coords)

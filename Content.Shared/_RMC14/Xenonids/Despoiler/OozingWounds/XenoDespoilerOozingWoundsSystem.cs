@@ -60,7 +60,7 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
 
         var severity = ComputeSeverity(uid, action);
         var radius = action.BaseRadius + severity;
-        var origin = Transform(uid).Coordinates;
+        var origin = Transform(uid).Coordinates.SnapToGrid(EntityManager);
         var sprayProto = empowered ? action.AcidSprayEmpoweredProto : action.AcidSprayProto;
         var now = _timing.CurTime;
 
@@ -80,7 +80,8 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
                 var cheby = Math.Max(Math.Abs(dx), Math.Abs(dy));
                 var tile = origin.Offset(new Vector2(dx, dy)).SnapToGrid(EntityManager);
 
-                if (!_interaction.InRangeUnobstructed(uid, tile, radius + 0.5f))
+                // Slack for the caster standing off-centre / on a tile edge.
+                if (!_interaction.InRangeUnobstructed(uid, tile, radius + 1f))
                     continue;
 
                 var spawnDelay = action.DistanceDelayPerTile * cheby;

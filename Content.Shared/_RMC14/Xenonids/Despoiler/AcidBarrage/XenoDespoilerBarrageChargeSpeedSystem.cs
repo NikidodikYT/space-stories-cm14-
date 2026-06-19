@@ -1,3 +1,4 @@
+using Content.Shared.Interaction.Events;
 using Content.Shared.Movement.Systems;
 
 namespace Content.Shared._RMC14.Xenonids.Despoiler;
@@ -11,6 +12,14 @@ public sealed class XenoDespoilerBarrageChargeSpeedSystem : EntitySystem
         SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, RefreshMovementSpeedModifiersEvent>(OnRefresh);
         SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<XenoDespoilerChargingBarrageComponent, ComponentShutdown>(OnShutdown);
+
+        // While the volley is armed, left click charges it instead of swinging.
+        SubscribeLocalEvent<XenoDespoilerArmedBarrageComponent, AttackAttemptEvent>(OnAttackAttempt);
+    }
+
+    private void OnAttackAttempt(Entity<XenoDespoilerArmedBarrageComponent> ent, ref AttackAttemptEvent args)
+    {
+        args.Cancel();
     }
 
     private void OnStartup(EntityUid uid, XenoDespoilerChargingBarrageComponent comp, ComponentStartup args)

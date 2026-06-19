@@ -2,25 +2,26 @@ using System.Numerics;
 using Content.Shared._RMC14.Actions;
 using Content.Shared._RMC14.Projectiles;
 using Content.Shared._RMC14.Xenonids.Hive;
-using Content.Shared._RMC14.Xenonids.Despoiler;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Ranged.Systems;
-using Robust.Server.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
-namespace Content.Server._RMC14.Xenonids.Despoiler;
+namespace Content.Shared._RMC14.Xenonids.Despoiler;
 
 public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 {
+    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private readonly AudioSystem _audio = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly RMCProjectileSystem _rmcProjectile = default!;
     [Dependency] private readonly SharedActionsSystem _actions = default!;
     [Dependency] private readonly SharedGunSystem _gun = default!;
@@ -43,9 +44,9 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         _projectileQuery = GetEntityQuery<XenoDespoilerAcidBarrageProjectileComponent>();
 
         SubscribeLocalEvent<XenoDespoilerComponent, XenoDespoilerAcidBarrageActionEvent>(OnAction);
-        SubscribeNetworkEvent<XenoDespoilerBarrageStartChargeRequest>(OnStartChargeRequest);
-        SubscribeNetworkEvent<XenoDespoilerBarrageFireRequest>(OnFireRequest);
-        SubscribeNetworkEvent<XenoDespoilerBarrageCancelRequest>(OnCancelRequest);
+        SubscribeAllEvent<XenoDespoilerBarrageStartChargeRequest>(OnStartChargeRequest);
+        SubscribeAllEvent<XenoDespoilerBarrageFireRequest>(OnFireRequest);
+        SubscribeAllEvent<XenoDespoilerBarrageCancelRequest>(OnCancelRequest);
     }
 
     private void OnCancelRequest(XenoDespoilerBarrageCancelRequest msg, EntitySessionEventArgs args)
@@ -71,7 +72,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
         EnsureComp<XenoDespoilerArmedBarrageComponent>(uid);
         _actions.SetToggled(args.Action.Owner, true);
-        _popup.PopupEntity(Loc.GetString("rmc-despoiler-barrage-armed"), uid, uid);
+        _popup.PopupClient(Loc.GetString("rmc-despoiler-barrage-armed"), uid, uid);
         args.Handled = true;
     }
 
@@ -98,7 +99,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         Dirty(uid, charging);
 
         if (action.ChargeSound is { } sound)
-            _audio.PlayPvs(sound, uid);
+            _audio.PlayPredicted(sound, uid, uid);
     }
 
     private void OnFireRequest(XenoDespoilerBarrageFireRequest msg, EntitySessionEventArgs args)
@@ -106,7 +107,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (args.SenderSession.AttachedEntity is not { } uid)
             return;
 
-        if (!TryComp<XenoDespoilerComponent>(uid, out var comp))
+        if (!_despoilerQuery.TryComp(uid, out var comp))
             return;
 
         if (!_chargingQuery.TryComp(uid, out var charge))
@@ -122,6 +123,20 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
         if (!coords.IsValid(EntityManager))
             coords = GetCoordinates(charge.Target);
 
+        if (!coords.IsValid(EntityManager))
+        {
+            ResetBarrage(uid);
+            return;
+        }
+
+        var casterMap = _xform.ToMapCoordinates(Transform(uid).Coordinates);
+        var targetMap = _xform.ToMapCoordinates(coords);
+        if (casterMap.MapId != targetMap.MapId)
+        {
+            ResetBarrage(uid);
+            return;
+        }
+
         if (TryGetBarrageAction(uid, out var actionEnt, out var action) &&
             _rmcActions.TryUseAction(uid, actionEnt.Owner, uid))
         {
@@ -135,6 +150,9 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
+        if (_net.IsClient)
+            return;
+
         var now = _timing.CurTime;
         var query = EntityQueryEnumerator<XenoDespoilerChargingBarrageComponent>();
         while (query.MoveNext(out var uid, out var charge))
@@ -187,6 +205,9 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
     private void FireVolley(EntityUid uid, XenoDespoilerAcidBarrageActionComponent action,
         XenoDespoilerChargingBarrageComponent charge, EntityCoordinates target)
     {
+        if (_net.IsClient)
+            return;
+
         var heldFor = (float)(_timing.CurTime - charge.StartedAt).TotalSeconds;
         var chargeFrac = Math.Clamp(heldFor / action.MaxChargeSeconds, 0f, 1f);
 
