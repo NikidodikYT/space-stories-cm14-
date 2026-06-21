@@ -79,10 +79,16 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
                 return;
 
             args.Handled = true;
+
+            _xform.SetCoordinates(uid, Transform(victim.Value).Coordinates);
+
+            if (action.PounceSound is { } empoweredSound)
+                _audio.PlayPredicted(empoweredSound, uid, uid);
+
             if (_net.IsClient)
                 return;
 
-            ExecuteEmpoweredLunge(uid, action, victim.Value);
+            ApplyEmpoweredHit(uid, action, victim.Value);
             _catalyze.TakeEmpowerment(uid, comp);
             return;
         }
@@ -205,15 +211,10 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         return true;
     }
 
-    private void ExecuteEmpoweredLunge(EntityUid uid,
+    private void ApplyEmpoweredHit(EntityUid uid,
         XenoDespoilerCausticEmbraceActionComponent action,
         EntityUid victim)
     {
-        _xform.SetCoordinates(uid, Transform(victim).Coordinates);
-
-        if (action.PounceSound is { } sound)
-            _audio.PlayPredicted(sound, uid, uid);
-
         _damageable.TryChangeDamage(victim, action.EmpoweredDamage, ignoreResistances: false, origin: uid);
         _acid.ApplyAcid(victim, uid, enhance: true);
 
