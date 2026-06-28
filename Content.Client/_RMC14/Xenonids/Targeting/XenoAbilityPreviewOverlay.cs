@@ -12,7 +12,7 @@ using Content.Shared._RMC14.Xenonids.AcidMine;
 using Content.Shared._RMC14.Xenonids.Bombard;
 using Content.Shared._RMC14.Xenonids.Burrow;
 using Content.Shared._RMC14.Xenonids.DeployTraps;
-using Content.Shared._RMC14.Xenonids.Despoiler;
+using Content.Shared._Stories.Xenonids.Despoiler;
 using Content.Shared._RMC14.Xenonids.Fruit.Components;
 using Content.Shared._RMC14.Xenonids.ResinSurge;
 using Content.Shared._RMC14.Xenonids.Spray;
