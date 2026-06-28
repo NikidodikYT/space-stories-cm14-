@@ -63,7 +63,7 @@ public sealed class XenoHudOverlay : Overlay
     private readonly EntityQuery<XenoShieldComponent> _xenoShieldQuery;
     private readonly EntityQuery<EntityActiveInvisibleComponent> _invisQuery;
     private readonly EntityQuery<XenoComponent> _xenoQuery;
-    private readonly EntityQuery<XenoDespoilerHypertensionComponent> _hyperQuery;
+    private readonly EntityQuery<XenoDespoilerHypertensionComponent> _hyperQuery; // Stories-Despoiler
     private readonly EntityQuery<HiveTeamMemberComponent> _hiveTeamMemberQuery;
 
     private readonly ShaderInstance _shader;
@@ -75,7 +75,7 @@ public sealed class XenoHudOverlay : Overlay
     private readonly ResPath _rsiPath = new("/Textures/_RMC14/Interface/xeno_hud.rsi");
     private readonly ResPath _rsiPathSlow = new("/Textures/_RMC14/Effects/xeno_stomp.rsi");
     private readonly ResPath _rsiPathFreeze = new("/Textures/_RMC14/Effects/xeno_freeze.rsi");
-    private readonly ResPath _rsiPathHypertension = new("/Textures/_RMC14/Interface/Alerts/hypertension.rsi");
+    private readonly ResPath _rsiPathHypertension = new("/Textures/_RMC14/Interface/Alerts/hypertension.rsi"); // Stories-Despoiler
 
     public XenoHudOverlay()
     {
@@ -99,7 +99,7 @@ public sealed class XenoHudOverlay : Overlay
         _xenoShieldQuery = _entity.GetEntityQuery<XenoShieldComponent>();
         _invisQuery = _entity.GetEntityQuery<EntityActiveInvisibleComponent>();
         _xenoQuery = _entity.GetEntityQuery<XenoComponent>();
-        _hyperQuery = _entity.GetEntityQuery<XenoDespoilerHypertensionComponent>();
+        _hyperQuery = _entity.GetEntityQuery<XenoDespoilerHypertensionComponent>(); // Stories-Despoiler
         _hiveTeamMemberQuery = _entity.GetEntityQuery<HiveTeamMemberComponent>();
 
         _shader = _prototype.Index<ShaderPrototype>("unshaded").Instance();
@@ -225,7 +225,7 @@ public sealed class XenoHudOverlay : Overlay
             UpdatePlasma((uid, xeno, sprite), handle);
             UpdateShields((uid, xeno, sprite), handle);
             UpdateEnergy((uid, xeno, sprite), handle);
-            UpdateHypertension((uid, xeno, sprite), handle);
+            UpdateHypertension((uid, xeno, sprite), handle); // Stories-Despoiler
         }
     }
 
@@ -631,6 +631,7 @@ public sealed class XenoHudOverlay : Overlay
         handle.DrawTexture(texture, position);
     }
 
+    // Stories-Despoiler-Start
     private void UpdateHypertension(Entity<XenoComponent, SpriteComponent> ent, DrawingHandleWorld handle)
     {
         var (uid, xeno, sprite) = ent;
@@ -647,6 +648,7 @@ public sealed class XenoHudOverlay : Overlay
 
         handle.DrawTexture(texture, new Vector2(xOffset, yOffset));
     }
+    // Stories-Despoiler-End
 
     private void UpdateShields(Entity<XenoComponent, SpriteComponent> ent, DrawingHandleWorld handle)
     {

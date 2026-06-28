@@ -87,9 +87,9 @@ public sealed class XenoAbilityPreviewOverlay : Overlay
     private readonly EntityQuery<XenoWeedsComponent> _weedsQ;
     private readonly EntityQuery<XenoAbductComponent> _abductQ;
     private readonly EntityQuery<XenoPierceComponent> _pierceQ;
-    private readonly EntityQuery<XenoDespoilerCausticEmbraceActionComponent> _causticEmbraceQ;
-    private readonly EntityQuery<XenoDespoilerComponent> _despoilerQ;
-    private readonly XenoDespoilerCatalyzeFlagSystem _catalyzeFlag;
+    private readonly EntityQuery<XenoDespoilerCausticEmbraceActionComponent> _causticEmbraceQ; // Stories-Despoiler
+    private readonly EntityQuery<XenoDespoilerComponent> _despoilerQ; // Stories-Despoiler
+    private readonly XenoDespoilerCatalyzeFlagSystem _catalyzeFlag; // Stories-Despoiler
     private readonly EntityQuery<TransformComponent> _xformQ;
 
     public XenoAbilityPreviewOverlay(IEntityManager ents)
@@ -121,9 +121,9 @@ public sealed class XenoAbilityPreviewOverlay : Overlay
         _weedsQ = ents.GetEntityQuery<XenoWeedsComponent>();
         _abductQ = ents.GetEntityQuery<XenoAbductComponent>();
         _pierceQ = ents.GetEntityQuery<XenoPierceComponent>();
-        _causticEmbraceQ = ents.GetEntityQuery<XenoDespoilerCausticEmbraceActionComponent>();
-        _despoilerQ = ents.GetEntityQuery<XenoDespoilerComponent>();
-        _catalyzeFlag = ents.System<XenoDespoilerCatalyzeFlagSystem>();
+        _causticEmbraceQ = ents.GetEntityQuery<XenoDespoilerCausticEmbraceActionComponent>(); // Stories-Despoiler
+        _despoilerQ = ents.GetEntityQuery<XenoDespoilerComponent>(); // Stories-Despoiler
+        _catalyzeFlag = ents.System<XenoDespoilerCatalyzeFlagSystem>(); // Stories-Despoiler
         _xformQ = ents.GetEntityQuery<TransformComponent>();
     }
 
@@ -227,11 +227,13 @@ public sealed class XenoAbilityPreviewOverlay : Overlay
                 DrawPierce(args, player.Value, xform, originMap, mousePos, pierce);
                 break;
 
+            // Stories-Despoiler-Start
             case XenoDespoilerCausticEmbraceActionEvent:
                 if (!_causticEmbraceQ.TryComp(action, out var embrace))
                     return;
                 DrawCausticEmbrace(args, player.Value, originMap, mousePos, embrace);
                 break;
+            // Stories-Despoiler-End
         }
     }
 
@@ -380,6 +382,7 @@ public sealed class XenoAbilityPreviewOverlay : Overlay
         DrawLinePreview(args, player, xform.Coordinates, mousePos, (int)pierce.Range, color);
     }
 
+    // Stories-Despoiler-Start
     private void DrawCausticEmbrace(
         in OverlayDrawArgs args,
         EntityUid player,
@@ -429,6 +432,7 @@ public sealed class XenoAbilityPreviewOverlay : Overlay
         DrawTileBorder(args.WorldHandle, gridUid, grid, splashTiles, Color.Lime.WithAlpha(OutlineAlpha));
         DrawTileBorder(args.WorldHandle, gridUid, grid, new HashSet<Vector2i> { landingTile }, Color.Yellow.WithAlpha(OutlineAlpha));
     }
+    // Stories-Despoiler-End
 
     private void DrawBombard(
         in OverlayDrawArgs args,
