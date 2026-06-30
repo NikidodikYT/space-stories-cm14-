@@ -1,4 +1,5 @@
-﻿using Content.Shared._RMC14.Dialog;
+﻿using Content.Shared._RMC14.AlertLevel;
+using Content.Shared._RMC14.Dialog;
 using Content.Shared._RMC14.Marines.ControlComputer;
 using Content.Shared._RMC14.Marines.Roles.Ranks;
 using Content.Shared._RMC14.Marines.Skills;
@@ -13,6 +14,7 @@ using Content.Shared.Popups;
 using Content.Shared.Radio;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -256,7 +258,42 @@ public abstract class SharedMarineAnnounceSystem : EntitySystem
         var wrappedMessage = Loc.GetString("rmc-announcement-message-signed", ("author", author), ("message", message), ("name", name));
 
         AnnounceToMarines(wrappedMessage, sound, filter);
+        AnnounceSignedUi(sender, message, author, name, sound, filter);
         _adminLog.Add(LogType.RMCMarineAnnounce, $"{ToPrettyString(sender):source} marine announced message: {message}");
+    }
+
+    /// <summary>
+    /// Server-side hook that also displays the signed announcement on-screen with the
+    /// speaker's sprite via the GeneralAnnounce widget. No-op on the client.
+    /// </summary>
+    protected virtual void AnnounceSignedUi(
+        EntityUid sender,
+        string message,
+        string author,
+        string name,
+        SoundSpecifier? sound,
+        Filter? filter)
+    {
+    }
+
+    /// <summary>
+    /// Displays an overwatch broadcast to a squad through the on-screen announcement widget.
+    /// </summary>
+    public virtual void AnnounceOverwatchSquad(
+        EntityUid sender,
+        string message,
+        EntityUid squad,
+        Color squadColor,
+        string squadName,
+        SoundSpecifier? sound = null)
+    {
+    }
+
+    /// <summary>
+    /// Displays an alert level change through the on-screen announcement widget.
+    /// </summary>
+    public virtual void AnnounceAlertLevel(RMCAlertLevels level, string message, Filter? filter = null)
+    {
     }
 
     public string FormatHighCommand(string? author, string message)
