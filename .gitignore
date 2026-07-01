@@ -306,3 +306,20 @@ Resources/MapImages
 
 # Direnv stuff
 .direnv/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs / temp
+*.log
+*.tmp
+
+# AI agent tooling (local only)
+/.claude-plugin/
+/AGENTS.md
+/skills.sh.json
+/skills/
