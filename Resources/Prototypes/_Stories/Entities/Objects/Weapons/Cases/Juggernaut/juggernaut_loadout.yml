@@ -1,0 +1,58 @@
+# TODO Stories: placeholder case label (sharp), replace with juggernaut label art
+- type: entity
+  parent: RMCBaseEquipmentCase
+  id: STJuggernautEquipmentCase
+  name: Juggernaut equipment case
+  description: "A large case containing the M134C-JLCW minigun, the J1 exoskeleton armor, ammo belts and support gear./n/nNOTE: You cannot put items back inside this case."
+  components:
+  - type: Sprite
+    layers:
+    - state: closed
+      map: [ base ]
+    - state: sharp
+      sprite: _Stories/Objects/loadout_kits.rsi
+      map: [ label ]
+  - type: Storage
+    maxItemSize: Huge
+    grid:
+    - 0,0,15,3
+  - type: StorageFill
+    contents:
+    - id: STWeaponM134C
+    - id: STMagazineM134CAP
+      amount: 2
+    - id: STMagazineM134CHE
+    - id: STArmorJuggernaut
+    - id: STBackpackJuggernaut
+    - id: RMCPowerCellSmartgun
+    - id: STJuggernautLoaderBag
+  - type: CMChangeUserOnVend
+    addComponents:
+    - type: JuggernautWhitelist
+
+- type: entity
+  parent: RMCBaseEquipmentCase
+  id: STJuggernautLoaderBag
+  name: M134C loader kit
+  description: "A support kit meant to be handed to a battle buddy: loader pack, service blowtorch, spare batteries and an engineering pamphlet./n/nNOTE: You cannot put items back inside this case."
+  components:
+  - type: Sprite
+    layers:
+    - state: closed
+      map: [ base ]
+    - state: sharp
+      sprite: _Stories/Objects/loadout_kits.rsi
+      map: [ label ]
+  - type: Storage
+    maxItemSize: Huge
+    grid:
+    - 0,0,15,1
+  - type: StorageFill
+    contents:
+    - id: STBackpackJuggernautLoader
+    - id: STWelderJuggernaut
+    - id: CMPamphletEngineer
+    - id: RMCPowerCellSmartgun
+      amount: 2
+    - id: STMagazineM134CAP
+    - id: RMCWeldingGoggles

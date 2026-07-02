@@ -1,0 +1,27 @@
+- type: entity
+  parent: CMBackpackMarine
+  id: STBackpackJuggernaut
+  name: J1 auxiliary pack
+  description: A compact pack mounted onto the J1 exoskeleton frame. Not much room left between the servos.
+  components:
+  - type: Storage
+    maxItemSize: Normal
+    grid:
+    - 0,0,2,1 # 6 slots
+
+- type: entity
+  parent: CMBackpackMarine
+  id: STBackpackJuggernautLoader
+  name: M134C loader pack
+  description: A heavy-duty rig for carrying M134C ammo belts, spare batteries and the repair blowtorch.
+  components:
+  - type: Storage
+    maxItemSize: Huge
+    grid:
+    - 0,0,4,2 # 15 slots
+    whitelist:
+      tags:
+      - STMagazineM134C
+      components:
+      - SmartGunBattery
+      - Blowtorch

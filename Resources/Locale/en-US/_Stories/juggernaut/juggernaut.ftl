@@ -1,0 +1,3 @@
+stories-juggernaut-gun-broken = The {THE($gun)} is wrecked! It needs welding repairs.
+stories-juggernaut-examine-broken = [color=red]The internals are wrecked — it needs welding repairs.[/color]
+stories-juggernaut-reload-start = You begin feeding a new belt into {THE($gun)}...

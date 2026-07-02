@@ -1,0 +1,13 @@
+- type: entity
+  parent: CMWelder
+  id: STWelderJuggernaut
+  name: JT4 service blowtorch
+  description: A high-capacity blowtorch issued to M134C loaders for field repairs of the minigun.
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      Welder:
+        reagents:
+        - ReagentId: RMCWeldingFuel
+          Quantity: 125
+        maxVol: 125

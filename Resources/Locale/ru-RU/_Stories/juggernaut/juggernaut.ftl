@@ -1,0 +1,3 @@
+stories-juggernaut-gun-broken = { $gun } повреждён! Требуется ремонт сваркой.
+stories-juggernaut-examine-broken = [color=red]Механизм повреждён — требуется ремонт сваркой.[/color]
+stories-juggernaut-reload-start = Вы начинаете заправлять новую ленту в { $gun }...

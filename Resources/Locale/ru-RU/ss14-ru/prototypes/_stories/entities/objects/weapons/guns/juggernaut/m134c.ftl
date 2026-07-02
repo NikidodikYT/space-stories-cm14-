@@ -1,0 +1,14 @@
+ent-STWeaponM134C = пулемёт M134C-JLCW
+    .desc = Juggernaut's Large Combat Weapon — шестиствольный ротационный пулемёт, питаемый батареей экзоскелета. Раскручивается перед стрельбой и перегревается при длительном огне.
+ent-STMagazineM134CAP = лента M134C (7.62мм ББ)
+    .desc = Бронебойная лента на 500 патронов для пулемёта M134C-JLCW.
+ent-STMagazineM134CHE = лента M134C (7.62мм фугасная)
+    .desc = Фугасная лента на 400 патронов для пулемёта M134C-JLCW.
+ent-STCartridgeM134CAP = патрон (7.62мм ББ)
+    .desc = { ent-CMBaseCartridgeRifle.desc }
+ent-STCartridgeM134CHE = патрон (7.62мм фугасный)
+    .desc = { ent-STCartridgeM134CAP.desc }
+ent-STBulletM134CAP = пуля (7.62мм ББ)
+    .desc = { ent-CMBulletBase.desc }
+ent-STBulletM134CHE = пуля (7.62мм фугасная)
+    .desc = { ent-CMBulletBase.desc }

@@ -57,6 +57,16 @@
         linkedEntries:
         - RMCGrenadeSpecEquipmentCase
       # Stories-SHARP-End
+      # Stories-Juggernaut-Start
+      - id: STJuggernautEquipmentCase
+        giveSquadRoleName: stories-job-name-weapons-specialist-juggernaut
+        isAppendSquadRoleName: false
+        givePrefix: stories-job-prefix-weapons-specialist-juggernaut
+        isAppendPrefix: true
+        giveMapBlip:
+          sprite: /Textures/_RMC14/Interface/map_blips.rsi
+          state: spec
+      # Stories-Juggernaut-End
       - id: RMCPyroSpecEquipmentCase
         giveSquadRoleName: rmc-job-name-weapons-specialist-pyro
         isAppendSquadRoleName: false
@@ -134,6 +144,14 @@
         points: 40
       - id: STMagazineSharpRifleFlechette
         points: 40
+    - name: Снаряжение Джаггернаута # Stories-Juggernaut
+      entries:
+      - id: STMagazineM134CAP
+        points: 40
+      - id: STMagazineM134CHE
+        points: 40
+      - id: STJuggernautLoaderBag
+        points: 15
     - name: Дополнительные Гранаты
       entries:
       - id: CMGrenadeHighExplosive
