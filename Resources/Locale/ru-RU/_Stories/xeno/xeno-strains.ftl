@@ -46,6 +46,3 @@ stories-xeno-bulwark-popup = Ваши панцирь укрепляется — 
 
 st-xeno-bulwark-reflective-shield-need-plates = Необходимо активировать Закованные Пластины!
 st-xeno-bulwark-reflective-shield-cant-use = Нельзя использовать способности при активном Отражающем Щите!
-
-st-xeno-despoiler-name = Дисбойлер
-st-xeno-despoiler-description = Огромный, сгорбленный ксеноморф с гипер-сжатыми кислотными мешками вдоль хребта. Из трещин в его панцире вырывается пар.
