@@ -2,7 +2,7 @@
   parent: ActionXenoBase
   id: STActionXenoDespoilerAcidBarrage
   name: Acid Barrage
-  description: "Activate to arm — the icon lights up green. Hold LMB to charge the volley: the longer you hold, the more projectiles. Release LMB to fire at the cursor."
+  description: "Activate to arm — the icon lights up green. Hold LMB to charge the volley: the longer you hold, the more projectiles. Release LMB to fire at the cursor. Right-click cancels the ability."
   components:
   - type: Action
     itemIconStyle: NoItem
