@@ -35,7 +35,7 @@ public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
 
         if (hyper.Stacks < action.HypertensionCost)
         {
-            _popup.PopupClient(Loc.GetString("rmc-despoiler-no-hypertension"), uid, uid);
+            _popup.PopupClient(Loc.GetString("st-xeno-despoiler-no-hypertension"), uid, uid);
             return;
         }
 
@@ -60,7 +60,7 @@ public sealed class XenoDespoilerCatalyzeSystem : EntitySystem
         _hive.SetSameHive(uid, burst);
         visual.CatalyzeVisual = burst;
 
-        _popup.PopupEntity(Loc.GetString("rmc-despoiler-catalyze-active"), uid, uid);
+        _popup.PopupEntity(Loc.GetString("st-xeno-despoiler-catalyze-active"), uid, uid);
     }
 
     private void OnShutdown(EntityUid uid, XenoDespoilerComponent comp, ComponentShutdown args)

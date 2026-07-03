@@ -72,7 +72,7 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
         EnsureComp<XenoDespoilerArmedBarrageComponent>(uid);
         _actions.SetToggled(args.Action.Owner, true);
-        _popup.PopupClient(Loc.GetString("rmc-despoiler-barrage-armed"), uid, uid);
+        _popup.PopupClient(Loc.GetString("st-xeno-despoiler-barrage-armed"), uid, uid);
         args.Handled = true;
     }
 

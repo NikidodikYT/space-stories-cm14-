@@ -98,7 +98,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         if (_rmcMap.IsTileBlocked(landing) ||
             !_interaction.InRangeUnobstructed(uid, landing, range: action.NormalRange + UnobstructedRangeBuffer))
         {
-            _popup.PopupClient(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
+            _popup.PopupClient(Loc.GetString("st-xeno-despoiler-pounce-blocked"), uid, uid);
             return;
         }
 
@@ -190,20 +190,20 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         victim = null;
         if (dist > action.EmpoweredRange)
         {
-            _popup.PopupClient(Loc.GetString("rmc-despoiler-pounce-out-of-range"), uid, uid);
+            _popup.PopupClient(Loc.GetString("st-xeno-despoiler-pounce-out-of-range"), uid, uid);
             return false;
         }
 
         victim = FindEmpoweredVictim(uid, args);
         if (victim is null)
         {
-            _popup.PopupClient(Loc.GetString("rmc-despoiler-caustic-no-target"), uid, uid);
+            _popup.PopupClient(Loc.GetString("st-xeno-despoiler-caustic-no-target"), uid, uid);
             return false;
         }
 
         if (!_interaction.InRangeUnobstructed(uid, victim.Value, range: action.EmpoweredRange + UnobstructedRangeBuffer))
         {
-            _popup.PopupClient(Loc.GetString("rmc-despoiler-pounce-blocked"), uid, uid);
+            _popup.PopupClient(Loc.GetString("st-xeno-despoiler-pounce-blocked"), uid, uid);
             victim = null;
             return false;
         }
