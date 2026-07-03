@@ -1,6 +1,6 @@
 - type: entity
   parent: ActionXenoBase
-  id: RMCActionXenoDespoilerAcidBarrage
+  id: STActionXenoDespoilerAcidBarrage
   name: Acid Barrage
   description: "Activate to arm — the icon lights up green. Hold LMB to charge the volley: the longer you hold, the more projectiles. Release LMB to fire at the cursor."
   components:
@@ -19,7 +19,7 @@
     empowerBonusProjectiles: 6
     scatterDegrees: 30
     chargingSpeedMultiplier: 0.5
-    projectileId: RMCProjectileDespoilerAcidShot
+    projectileId: STProjectileDespoilerAcidShot
     projectileSpeed: 12
     minRangeTiles: 1
     maxRangeTiles: 6
@@ -35,7 +35,7 @@
 
 - type: entity
   parent: ActionXenoBase
-  id: RMCActionXenoDespoilerCausticEmbrace
+  id: STActionXenoDespoilerCausticEmbrace
   name: Caustic Embrace
   description: Leap toward the click with an acid splash. Empowered lets you strike a chosen target up to 5 tiles away and applies an acid DoT.
   components:
@@ -62,8 +62,8 @@
         Heat: 30
     lingeringAcidChance: 0.3
     empoweredWeakenDuration: 1
-    telegraphProto: RMCEffectDespoilerCausticTelegraph
-    lingeringAcidProto: RMCEffectDespoilerLingeringAcid
+    telegraphProto: STEffectDespoilerCausticTelegraph
+    lingeringAcidProto: STEffectDespoilerLingeringAcid
     pounceSound:
       path: /Audio/_RMC14/Xeno/alien_roar1.ogg
   - type: XenoActionPlasma
@@ -71,7 +71,7 @@
 
 - type: entity
   parent: ActionXenoBase
-  id: RMCActionXenoDespoilerOozingWounds
+  id: STActionXenoDespoilerOozingWounds
   name: Oozing Wounds
   description: Creates a ring of acid spray around you. The radius grows as your HP drops. The empowered version stuns and applies acid.
   components:
@@ -90,10 +90,10 @@
     severityHpThreshold2: 0.3
     lingeringAcidChance: 0.2
     distanceDelayPerTile: 0.2
-    telegraphProto: RMCEffectDespoilerOozingTelegraph
-    acidSprayProto: RMCEffectDespoilerAcidSpray
-    acidSprayEmpoweredProto: RMCEffectDespoilerAcidSprayEmpowered
-    lingeringAcidProto: RMCEffectDespoilerLingeringAcid
+    telegraphProto: STEffectDespoilerOozingTelegraph
+    acidSprayProto: STEffectDespoilerAcidSpray
+    acidSprayEmpoweredProto: STEffectDespoilerAcidSprayEmpowered
+    lingeringAcidProto: STEffectDespoilerLingeringAcid
     castSound:
       path: /Audio/_RMC14/Xeno/acid_sizzle3.ogg
   - type: XenoActionPlasma
@@ -101,7 +101,7 @@
 
 - type: entity
   parent: ActionXenoBase
-  id: RMCActionXenoDespoilerCatalyze
+  id: STActionXenoDespoilerCatalyze
   name: Catalyze
   description: Spends 1 Hypertension stack and empowers your next active ability.
   components:
@@ -117,4 +117,4 @@
   - type: XenoDespoilerCatalyzeAction
     hypertensionCost: 1
     buffDuration: 10
-    visualProto: RMCEffectDespoilerCatalyze
+    visualProto: STEffectDespoilerCatalyze

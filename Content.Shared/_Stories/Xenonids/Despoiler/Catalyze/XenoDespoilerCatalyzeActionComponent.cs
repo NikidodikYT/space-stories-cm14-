@@ -12,5 +12,5 @@ public sealed partial class XenoDespoilerCatalyzeActionComponent : Component
     public TimeSpan BuffDuration = TimeSpan.FromSeconds(10);
 
     [DataField]
-    public EntProtoId VisualProto = "RMCEffectDespoilerCatalyze";
+    public EntProtoId VisualProto = "STEffectDespoilerCatalyze";
 }

@@ -35,10 +35,10 @@ public sealed partial class XenoDespoilerCausticEmbraceActionComponent : Compone
     public float SplashScanSize = 3f;
 
     [DataField]
-    public EntProtoId TelegraphProto = "RMCEffectDespoilerCausticTelegraph";
+    public EntProtoId TelegraphProto = "STEffectDespoilerCausticTelegraph";
 
     [DataField]
-    public EntProtoId LingeringAcidProto = "RMCEffectDespoilerLingeringAcid";
+    public EntProtoId LingeringAcidProto = "STEffectDespoilerLingeringAcid";
 
     [DataField]
     public SoundSpecifier? PounceSound;

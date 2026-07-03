@@ -25,7 +25,7 @@ public sealed partial class XenoDespoilerAcidBarrageActionComponent : Component
     public float ChargingSpeedMultiplier = 0.5f;
 
     [DataField]
-    public EntProtoId ProjectileId = "RMCProjectileDespoilerAcidShot";
+    public EntProtoId ProjectileId = "STProjectileDespoilerAcidShot";
 
     [DataField]
     public float ProjectileSpeed = 12f;

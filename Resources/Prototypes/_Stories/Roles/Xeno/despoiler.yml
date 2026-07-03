@@ -1,9 +1,9 @@
 - type: job
   parent: CMJobXenoBase
-  id: RMCXenoDespoiler
+  id: STXenoDespoiler
   name: rmc-job-name-xeno-despoiler
-  playTimeTracker: RMCJobXenoDespoiler
+  playTimeTracker: STJobXenoDespoiler
 
 - type: playTimeTracker
-  id: RMCJobXenoDespoiler
+  id: STJobXenoDespoiler
   isXeno: true

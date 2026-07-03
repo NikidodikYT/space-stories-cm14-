@@ -3,13 +3,13 @@ rmc-xeno-despoiler-description = Огромный, сгорбленный ксе
 
 rmc-job-name-xeno-despoiler = Дисбойлер
 
-ent-RMCActionXenoDespoilerAcidBarrage = Кислотный шквал
+ent-STActionXenoDespoilerAcidBarrage = Кислотный шквал
     .desc = Активируй способность — она подсветится. Зажми ЛКМ для зарядки залпа: чем дольше держишь, тем больше снарядов. Отпусти ЛКМ — залп уйдёт в направлении курсора.
-ent-RMCActionXenoDespoilerCausticEmbrace = Едкое объятие
+ent-STActionXenoDespoilerCausticEmbrace = Едкое объятие
     .desc = Прыжок в направлении клика с кислотным выплеском. Эмпауэр позволяет атаковать выбранную цель на дистанции до 5 клеток и накладывает кислотный DoT.
-ent-RMCActionXenoDespoilerOozingWounds = Сочащиеся раны
+ent-STActionXenoDespoilerOozingWounds = Сочащиеся раны
     .desc = Создаёт кольцо кислотного спрея вокруг себя. Радиус растёт по мере падения собственного HP. Усиленный вариант оглушает и накладывает кислоту.
-ent-RMCActionXenoDespoilerCatalyze = Катализ
+ent-STActionXenoDespoilerCatalyze = Катализ
     .desc = Расходует 1 стэк Гипертензии и усиливает следующую активную способность.
 
 rmc-despoiler-no-hypertension = Недостаточно стэков Гипертензии.

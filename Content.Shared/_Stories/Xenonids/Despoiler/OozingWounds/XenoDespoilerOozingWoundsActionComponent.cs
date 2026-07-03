@@ -22,16 +22,16 @@ public sealed partial class XenoDespoilerOozingWoundsActionComponent : Component
     public TimeSpan DistanceDelayPerTile = TimeSpan.FromSeconds(0.2);
 
     [DataField]
-    public EntProtoId TelegraphProto = "RMCEffectDespoilerOozingTelegraph";
+    public EntProtoId TelegraphProto = "STEffectDespoilerOozingTelegraph";
 
     [DataField]
-    public EntProtoId AcidSprayProto = "RMCEffectDespoilerAcidSpray";
+    public EntProtoId AcidSprayProto = "STEffectDespoilerAcidSpray";
 
     [DataField]
-    public EntProtoId AcidSprayEmpoweredProto = "RMCEffectDespoilerAcidSprayEmpowered";
+    public EntProtoId AcidSprayEmpoweredProto = "STEffectDespoilerAcidSprayEmpowered";
 
     [DataField]
-    public EntProtoId LingeringAcidProto = "RMCEffectDespoilerLingeringAcid";
+    public EntProtoId LingeringAcidProto = "STEffectDespoilerLingeringAcid";
 
     [DataField]
     public SoundSpecifier? CastSound;

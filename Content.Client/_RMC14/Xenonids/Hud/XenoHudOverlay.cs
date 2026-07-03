@@ -75,7 +75,7 @@ public sealed class XenoHudOverlay : Overlay
     private readonly ResPath _rsiPath = new("/Textures/_RMC14/Interface/xeno_hud.rsi");
     private readonly ResPath _rsiPathSlow = new("/Textures/_RMC14/Effects/xeno_stomp.rsi");
     private readonly ResPath _rsiPathFreeze = new("/Textures/_RMC14/Effects/xeno_freeze.rsi");
-    private readonly ResPath _rsiPathHypertension = new("/Textures/_RMC14/Interface/Alerts/hypertension.rsi"); // Stories-Despoiler
+    private readonly ResPath _rsiPathHypertension = new("/Textures/_Stories/Interface/Alerts/hypertension.rsi"); // Stories-Despoiler
 
     public XenoHudOverlay()
     {
