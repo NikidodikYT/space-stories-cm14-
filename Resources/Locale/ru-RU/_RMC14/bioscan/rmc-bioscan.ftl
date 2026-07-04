@@ -1,5 +1,4 @@
-rmc-bioscan-ares-announcement = [color=white][font size=16][bold]Статус биосканера ARES v3.2[/bold][/font][/color][color=red][font size=14][bold]
-    { $message }[/bold][/font][/color]
+rmc-bioscan-ares-announcement = [color=white][font size=16][bold]Статус биосканера ARES v3.2[/bold][/font][/color][color=red][font size=14][bold] { $message }[/bold][/font][/color]
 
 rmc-bioscan-ares = Биосканирование завершено.
 
@@ -25,8 +24,7 @@ rmc-bioscan-ares = Биосканирование завершено.
     *[other] , в том числе в { $planetLocation }
 }
 
-rmc-bioscan-xeno-announcement = [color=#318850][font size=14][bold]Королева-мать проникает в ваше сознание из разных миров.
-    { $message }[/bold][/font][/color]
+rmc-bioscan-xeno-announcement = [color=#318850][font size=14][bold]Королева-мать проникает в ваше сознание из разных миров. { $message }[/bold][/font][/color]
 
 rmc-bioscan-xeno = Моим детям и их королеве: Я чувствую { $onShip ->
     [0] отсутствие носителей

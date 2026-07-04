@@ -39,6 +39,10 @@ rmc-announcement-dropship-message = [color=#CECECE][font size=14][bold]Опов�
 
     { $message }[/bold][/font][/color]
 
+rmc-announcement-anti-air = [color=#CECECE][font size=16][bold]IX-50 MGAD System[/bold][/font][/color][color=red][font size=16][bold]
+
+    { $message }[/bold][/font][/color]
+
 rmc-announcement-emergency-dropship-crash = [font size=14][bold][color=#CECECE]ТРЕВОГА[/color][/bold][/font][font size=14][color=red]
   ДЕСАНТНЫЙ КОРАБЛЬ НА КУРСЕ СТОЛКНОВЕНИЯ. КРУШЕНИЕ НЕИЗБЕЖНО.[/color][/font]
 
