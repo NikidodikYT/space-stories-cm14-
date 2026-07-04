@@ -1,8 +1,11 @@
+using System.IO;
 using System.Text.RegularExpressions;
 using Content.Shared._Stories.Chat;
 using Content.Shared._Stories.SCCVars;
+using Robust.Server.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Enums;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
@@ -12,6 +15,7 @@ public sealed class ServerChatFilterSystem : EntitySystem
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IResourceManager _res = default!;
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
 
     private readonly List<string> _serverBanwordsRaw = new();
     private readonly List<FilterRule> _rules = new();
@@ -31,6 +35,24 @@ public sealed class ServerChatFilterSystem : EntitySystem
         _cfg.OnValueChanged(SCCVars.BanwordsFile, OnFileChanged, true);
 
         SubscribeLocalEvent<PlayerAttachedEvent>(OnPlayerAttached);
+        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+    }
+
+    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
+    {
+        if (e.NewStatus == SessionStatus.Connected || e.NewStatus == SessionStatus.InGame)
+        {
+            if (_serverBanwordsRaw.Count > 0)
+            {
+                RaiseNetworkEvent(new SyncBanwordsEvent(_serverBanwordsRaw), e.Session.Channel);
+            }
+        }
     }
 
     private void OnPlayerAttached(PlayerAttachedEvent ev)
@@ -53,14 +75,33 @@ public sealed class ServerChatFilterSystem : EntitySystem
 
         try
         {
-            if (!_res.UserData.Exists(path))
+            string content;
+            var cleanFilename = filename.TrimStart('/');
+            if (File.Exists(filename))
             {
-                _sawmill.Warning($"Banwords file not found at UserData: {path}");
+                content = File.ReadAllText(filename);
+            }
+            else if (File.Exists(cleanFilename))
+            {
+                content = File.ReadAllText(cleanFilename);
+            }
+            else if (_res.UserData.Exists(path))
+            {
+                content = _res.UserData.ReadAllText(path);
+            }
+            else if (!path.ToString().Contains(":") && _res.ContentFileExists(path))
+            {
+                using var stream = _res.ContentFileRead(path);
+                using var reader = new StreamReader(stream);
+                content = reader.ReadToEnd();
+            }
+            else
+            {
+                _sawmill.Warning($"Banwords file not found at OS path, UserData, or Content: {path}");
                 return;
             }
 
-            var content = _res.UserData.ReadAllText(path);
-            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
             {
                 var word = line.Trim();

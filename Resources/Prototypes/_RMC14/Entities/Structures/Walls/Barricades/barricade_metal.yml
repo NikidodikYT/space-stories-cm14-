@@ -489,15 +489,7 @@
         enum.RMCDamageOverlayVisuals.DamageOverlay:
           Open: { sprite: _RMC14/Structures/Walls/Barricades/folding_metal_closed_cracks.rsi }
           Closed: { sprite: _RMC14/Structures/Walls/Barricades/folding_metal_cracks.rsi }       
-  - type: DamageVisuals
-    thresholds: [4, 8, 12]
-    damageDivisor: 25
-    trackAllDamage: true
-    overlay: false
-    targetLayers:
-    - "enum.RMCDamageOverlayVisuals.DamageOverlay"
-    damageGroup: "Brute"
-    hideIfZero: false
+
   - type: InteractionOutline
   - type: Door
     openSpriteState: folding_metal_closed

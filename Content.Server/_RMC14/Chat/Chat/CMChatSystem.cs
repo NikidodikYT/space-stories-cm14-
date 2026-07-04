@@ -93,8 +93,6 @@ public sealed class CMChatSystem : SharedCMChatSystem
             // Disabling ghost hearing removes this component, so the `GhostComponent` check is needed to keep ghosts included.
             if (!HasComp<XenoComponent>(session.AttachedEntity) && !HasComp<GhostComponent>(session.AttachedEntity))
                 _toRemove.Add(session);
-                continue;
-            }
         }
 
         foreach (var session in _toRemove)
@@ -240,7 +238,7 @@ public sealed class CMChatSystem : SharedCMChatSystem
 
         var keycode = char.ToLowerInvariant(prefixPart[1]);
 
-        if (keycode == SharedChatSystem.DefaultChannelKey && keys.DefaultChannel != null)
+        if (keycode.ToString() == SharedChatSystem.DefaultChannelKey && keys.DefaultChannel != null)
             return true;
 
         foreach (var ch in _proto.EnumeratePrototypes<RadioChannelPrototype>())
@@ -248,7 +246,7 @@ public sealed class CMChatSystem : SharedCMChatSystem
             if (!keys.Channels.Contains(ch.ID))
                 continue;
 
-            if (ch.RadioPrefix == prefix && ch.KeyCode == keycode)
+            if (ch.RadioPrefix == prefix && ch.KeyCode == keycode.ToString())
                 return true;
         }
 
@@ -319,38 +317,30 @@ public sealed class CMChatSystem : SharedCMChatSystem
         if (validPrefixes.Count < 2)
             return null;
 
+        if (headset.Value.Comp.Last != null)
+        {
+            var timeLeft = headset.Value.Comp.Last.Value + headset.Value.Comp.Cooldown - time;
+            if (timeLeft > TimeSpan.Zero)
+            {
+                _popup.PopupEntity(
+                    $"Вы использовали систему мультитрансляции слишком часто. Подождите еще {timeLeft.TotalSeconds:F0} секунд.",
+                    source,
+                    source,
+                    PopupType.MediumCaution
+                );
+                return null;
+            }
+        }
+
         var messages = new List<string>(validPrefixes.Count);
         var messageBody = message[prefixLength..];
 
         for (var idx = 0; idx < validPrefixes.Count; idx++)
             messages.Add($"{validPrefixes[idx]}{messageBody}");
 
-        if (messages.Count < 2)
-            return null;
-        }
-
-        var timeLeft = headset.Value.Comp.Last + headset.Value.Comp.Cooldown - time;
-        if (headset.Value.Comp.Last != TimeSpan.Zero && timeLeft > TimeSpan.Zero)
-        {
-            _popup.PopupEntity(
-                $"Вы использовали систему мультитрансляции слишком часто. Подождите еще {timeLeft.Value.TotalSeconds:F0} секунд.",
-                source,
-                source,
-                PopupType.MediumCaution
-            );
-            return null;
-        }
-
-        var generatedMessages = new List<string>();
-        foreach (var key in keys)
-        {
-            generatedMessages.Add($":{key} {messagePart}");
-        }
-
         headset.Value.Comp.Last = time;
         Dirty(headset.Value);
 
-        return generatedMessages;
-        // Stories-Hunter-End
+        return messages;
     }
 }

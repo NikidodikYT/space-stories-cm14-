@@ -206,7 +206,7 @@ public sealed class MarineAnnounceSystem : SharedMarineAnnounceSystem
         base.AnnounceRadio(sender, message, channel);
 
         _adminLogs.Add(LogType.RMCMarineAnnounce, $"{ToPrettyString(sender):source} marine announced radio message: {message}");
-        _radio.SendRadioMessage(sender, message, channel, sender, playTTS: playTTS);
+        _radio.SendRadioMessage(sender, message, channel, sender);
     }
 
     public override void AnnounceARESStaging(

@@ -368,7 +368,6 @@ public sealed class RadioSystem : EntitySystem
             wearing.Headset == receiver)
         {
             return wearer;
->>>>>>> 3b47ee29fd72669e9a92db1b14c5af1859b25faa
         }
 
         return null;
