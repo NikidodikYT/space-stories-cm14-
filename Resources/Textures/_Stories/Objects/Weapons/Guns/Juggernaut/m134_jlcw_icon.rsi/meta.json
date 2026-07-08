@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from cmss13 (PR #10280, UPP gatling gun by Thwomper/Crowford), modified for Space Stories.",
+  "size": {
+    "x": 64,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "mag-0"
+    },
+    {
+      "name": "mag-1"
+    }
+  ]
+}

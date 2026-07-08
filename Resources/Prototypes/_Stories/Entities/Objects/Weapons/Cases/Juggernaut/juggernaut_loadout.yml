@@ -1,0 +1,111 @@
+- type: Tag
+  id: STKitSquire
+
+- type: entity
+  parent: RMCBaseEquipmentCase
+  id: STJuggernautEquipmentCase
+  name: Juggernaut equipment case
+  description: "A massive case containing an M134C-JLCW minigun, a Juggernaut exoskeleton armor set, ammo drums, and a Squire's support kit to hand off to a squadmate.\n\nNOTE: You cannot put items back inside this case."
+  components:
+  - type: Storage
+    maxItemSize: Huge
+    grid:
+    - 0,0,21,3
+  - type: StorageFill
+    contents:
+    - id: STArmorJuggernaut
+    - id: STArmorHoodJuggernaut
+    - id: STWeaponM134CJLCW
+    - id: STBeltM134AP
+      amount: 1
+    - id: STBeltM134HE
+      amount: 2
+    - id: RMCMK80
+    - id: CMMagazinePistolMK80
+      amount: 2
+    - id: STKitSquire
+    - id: STPamphletSquire
+    - id: STWelderSquire
+  - type: CMChangeUserOnVend
+    addComponents:
+    - type: JuggernautWhitelist
+
+# Cargo crates
+
+- type: entity
+  parent: RMCCrateAmmo
+  id: STCrateMagazineM134HE
+  name: M134C-JLCW ammo drum crate (high-explosive, x3)
+  components:
+  - type: StorageFill
+    contents:
+    - id: STBeltM134HE
+      amount: 3
+
+- type: entity
+  parent: RMCCrateAmmo
+  id: STCrateMagazineM134AP
+  name: M134C-JLCW ammo drum crate (armor-piercing, x3)
+  components:
+  - type: StorageFill
+    contents:
+    - id: STBeltM134AP
+      amount: 3
+
+# Squire kit
+
+- type: entity
+  parent: RMCKitBase
+  id: STKitSquire
+  name: Squire kit
+  description: "A kit containing everything needed to turn a Marine into a Juggernaut's Squire: a training pamphlet, a roomier backpack, and a high-capacity welder for field-repairing the M134C-JLCW.
+
+    Step One: Read the pamphlet to learn field maintenance.
+
+    Step Two: Take the backpack and welder.
+
+    Step Three: Stay close to the Juggernaut - the belt reloads faster and the M134C-JLCW welds far faster with you nearby.
+
+    Step Four: When the minigun overheats, weld it back down."
+  components:
+  - type: Storage
+    maxItemSize: Huge
+    grid:
+    - 0,0,11,1
+  - type: StorageFill
+    contents:
+    - id: STPamphletSquire
+    - id: STBackpackSquire
+    - id: STWelderSquire
+  - type: Tag
+    tags:
+    - STKitSquire
+
+# Backpack
+
+- type: entity
+  parent: CMBackpackMarine
+  id: STBackpackSquire
+  name: Squire's pack
+  description: An oversized backpack rigged up to carry spare ammo drums and welding fuel for a Juggernaut.
+  components:
+  - type: Storage
+    maxItemSize: Normal
+    grid:
+    - 0,0,15,1
+
+# Welder
+
+- type: entity
+  parent: CMWelder
+  id: STWelderSquire
+  name: Squire's blowtorch
+  description: A blowtorch with an oversized fuel tank, meant for repeated field repairs on a Juggernaut's M134C-JLCW without having to stop and refuel.
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      Welder:
+        reagents:
+        - ReagentId: RMCWeldingFuel
+          Quantity: 125
+        maxVol: 125
