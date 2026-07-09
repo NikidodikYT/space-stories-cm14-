@@ -30,8 +30,7 @@ public sealed class JuggernautBeltReloadSystem : EntitySystem
         if (args.Cancelled || args.Slot.ID != ent.Comp.Slot || ent.Comp.CompletingInsert)
             return;
 
-        // Also fires from pure can-insert probes (e.g. verb menu), so no popups/DoAfters here -
-        // just block the instant insert and let OnInteractUsing run the timed reload instead.
+        // Also fires from can-insert probes (verb menu) - no popups/DoAfters here.
         args.Cancelled = true;
     }
 
@@ -57,7 +56,6 @@ public sealed class JuggernautBeltReloadSystem : EntitySystem
         if (args.Handled || !args.CanReach || args.Target is not { } target)
             return;
 
-        // Squire-only shortcut - anyone else reloads the normal way.
         if (!HasComp<SquireWhitelistComponent>(args.User))
             return;
 
@@ -111,7 +109,7 @@ public sealed class JuggernautBeltReloadSystem : EntitySystem
         ent.Comp.CompletingInsert = true;
         try
         {
-            // Eject the old belt first so the new one can go in - TryInsert refuses to fill an occupied slot.
+            // TryInsert refuses an occupied slot - eject first.
             if (slot.HasItem)
                 _itemSlots.TryEjectToHands(ent, slot, args.User, excludeUserAudio: true);
 

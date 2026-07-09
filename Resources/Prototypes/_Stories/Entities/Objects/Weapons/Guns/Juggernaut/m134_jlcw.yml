@@ -79,8 +79,6 @@
     rsi:
       sprite: _Stories/Interface/MousePointer/m134_mouse.rsi
       state: all
-  # Smartgun's recoil-compensation setup (GunToggleableRecoil + GunDrainBatteryOnShoot), minigun scatter
-  # profile layered on top by JuggernautRecoil.
   - type: GunToggleableRecoil
     batteryDrain: 5
   - type: JuggernautRecoil
@@ -94,7 +92,6 @@
   - type: GunRequiresSkills
     skills:
       RMCSkillSpecialistWeapons: 1
-  # No armor worn -> can't fire at all.
   - type: GunRequireEquipped
     whitelist:
       tags:
@@ -104,7 +101,7 @@
   - type: RMCMagneticItem
   - type: JuggernautBarrelHeat
   - type: JuggernautBeltReload
-  - type: JuggernautGun # marks this as the gun a Squire can weld/reload through its wielder - see JuggernautAssistedRepairSystem
+  - type: JuggernautGun # see JuggernautAssistedRepairSystem
   - type: Damageable
     damageContainer: StructuralMarine
   - type: RMCRepairable

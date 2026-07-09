@@ -39,11 +39,31 @@ public sealed class JuggernautBarrelHeatSystem : EntitySystem
         var comp = ent.Comp;
         var now = _timing.CurTime;
 
-        if (comp.FiringSince is null || now - comp.LastShotAt > comp.SustainedFireGrace)
+        if (comp.FiringSince is not { } firingSince)
         {
             comp.FiringSince = now;
             comp.NextDamageTickAt = now + comp.DamageStartAfter;
             comp.TicksDealt = 0;
+        }
+        else
+        {
+            var gap = now - comp.LastShotAt;
+            if (gap > comp.SustainedFireGrace)
+            {
+                // Pause costs 1:1 against banked fire time instead of wiping it outright - stops pulsing
+                // fire just under SustainedFireGrace from resetting the clock for free.
+                if (gap >= comp.LastShotAt - firingSince)
+                {
+                    comp.FiringSince = now;
+                    comp.NextDamageTickAt = now + comp.DamageStartAfter;
+                    comp.TicksDealt = 0;
+                }
+                else
+                {
+                    comp.FiringSince = firingSince + gap;
+                    comp.NextDamageTickAt += gap;
+                }
+            }
         }
 
         comp.LastShotAt = now;

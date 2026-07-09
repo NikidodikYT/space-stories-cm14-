@@ -29,11 +29,9 @@
   - type: RMCGrantLeapProtection
   - type: RMCStunResistance
     resistance: 6
-  # No room for a backpack, belt or webbing over all that plating.
   - type: ClothingBlockBackpack
   - type: ClothingBlockWebbing
-  - type: JuggernautArmorRestrict # belts, both directions
-  # Keys the drag slowdown, slow get-up and tackle resistance to actually wearing the armor.
+  - type: JuggernautArmorRestrict
   - type: ClothingGrantComponents
     components:
     - type: JuggernautArmorWorn

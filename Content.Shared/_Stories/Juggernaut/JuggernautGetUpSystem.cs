@@ -6,7 +6,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._Stories.Juggernaut;
 
-/// <summary>Turns the instant stand-up on knockdown expiry into a GetUpDelay-long DoAfter. Voluntary stands (e.g. toggling rest) are untouched.</summary>
+/// <summary>Turns the instant stand-up on knockdown expiry into a GetUpDelay-long DoAfter.</summary>
 public sealed class JuggernautGetUpSystem : EntitySystem
 {
     [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
@@ -25,8 +25,7 @@ public sealed class JuggernautGetUpSystem : EntitySystem
         if (args.Cancelled)
             return;
 
-        // Only the auto-recovery stand (knockdown shutting down, LifeStage > Running) - while it's
-        // still active the stun system's own cancel is in charge.
+        // Auto-recovery only - stun system cancels while knockdown is still active.
         if (!TryComp(ent, out KnockedDownComponent? knocked) ||
             knocked.LifeStage <= ComponentLifeStage.Running)
         {
@@ -44,7 +43,7 @@ public sealed class JuggernautGetUpSystem : EntitySystem
         var ev = new JuggernautGetUpDoAfterEvent();
         var doAfterArgs = new DoAfterArgs(EntityManager, ent, ent.Comp.GetUpDelay, ev, ent)
         {
-            // Uninterruptible: cancelling would leave him down forever with no auto-retry.
+            // Uninterruptible - cancelling leaves him down forever with no retry.
             BreakOnMove = false,
             NeedHand = false,
             RequireCanInteract = false,
@@ -69,7 +68,6 @@ public sealed class JuggernautGetUpSystem : EntitySystem
 
         args.Handled = true;
 
-        // Knocked down again mid-recovery - stay lying, its own expiry restarts the cycle.
         if (HasComp<KnockedDownComponent>(ent))
             return;
 

@@ -3,7 +3,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._Stories.Juggernaut;
 
-/// <summary>Marks a gun whose wielded in-hand sprite should swap to an animated "-firing" RSI state (see <see cref="MinigunFiringSystem"/>) while it's actively shooting, then fall back to the static wielded sprite once fire stops.</summary>
+/// <summary>Marks a gun whose wielded sprite should swap to an animated "-firing" RSI state while shooting - see <see cref="MinigunFiringSystem"/>.</summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 [Access(typeof(MinigunFiringSystem))]
 public sealed partial class MinigunFiringVisualsComponent : Component

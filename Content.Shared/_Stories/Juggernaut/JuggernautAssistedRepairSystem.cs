@@ -23,7 +23,6 @@ public sealed class JuggernautAssistedRepairSystem : EntitySystem
         if (args.Handled)
             return;
 
-        // Squire-only shortcut - anyone else has to make him put the gun away and weld it directly.
         if (!HasComp<SquireWhitelistComponent>(args.User))
             return;
 
