@@ -37,6 +37,7 @@
     steps: 1
     zeroVisible: true
   - type: Appearance
+  - type: MinigunFiringVisuals
   - type: MeleeWeapon
     attackRate: 0.5
     damage:
@@ -103,7 +104,7 @@
   - type: RMCMagneticItem
   - type: JuggernautBarrelHeat
   - type: JuggernautBeltReload
-  - type: JuggernautWhitelist # marks this as the gun a Squire can weld/reload through its wielder - see JuggernautAssistedRepairSystem
+  - type: JuggernautGun # marks this as the gun a Squire can weld/reload through its wielder - see JuggernautAssistedRepairSystem
   - type: Damageable
     damageContainer: StructuralMarine
   - type: RMCRepairable
@@ -156,9 +157,6 @@
     maxCharge: 10000
     startingCharge: 10000
   - type: JuggernautBattery
-    guns:
-      components:
-      - JuggernautWhitelist
   - type: PhysicalComposition
     materialComposition: {}
 

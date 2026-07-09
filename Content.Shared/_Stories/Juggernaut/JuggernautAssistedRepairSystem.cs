@@ -29,7 +29,7 @@ public sealed class JuggernautAssistedRepairSystem : EntitySystem
 
         foreach (var held in _hands.EnumerateHeld(ent.Owner))
         {
-            if (!HasComp<JuggernautWhitelistComponent>(held))
+            if (!HasComp<JuggernautGunComponent>(held))
                 continue;
 
             if (!TryComp(held, out RMCRepairableComponent? repairable) ||

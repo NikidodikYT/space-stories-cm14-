@@ -106,6 +106,9 @@
         isAppendSquadRoleName: false
         givePrefix: st-job-prefix-weapons-specialist-juggernaut
         isAppendPrefix: true
+        giveIcon:
+          sprite: _Stories/Interface/cm_job_icons.rsi
+          state: hudsquad_spec_juggernaut
       # Stories-Juggernaut-End
     - name: Дополнительные Боеприпасы Для Скаутов
       entries:

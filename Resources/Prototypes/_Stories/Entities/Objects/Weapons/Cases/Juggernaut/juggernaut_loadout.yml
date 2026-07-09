@@ -7,6 +7,12 @@
   name: Juggernaut equipment case
   description: "A massive case containing an M134C-JLCW minigun, a Juggernaut exoskeleton armor set, ammo drums, and a Squire's support kit to hand off to a squadmate.\n\nNOTE: You cannot put items back inside this case."
   components:
+  - type: Sprite
+    layers:
+    - state: closed
+      map: [ base ]
+    - state: juggernaut
+      map: [ label ]
   - type: Storage
     maxItemSize: Huge
     grid:
