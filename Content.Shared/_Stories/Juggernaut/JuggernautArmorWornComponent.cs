@@ -11,5 +11,5 @@ public sealed partial class JuggernautArmorWornComponent : Component
     public TimeSpan GetUpDelay = TimeSpan.FromSeconds(3);
 
     [DataField]
-    public int TackleResistMin = 5;
+    public int TackleResistMin = 8;
 }

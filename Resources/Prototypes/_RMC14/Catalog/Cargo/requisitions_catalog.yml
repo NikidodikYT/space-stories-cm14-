@@ -419,6 +419,8 @@
         crate: STCrateMagazineM134HE
       - cost: 20000
         crate: STCrateMagazineM134AP
+      - cost: 4000
+        crate: STCrateBatteryJuggernaut
       # Stories-Juggernaut-End
 
 

@@ -14,7 +14,7 @@
     bullet: 35
     bio: 20
     explosionArmor: 45
-    immuneToAP: true
+    immuneToAP: false
   - type: RMCArmorSpeedTier
     speedTier: heavy
   - type: ClothingSpeedModifier
