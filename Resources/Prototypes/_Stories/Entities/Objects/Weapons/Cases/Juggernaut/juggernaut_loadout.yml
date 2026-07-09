@@ -1,5 +1,5 @@
 - type: Tag
-  id: STKitSquire
+  id: STKitJuggernaut
 
 - type: entity
   parent: RMCBaseEquipmentCase
@@ -11,12 +11,13 @@
     layers:
     - state: closed
       map: [ base ]
-    - state: juggernaut
+    - state: sharp
+      sprite: _Stories/Objects/loadout_kits.rsi
       map: [ label ]
   - type: Storage
     maxItemSize: Huge
     grid:
-    - 0,0,21,3
+    - 0,0,6,3
   - type: StorageFill
     contents:
     - id: STArmorJuggernaut
@@ -26,15 +27,59 @@
       amount: 1
     - id: STBeltM134HE
       amount: 2
-    - id: RMCMK80
-    - id: CMMagazinePistolMK80
-      amount: 2
-    - id: STKitSquire
-    - id: STPamphletSquire
-    - id: STWelderSquire
+    - id: STKitJuggernaut
   - type: CMChangeUserOnVend
     addComponents:
     - type: JuggernautWhitelist
+  - type: IgnoreContentsSize
+    items:
+      tags:
+      - STKitJuggernaut
+
+# Juggernaut kit
+
+- type: entity
+  parent: RMCKitBase
+  id: STKitJuggernaut
+  name: Juggernaut kit
+  description: "A large kit containing all the supplies needed to turn a Private into a Juggernaut's Squire.
+
+    A little infographic series shows how field maintenance should be done:
+
+    Step One: Read the pamphlet
+
+    Step Two: Take the chestrig, welder, and sidearm
+
+    Step Three: Stay close to the Juggernaut - the belt reloads faster and the M134C-JLCW welds far faster with you nearby
+
+    Step Four: When the minigun overheats, weld it back down"
+  components:
+  - type: Storage
+    maxItemSize: Huge
+    grid:
+    - 0,0,13,3
+  - type: Sprite
+    sprite: _RMC14/Objects/Storage/procase_mini.rsi
+  - type: Icon
+    sprite: _RMC14/Objects/Storage/procase_mini.rsi
+    layers:
+    - state: closed
+      map: [ base ]
+    - state: loader
+      map: [ label ]
+  - type: StorageFill
+    contents:
+    - id: STPamphletSquire
+    - id: RMCSatchelWelderChestrig
+    - id: STWelderSquire
+    - id: CMArmorB12
+    - id: ArmorHelmetM10
+    - id: RMCMK80
+    - id: CMMagazinePistolMK80
+      amount: 2
+  - type: Tag
+    tags:
+    - STKitJuggernaut
 
 # Cargo crates
 
@@ -57,48 +102,6 @@
     contents:
     - id: STBeltM134AP
       amount: 3
-
-# Squire kit
-
-- type: entity
-  parent: RMCKitBase
-  id: STKitSquire
-  name: Squire kit
-  description: "A kit containing everything needed to turn a Marine into a Juggernaut's Squire: a training pamphlet, a roomier backpack, and a high-capacity welder for field-repairing the M134C-JLCW.
-
-    Step One: Read the pamphlet to learn field maintenance.
-
-    Step Two: Take the backpack and welder.
-
-    Step Three: Stay close to the Juggernaut - the belt reloads faster and the M134C-JLCW welds far faster with you nearby.
-
-    Step Four: When the minigun overheats, weld it back down."
-  components:
-  - type: Storage
-    maxItemSize: Huge
-    grid:
-    - 0,0,11,1
-  - type: StorageFill
-    contents:
-    - id: STPamphletSquire
-    - id: STBackpackSquire
-    - id: STWelderSquire
-  - type: Tag
-    tags:
-    - STKitSquire
-
-# Backpack
-
-- type: entity
-  parent: CMBackpackMarine
-  id: STBackpackSquire
-  name: Squire's pack
-  description: An oversized backpack rigged up to carry spare ammo drums and welding fuel for a Juggernaut.
-  components:
-  - type: Storage
-    maxItemSize: Normal
-    grid:
-    - 0,0,15,1
 
 # Welder
 
