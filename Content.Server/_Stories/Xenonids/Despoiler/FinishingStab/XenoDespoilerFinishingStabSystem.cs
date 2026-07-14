@@ -35,7 +35,6 @@ public sealed class XenoDespoilerFinishingStabSystem : EntitySystem
 
         RemComp<XenoDespoilerTailStabPendingComponent>(uid);
 
-        // Marker is valid only on the tick the tail stab set it; a stale one (Flurry/TailJab) is dropped.
         if (pending.Tick != _timing.CurTick)
             return;
 

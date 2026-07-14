@@ -104,14 +104,6 @@ public sealed class SharedXenoDespoilerAcidSystem : EntitySystem
         }
     }
 
-    /// <summary>
-    /// Apply Despoiler's lingering acid to <paramref name="target"/> from
-    /// <paramref name="caster"/>. Uses the caster's <see cref="XenoDespoilerComponent.AcidComponents"/>
-    /// registry to spawn <see cref="UserAcidedComponent"/> on first hit; ticks/visuals
-    /// after that are owned by <see cref="XenoSpitSystem"/>. Increments the Despoiler
-    /// acid tier on the target; <paramref name="enhance"/> jumps tier to max and flips
-    /// the UserAcided combo flag.
-    /// </summary>
     public void ApplyAcid(EntityUid target, EntityUid caster, bool enhance = false)
     {
         if (_net.IsClient)
@@ -143,11 +135,6 @@ public sealed class SharedXenoDespoilerAcidSystem : EntitySystem
         Dirty(target, tier);
     }
 
-    /// <summary>
-    /// Decrement the Despoiler acid tier on <paramref name="target"/> by one.
-    /// Returns the tier value <em>before</em> the decrement, or 0 if no tier
-    /// component was present.
-    /// </summary>
     public int ConsumeAcidTier(EntityUid target)
     {
         if (_net.IsClient)
