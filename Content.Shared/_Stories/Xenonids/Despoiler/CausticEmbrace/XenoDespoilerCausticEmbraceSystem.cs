@@ -66,9 +66,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         if (dist < 0.01f)
             return;
 
-        var step = SnapDirectionToTile(approach / dist);
-        if (step == Vector2.Zero)
-            return;
+        var direction = approach.Normalized();
 
         if (_catalyze.IsEmpowered(uid, comp))
         {
@@ -93,10 +91,12 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             return;
         }
 
-        var landing = ownerXform.Coordinates.Offset(step).SnapToGrid(EntityManager);
+        var landing = ownerXform.Coordinates.Offset(direction * action.NormalRange).SnapToGrid(EntityManager);
+        var landingMap = _xform.ToMapCoordinates(landing);
+        var landingDistance = (landingMap.Position - ownerMap.Position).Length();
 
         if (_rmcMap.IsTileBlocked(landing) ||
-            !_interaction.InRangeUnobstructed(uid, landing, range: action.NormalRange + UnobstructedRangeBuffer))
+            !_interaction.InRangeUnobstructed(uid, landing, range: landingDistance + UnobstructedRangeBuffer))
         {
             _popup.PopupClient(Loc.GetString("st-xeno-despoiler-pounce-blocked"), uid, uid);
             return;
@@ -115,12 +115,12 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         if (_net.IsClient)
             return;
 
-        SpawnSplashAroundExceptBack(uid, action, landing, step);
+        SpawnSplashAroundExceptBack(uid, action, landing, direction);
     }
 
-    private static Vector2 SnapDirectionToTile(Vector2 dir)
+    private static Vector2i SnapDirectionToTile(Vector2 dir)
     {
-        return new Vector2(Math.Sign(MathF.Round(dir.X)), Math.Sign(MathF.Round(dir.Y)));
+        return new Vector2i(Math.Sign(MathF.Round(dir.X)), Math.Sign(MathF.Round(dir.Y)));
     }
 
     private void SpawnSplashAroundExceptBack(EntityUid caster,
@@ -128,8 +128,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
         EntityCoordinates center,
         Vector2 forward)
     {
-        var backX = -(int)forward.X;
-        var backY = -(int)forward.Y;
+        var back = SnapDirectionToTile(-forward);
 
         var centerMap = _xform.ToMapCoordinates(center);
         var hits = _lookup.GetEntitiesIntersecting(centerMap.MapId,
@@ -142,7 +141,7 @@ public sealed class XenoDespoilerCausticEmbraceSystem : EntitySystem
             {
                 if (dx == 0 && dy == 0)
                     continue;
-                if (dx == backX && dy == backY)
+                if (dx == back.X && dy == back.Y)
                     continue;
 
                 var tile = center.Offset(new Vector2(dx, dy));

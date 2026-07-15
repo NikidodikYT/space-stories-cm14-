@@ -25,6 +25,7 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
     [Dependency] private readonly SharedRMCActionsSystem _rmcActions = default!;
     [Dependency] private readonly SharedXenoHiveSystem _hive = default!;
     [Dependency] private readonly XenoDespoilerCatalyzeFlagSystem _catalyze = default!;
+    [Dependency] private readonly XenoDespoilerHypertensionSystem _hypertension = default!;
 
     private EntityQuery<XenoDespoilerAcidSprayComponent> _sprayQuery;
     private EntityQuery<XenoDespoilerLingeringAcidComponent> _lingeringQuery;
@@ -56,9 +57,23 @@ public sealed class XenoDespoilerOozingWoundsSystem : EntitySystem
         if (_net.IsClient)
             return;
 
+        var severity = ComputeSeverity(uid, action);
+
+        if (TryComp<XenoDespoilerHypertensionComponent>(uid, out var hypertension))
+        {
+            var stacksToRemove = severity switch
+            {
+                0 => hypertension.Stacks,
+                1 => 2,
+                2 => 1,
+                _ => hypertension.Stacks,
+            };
+
+            _hypertension.RemoveStacks(uid, hypertension, stacksToRemove);
+        }
+
         var empowered = _catalyze.TakeEmpowerment(uid, comp);
 
-        var severity = ComputeSeverity(uid, action);
         var radius = action.BaseRadius + severity;
         var origin = Transform(uid).Coordinates.SnapToGrid(EntityManager);
         var sprayProto = empowered ? action.AcidSprayEmpoweredProto : action.AcidSprayProto;

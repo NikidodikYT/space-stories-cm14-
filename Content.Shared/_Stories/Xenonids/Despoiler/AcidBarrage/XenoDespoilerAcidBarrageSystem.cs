@@ -236,7 +236,11 @@ public sealed class XenoDespoilerAcidBarrageSystem : EntitySystem
 
         for (var i = 0; i < count; i++)
         {
-            var angle = baseAngle + ((_random.NextDouble() * 2d - 1d) * scatter);
+            var spread = count == 1
+                ? 0d
+                : -scatter.Theta + 2d * scatter.Theta * i / (count - 1);
+
+            var angle = baseAngle + new Angle(spread);
             var unit = angle.ToVec();
             var rangeTiles = _random.Next(action.MinRangeTiles, action.MaxRangeTiles + 1);
 
