@@ -33,6 +33,9 @@ public sealed partial class XenoDespoilerHypertensionComponent : Component
     [DataField]
     public float BonusBurnPerStack = 10f;
 
+    [DataField]
+    public int ArmorPerStackPair = 5;
+
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
     public TimeSpan LastActivityAt;
 }

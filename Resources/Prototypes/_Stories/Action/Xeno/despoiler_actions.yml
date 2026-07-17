@@ -30,6 +30,7 @@
       path: /Audio/_RMC14/Xeno/acid_sizzle1.ogg
     fireSound:
       path: /Audio/_RMC14/Xeno/alien_spitacid2.ogg
+  - type: ActionBlockIfResting
   - type: XenoActionPlasma
     cost: 100
 
@@ -66,6 +67,7 @@
     lingeringAcidProto: STEffectDespoilerLingeringAcid
     pounceSound:
       path: /Audio/_RMC14/Xeno/alien_roar1.ogg
+  - type: ActionBlockIfResting
   - type: XenoActionPlasma
     cost: 100
 
@@ -96,6 +98,7 @@
     lingeringAcidProto: STEffectDespoilerLingeringAcid
     castSound:
       path: /Audio/_RMC14/Xeno/acid_sizzle3.ogg
+  - type: ActionBlockIfResting
   - type: XenoActionPlasma
     cost: 100
 
@@ -118,3 +121,4 @@
     hypertensionCost: 2
     buffDuration: 10
     visualProto: STEffectDespoilerCatalyze
+  - type: ActionBlockIfResting
